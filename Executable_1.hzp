@@ -1,0 +1,392 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="Executable_1" target="8" version="2">
+  <project Name="Executable_1">
+    <configuration
+      CMSIS_CORE="Yes"
+      Name="Common"
+      Placement="Flash"
+      Target="ATSAME70Q21B"
+      arm_architecture="v7EM"
+      arm_compiler_variant="clang"
+      arm_core_type="Cortex-M7"
+      arm_endian="Little"
+      arm_fp_abi="Hard"
+      arm_fpu_type="FPv5-D16"
+      arm_interwork="No"
+      arm_linker_heap_size="2048"
+      arm_linker_process_stack_size="256"
+      arm_linker_stack_size="2048"
+      arm_simulator_memory_simulation_filename="$(ProjectDir)/SAM_E_SimulatorMemory_linux_x64.so"
+      arm_simulator_memory_simulation_parameter="SAM E;FLASH,0x00400000,0x00200000,ROM;RAM,0x20400000,0x00060000,RAM"
+      arm_target_debug_interface_type="ADIv5"
+      arm_target_device_name="ATSAME70Q21"
+      arm_target_interface_type="SWD"
+      arm_target_loader_applicable_loaders="Flash"
+      arm_target_loader_default_loader="Flash"
+      c_preprocessor_definitions="__SAME70Q21B__;__SAM_E_FAMILY;ARM_MATH_CM7;FLASH_PLACEMENT=1;__USE_CRYSTAL_OSCILLATOR__;__TCM_CONFIG__=0;NO_SYSTEM_INIT;STARTUP_FROM_RESET"
+      c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Config;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/RTC;$(ProjectDir)/Drivers/PWM;$(ProjectDir)/Drivers/sd_mmc;$(ProjectDir)/Source Files;$(ProjectDir)/Middleware;$(ProjectDir)/Middleware/diskio;$(ProjectDir)/Middleware/fatfs/src;$(ProjectDir)/Middleware/ASF;$(ProjectDir)/Middleware/ASF/hal/include;$(ProjectDir)/Middleware/ASF/hal/src;$(ProjectDir)/Middleware/ASF/hal/utils/include;$(ProjectDir)/Middleware/ASF/hpl/core;$(ProjectDir)/Middleware/ASF/hpl/pio;$(ProjectDir)/Middleware/ASF/hpl/pmc;$(ProjectDir)/Middleware/ASF/hri;$(ProjectDir)/Application/include;$(ProjectDir)/Middleware/FreeRTOS/Source/include;$(ProjectDir)/Middleware/FreeRTOS/Source/portable/GCC/ARM_CM7;$(ProjectDir)/SEGGER;$(ProjectDir)/SEGGER/SystemView;$(ProjectDir)/SEGGER/RTT"
+      debug_register_definition_file="$(DeviceRegisterDefinitionFile)"
+      debug_threads_script=""
+      gcc_debugging_level="Level 3"
+      gcc_entry_point="Reset_Handler"
+      gcc_optimization_level="Debug"
+      libctl="No"
+      linker_memory_map_file="$(DeviceMemoryMapFile)"
+      linker_printf_fmt_level="long"
+      linker_printf_fp_enabled="No"
+      linker_scanf_character_group_matching_enabled="No"
+      linker_scanf_fmt_level="long"
+      linker_scanf_fp_enabled="No"
+      linker_section_placement_file="$(ProjectDir)/flash_placement_tcm.xml"
+      macros="DeviceIncludePath=$(TargetsDir)/SAM_E/CMSIS/same70b/include;DeviceHeaderFile=$(TargetsDir)/SAM_E/CMSIS/same70b/include/sam.h;DeviceMemoryMapFile=$(TargetsDir)/SAM_E/XML/ATSAME70Q21_MemoryMap.xml;DeviceRegisterDefinitionFile=$(TargetsDir)/SAM_E/XML/ATSAME70Q21_Registers.xml;DeviceSystemFile=$(TargetsDir)/SAM_E/CMSIS/source/system_SAME70.c;DeviceVectorsFile=$(TargetsDir)/SAM_E/Source/ATSAME70Q21_Vectors.s;DeviceFamily=SAM E;DeviceLoaderFile=$(TargetsDir)/SAM_E/Loader/SAME70_Loader.elf;Target=ATSAME70Q21B;Placement=Flash;Startup=Release Only;on-chip-oscillator=No;tcm-configuration=ITCM and DTCM Disabled"
+      package_dependencies="SAM_E"
+      project_directory=""
+      project_type="Executable"
+      target_get_partname_script="GetPartName()"
+      target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)"
+      target_reset_script="Reset();"
+      target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
+    <configuration
+      Name="Flash"
+      arm_target_flash_loader_file_path="$(DeviceLoaderFile)" />
+    <folder Name="CMSIS Files">
+      <file file_name="targets/SAM_E/CMSIS/same70b/include/sam.h" />
+      <file file_name="targets/SAM_E/CMSIS/source/system_SAME70.c">
+        <configuration
+          Name="Common"
+          default_code_section=".init"
+          default_const_section=".init_rodata" />
+      </file>
+      <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+    </folder>
+    <folder Name="Script Files">
+      <file file_name="targets/SAM_E/Scripts/SAM_E_Target.js">
+        <configuration Name="Common" file_type="Reset Script" />
+      </file>
+      <file file_name="libraries/libctl/source/threads.js" />
+    </folder>
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+      <file file_name="main_ctl.c">
+        <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+      </file>
+    </folder>
+    <folder Name="System Files">
+      <file file_name="thumb_crt0.s">
+        <configuration
+          Name="Common"
+          c_preprocessor_definitions="INITIALIZE_TCM_SECTIONS" />
+      </file>
+      <file file_name="targets/SAM_E/Source/SAM_E_DeviceInit.c">
+        <configuration
+          Name="Common"
+          default_code_section=".init"
+          default_const_section=".init_rodata" />
+      </file>
+      <file file_name="targets/SAM_E/Source/SAM_E_Startup.s" />
+      <file file_name="targets/SAM_E/Source/ATSAME70Q21B_Vectors.s" />
+    </folder>
+    <folder Name="Drivers">
+      <folder Name="SD_MMC">
+        <file file_name="Drivers/sd_mmc/sd_mmc.c" />
+        <file file_name="Drivers/sd_mmc/sd_mmc.h" />
+        <file file_name="Drivers/sd_mmc/sd_mmc_protocol.h" />
+        <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+      </folder>
+      <folder Name="RTC">
+        <file file_name="Drivers/RTC/rtc.c" />
+        <file file_name="Drivers/RTC/rtc.h" />
+      </folder>
+      <folder Name="SPI">
+        <file file_name="Drivers/SPI/spi.c" />
+        <file file_name="Drivers/SPI/spi.h" />
+      </folder>
+      <folder Name="PWM">
+        <file file_name="Drivers/PWM/pwm.c" />
+        <file file_name="Drivers/PWM/pwm.h" />
+      </folder>
+    </folder>
+    <folder Name="Config">
+      <file file_name="Config/conf_fatfs.h" />
+      <file file_name="Config/conf_sd_mmc.h" />
+      <file file_name="Config/FreeRTOSConfig.h" />
+      <file file_name="Config/hpl_hsmci_config.h" />
+      <file file_name="Config/hpl_pmc_config.h" />
+      <file file_name="Config/hpl_rtc_config.h" />
+      <file file_name="Config/hpl_xdmac_config.h" />
+      <file file_name="Config/peripheral_clk_config.h" />
+      <configuration Name="Common" c_user_include_directories="." />
+    </folder>
+    <folder Name="Middleware">
+      <folder Name="ASF">
+        <folder Name="hal">
+          <folder Name="include">
+            <file file_name="Middleware/ASF/hal/include/hal_atomic.h" />
+            <file file_name="Middleware/ASF/hal/include/hal_calendar.h" />
+            <file file_name="Middleware/ASF/hal/include/hal_delay.h" />
+            <file file_name="Middleware/ASF/hal/include/hal_gpio.h" />
+            <file file_name="Middleware/ASF/hal/include/hal_init.h" />
+            <file file_name="Middleware/ASF/hal/include/hal_io.h" />
+            <file file_name="Middleware/ASF/hal/include/hal_mci_sync.h" />
+            <file file_name="Middleware/ASF/hal/include/hal_sleep.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_calendar.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_core.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_delay.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_dma.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_ext_irq.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_gpio.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_init.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_irq.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_mci_async.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_mci_sync.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_missing_features.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_reset.h" />
+            <file file_name="Middleware/ASF/hal/include/hpl_sleep.h" />
+          </folder>
+          <folder Name="src">
+            <file file_name="Middleware/ASF/hal/src/hal_atomic.c" />
+            <file file_name="Middleware/ASF/hal/src/hal_calendar.c" />
+            <file file_name="Middleware/ASF/hal/src/hal_delay.c" />
+            <file file_name="Middleware/ASF/hal/src/hal_gpio.c" />
+            <file file_name="Middleware/ASF/hal/src/hal_init.c" />
+            <file file_name="Middleware/ASF/hal/src/hal_io.c" />
+            <file file_name="Middleware/ASF/hal/src/hal_mci_sync.c" />
+            <file file_name="Middleware/ASF/hal/src/hal_sleep.c" />
+          </folder>
+          <folder Name="utils">
+            <folder Name="include">
+              <file file_name="Middleware/ASF/hal/utils/include/compiler.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/err_codes.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/events.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/parts.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/utils.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/utils_assert.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/utils_decrement_macro.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/utils_event.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/utils_increment_macro.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/utils_list.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/utils_recursion_macro.h" />
+              <file file_name="Middleware/ASF/hal/utils/include/utils_repeat_macro.h" />
+            </folder>
+            <folder Name="src">
+              <file file_name="Middleware/ASF/hal/utils/src/utils_assert.c" />
+              <file file_name="Middleware/ASF/hal/utils/src/utils_event.c" />
+              <file file_name="Middleware/ASF/hal/utils/src/utils_list.c" />
+              <file file_name="Middleware/ASF/hal/utils/src/utils_syscalls.c" />
+            </folder>
+          </folder>
+        </folder>
+        <folder Name="hpl">
+          <folder Name="core">
+            <file file_name="Middleware/ASF/hpl/core/hpl_core_m7_base.c" />
+            <file file_name="Middleware/ASF/hpl/core/hpl_core_port.h" />
+            <file file_name="Middleware/ASF/hpl/core/hpl_init.c" />
+          </folder>
+          <folder Name="hsmci">
+            <file file_name="Middleware/ASF/hpl/hsmci/hpl_hsmci.c" />
+          </folder>
+          <folder Name="pio">
+            <file file_name="Middleware/ASF/hpl/pio/hpl_gpio_base.h" />
+          </folder>
+          <folder Name="pmc">
+            <file file_name="Middleware/ASF/hpl/pmc/hpl_pmc.c" />
+            <file file_name="Middleware/ASF/hpl/pmc/hpl_pmc.h" />
+            <file file_name="Middleware/ASF/hpl/pmc/hpl_sleep.c" />
+          </folder>
+          <folder Name="xdmac">
+            <file file_name="Middleware/ASF/hpl/xdmac/hpl_xdmac.c" />
+          </folder>
+        </folder>
+        <folder Name="hri">
+          <file file_name="Middleware/ASF/hri/hri_acc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_aes_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_afec_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_chipid_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_dacc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_efc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_gmac_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_gpbr_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_hsmci_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_i2sc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_icm_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_isi_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_lockbit_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_matrix_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_mcan_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_pio_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_pmc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_pwm_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_qspi_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_rstc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_rswdt_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_rtc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_rtt_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_sdramc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_smc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_spi_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_ssc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_supc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_tc_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_trng_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_twihs_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_uart_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_usart_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_usbhs_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_utmi_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_wdt_e70b.h" />
+          <file file_name="Middleware/ASF/hri/hri_xdmac_e70b.h" />
+        </folder>
+      </folder>
+      <file file_name="Middleware/sd_mmc_start.c" />
+      <file file_name="Middleware/sd_mmc_start.h" />
+      <file file_name="Middleware/sdcard.c" />
+      <file file_name="Middleware/sdcard.h" />
+      <folder Name="diskio">
+        <file file_name="Middleware/diskio/diskio.h" />
+        <file file_name="Middleware/diskio/sdmmc_diskio.c" />
+      </folder>
+      <folder Name="fatfs">
+        <folder Name="src">
+          <file file_name="Middleware/fatfs/src/ff.c" />
+          <file file_name="Middleware/fatfs/src/ff.h" />
+          <file file_name="Middleware/fatfs/src/ffconf.h" />
+          <file file_name="Middleware/fatfs/src/integer.h" />
+        </folder>
+      </folder>
+      <folder Name="FreeRTOS">
+        <file file_name="Middleware/FreeRTOS/readme.txt" />
+        <folder Name="License">
+          <file file_name="Middleware/FreeRTOS/License/license.txt" />
+        </folder>
+        <folder Name="Source">
+          <file file_name="Middleware/FreeRTOS/Source/croutine.c" />
+          <file file_name="Middleware/FreeRTOS/Source/event_groups.c" />
+          <file file_name="Middleware/FreeRTOS/Source/list.c" />
+          <file file_name="Middleware/FreeRTOS/Source/queue.c" />
+          <file file_name="Middleware/FreeRTOS/Source/readme.txt" />
+          <file file_name="Middleware/FreeRTOS/Source/stream_buffer.c" />
+          <file file_name="Middleware/FreeRTOS/Source/tasks.c" />
+          <file file_name="Middleware/FreeRTOS/Source/timers.c" />
+          <folder Name="include">
+            <file file_name="Middleware/FreeRTOS/Source/include/FreeRTOS.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/StackMacros.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/croutine.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/deprecated_definitions.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/event_groups.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/list.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/message_buffer.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/mpu_wrappers.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/portable.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/projdefs.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/queue.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/semphr.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/stack_macros.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/stdint.readme" />
+            <file file_name="Middleware/FreeRTOS/Source/include/stream_buffer.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/task.h" />
+            <file file_name="Middleware/FreeRTOS/Source/include/timers.h" />
+          </folder>
+          <folder Name="portable">
+            <file file_name="Middleware/FreeRTOS/Source/portable/readme.txt" />
+            <folder Name="GCC">
+              <folder Name="ARM_CM7">
+                <file file_name="Middleware/FreeRTOS/Source/portable/GCC/ARM_CM7/port.c" />
+                <file file_name="Middleware/FreeRTOS/Source/portable/GCC/ARM_CM7/portmacro.h" />
+              </folder>
+            </folder>
+            <folder Name="MemMang">
+              <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_1.c">
+                <configuration
+                  Name="THUMB Debug"
+                  build_exclude_from_build="Yes" />
+              </file>
+              <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_2.c">
+                <configuration
+                  Name="THUMB Debug"
+                  build_exclude_from_build="Yes" />
+              </file>
+              <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_3.c">
+                <configuration
+                  Name="THUMB Debug"
+                  build_exclude_from_build="Yes" />
+              </file>
+              <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_4.c" />
+              <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_5.c">
+                <configuration
+                  Name="THUMB Debug"
+                  build_exclude_from_build="Yes" />
+              </file>
+            </folder>
+          </folder>
+        </folder>
+      </folder>
+      <configuration Name="Common" c_user_include_directories="." />
+    </folder>
+    <folder Name="SEGGER">
+      <folder Name="Ozone">
+        <file file_name="SEGGER/Ozone/JLinkScript.pex" />
+        <file file_name="SEGGER/Ozone/debug.jdebug" />
+      </folder>
+      <folder Name="RTT">
+        <file file_name="SEGGER/RTT/SEGGER_RTT.c" />
+        <file file_name="SEGGER/RTT/SEGGER_RTT.h" />
+        <file file_name="SEGGER/RTT/SEGGER_RTT_ASM_ARMv7M.S" />
+        <file file_name="SEGGER/RTT/SEGGER_RTT_Conf.h" />
+        <file file_name="SEGGER/RTT/SEGGER_RTT_printf.c" />
+      </folder>
+      <folder Name="SystemView">
+        <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW.c" />
+        <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW.h" />
+        <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW_Conf.h" />
+        <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW_ConfDefaults.h" />
+        <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW_Config_FreeRTOS.c" />
+        <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW_FreeRTOS.c" />
+        <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW_FreeRTOS.h" />
+        <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW_Int.h" />
+      </folder>
+      <file file_name="SEGGER/Global.h" />
+      <file file_name="SEGGER/SEGGER.h" />
+    </folder>
+    <folder Name="Application">
+      <folder Name="include">
+        <file file_name="Application/include/atmel_start.h" />
+        <file file_name="Application/include/atmel_start_pins.h" />
+        <file file_name="Application/include/driver_init.h" />
+        <file file_name="Application/include/logWriter.h" />
+        <file file_name="Application/include/osConfig.h" />
+        <file file_name="Application/include/rtos_start.h" />
+      </folder>
+      <file file_name="Application/atmel_start.c" />
+      <file file_name="Application/driver_init.c" />
+      <file file_name="Application/logWriter.c" />
+      <file file_name="Application/main.c" />
+      <file file_name="Application/rtos_start.c" />
+    </folder>
+  </project>
+  <configuration Name="THUMB Debug" inherited_configurations="THUMB;Debug" />
+  <configuration
+    Name="THUMB"
+    Platform="ARM"
+    arm_instruction_set="Thumb"
+    arm_library_instruction_set="Thumb"
+    c_preprocessor_definitions="__THUMB"
+    hidden="Yes" />
+  <configuration
+    Name="Debug"
+    c_preprocessor_definitions="DEBUG"
+    gcc_debugging_level="Level 3"
+    gcc_omit_frame_pointer="Yes"
+    gcc_optimization_level="None"
+    hidden="Yes" />
+  <configuration
+    Name="THUMB Release"
+    inherited_configurations="THUMB;Release" />
+  <configuration
+    Name="Release"
+    c_preprocessor_definitions="NDEBUG"
+    gcc_debugging_level="None"
+    gcc_omit_frame_pointer="Yes"
+    gcc_optimization_level="Level 1"
+    hidden="Yes" />
+</solution>

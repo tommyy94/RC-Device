@@ -1,0 +1,5 @@
+.vs
+.orig
+.rej
+.atmelstart
+Debug/
