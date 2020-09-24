@@ -7,12 +7,13 @@
       Placement="Flash"
       Target="ATSAME70Q21B"
       arm_architecture="v7EM"
-      arm_compiler_variant="clang"
+      arm_compiler_variant="gcc"
       arm_core_type="Cortex-M7"
       arm_endian="Little"
       arm_fp_abi="Hard"
       arm_fpu_type="FPv5-D16"
       arm_interwork="No"
+      arm_keep_assembly="Yes"
       arm_linker_heap_size="2048"
       arm_linker_process_stack_size="256"
       arm_linker_stack_size="2048"
@@ -23,10 +24,13 @@
       arm_target_interface_type="SWD"
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
+      batch_build_configurations="Clang Debug;GCC Debug"
       c_preprocessor_definitions="__SAME70Q21B__;__SAM_E_FAMILY;ARM_MATH_CM7;FLASH_PLACEMENT=1;__USE_CRYSTAL_OSCILLATOR__;__TCM_CONFIG__=0;NO_SYSTEM_INIT;STARTUP_FROM_RESET"
       c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Config;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/RTC;$(ProjectDir)/Drivers/PWM;$(ProjectDir)/Drivers/sd_mmc;$(ProjectDir)/Source Files;$(ProjectDir)/Middleware;$(ProjectDir)/Middleware/diskio;$(ProjectDir)/Middleware/fatfs/src;$(ProjectDir)/Middleware/ASF;$(ProjectDir)/Middleware/ASF/hal/include;$(ProjectDir)/Middleware/ASF/hal/src;$(ProjectDir)/Middleware/ASF/hal/utils/include;$(ProjectDir)/Middleware/ASF/hpl/core;$(ProjectDir)/Middleware/ASF/hpl/pio;$(ProjectDir)/Middleware/ASF/hpl/pmc;$(ProjectDir)/Middleware/ASF/hri;$(ProjectDir)/Application/include;$(ProjectDir)/Middleware/FreeRTOS/Source/include;$(ProjectDir)/Middleware/FreeRTOS/Source/portable/GCC/ARM_CM7;$(ProjectDir)/SEGGER;$(ProjectDir)/SEGGER/SystemView;$(ProjectDir)/SEGGER/RTT"
       debug_register_definition_file="$(DeviceRegisterDefinitionFile)"
       debug_threads_script=""
+      gcc_c_language_standard="gnu11"
+      gcc_cplusplus_language_standard="gnu++17"
       gcc_debugging_level="Level 3"
       gcc_entry_point="Reset_Handler"
       gcc_optimization_level="Debug"
@@ -57,19 +61,13 @@
           default_code_section=".init"
           default_const_section=".init_rodata" />
       </file>
-      <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+      <configuration Name="GCC Debug" build_exclude_from_build="Yes" />
     </folder>
     <folder Name="Script Files">
       <file file_name="targets/SAM_E/Scripts/SAM_E_Target.js">
         <configuration Name="Common" file_type="Reset Script" />
       </file>
       <file file_name="libraries/libctl/source/threads.js" />
-    </folder>
-    <folder Name="Source Files">
-      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
-      <file file_name="main_ctl.c">
-        <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
-      </file>
     </folder>
     <folder Name="System Files">
       <file file_name="thumb_crt0.s">
@@ -91,7 +89,7 @@
         <file file_name="Drivers/sd_mmc/sd_mmc.c" />
         <file file_name="Drivers/sd_mmc/sd_mmc.h" />
         <file file_name="Drivers/sd_mmc/sd_mmc_protocol.h" />
-        <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+        <configuration Name="GCC Debug" build_exclude_from_build="No" />
       </folder>
       <folder Name="RTC">
         <file file_name="Drivers/RTC/rtc.c" />
@@ -298,23 +296,35 @@
             <folder Name="MemMang">
               <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_1.c">
                 <configuration
-                  Name="THUMB Debug"
+                  Name="GCC Debug"
+                  build_exclude_from_build="Yes" />
+                <configuration
+                  Name="Clang Debug"
                   build_exclude_from_build="Yes" />
               </file>
               <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_2.c">
                 <configuration
-                  Name="THUMB Debug"
+                  Name="GCC Debug"
+                  build_exclude_from_build="Yes" />
+                <configuration
+                  Name="Clang Debug"
                   build_exclude_from_build="Yes" />
               </file>
               <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_3.c">
                 <configuration
-                  Name="THUMB Debug"
+                  Name="GCC Debug"
+                  build_exclude_from_build="Yes" />
+                <configuration
+                  Name="Clang Debug"
                   build_exclude_from_build="Yes" />
               </file>
               <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_4.c" />
               <file file_name="Middleware/FreeRTOS/Source/portable/MemMang/heap_5.c">
                 <configuration
-                  Name="THUMB Debug"
+                  Name="GCC Debug"
+                  build_exclude_from_build="Yes" />
+                <configuration
+                  Name="Clang Debug"
                   build_exclude_from_build="Yes" />
               </file>
             </folder>
@@ -363,8 +373,20 @@
       <file file_name="Application/main.c" />
       <file file_name="Application/rtos_start.c" />
     </folder>
+    <configuration
+      Name="Debug"
+      gcc_c_language_standard="c11"
+      gcc_cplusplus_language_standard="c++17" />
+    <configuration
+      Name="Clang Debug"
+      arm_assembler_variant="clang"
+      arm_compiler_variant="clang"
+      gcc_enable_all_warnings="Yes" />
+    <configuration Name="GCC Debug" arm_compiler_variant="gcc" />
   </project>
-  <configuration Name="THUMB Debug" inherited_configurations="THUMB;Debug" />
+  <configuration
+    Name="GCC Debug"
+    inherited_configurations="THUMB;Debug;Clang Debug" />
   <configuration
     Name="THUMB"
     Platform="ARM"
@@ -389,4 +411,5 @@
     gcc_omit_frame_pointer="Yes"
     gcc_optimization_level="Level 1"
     hidden="Yes" />
+  <configuration Name="Clang Debug" inherited_configurations="Debug;THUMB" />
 </solution>
