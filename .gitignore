@@ -3,3 +3,4 @@
 .rej
 .atmelstart
 Debug/
+Executable_1 THUMB Debug/
