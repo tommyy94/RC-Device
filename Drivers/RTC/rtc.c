@@ -1,6 +1,7 @@
 #include <same70q21b.h>
 #include <FreeRTOS.h>
 #include <task.h>
+#include <utils_assert.h>
 
 #include "osConfig.h"
 #include "rtc.h"
@@ -77,7 +78,7 @@ void RTC_Init(void)
 void RTC_Handler(void)
 {
     Rtc *rtc = RTC;
-    BaseType_t xTaskWoken;
+    BaseType_t xTaskWoken = pdFALSE;
     uint32_t status;
 
     SEGGER_SYSVIEW_RecordEnterISR();
@@ -268,6 +269,7 @@ static bool RTC_SetTime(Calendar *calendar)
 /* Supervision and control for RTC. */
 void CalendarTask(void *arg)
 {
+    (void)arg;
     Rtc *rtc = RTC;
     BaseType_t ret;
     uint32_t event;

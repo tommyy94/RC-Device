@@ -2,6 +2,8 @@
 #include "osConfig.h"
 #include "logWriter.h"
 
+#include <utils_assert.h>
+
 
 
 extern QueueHandle_t xTxQ;

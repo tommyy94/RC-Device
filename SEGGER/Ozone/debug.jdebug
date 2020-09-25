@@ -49,7 +49,7 @@ void OnProjectLoad (void) {
   Edit.Preference (PREF_TIMESTAMP_FORMAT, TIMESTAMP_FORMAT_INST_CNT);
   Edit.SysVar (VAR_TRACE_MAX_INST_CNT, 2000000000);
   Edit.SysVar (VAR_TRACE_CORE_CLOCK, 300000000);
-  File.Open ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Executable_1 THUMB Debug/Executable_1.elf");
+  File.Open ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Executable_1 Clang Debug/Executable_1.elf");
   Project.SetOSPlugin("FreeRTOSPlugin");
 }
 
