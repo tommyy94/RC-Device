@@ -6,8 +6,9 @@
 
 
 
-extern QueueHandle_t xTxQ;
-extern QueueHandle_t xRxQ;
+extern QueueHandle_t      xTxQ;
+extern QueueHandle_t      xRxQ;
+extern SemaphoreHandle_t  spiMutex;
 
 typedef enum
 {
@@ -163,38 +164,47 @@ static uint8_t SPI_TxByte(Spi *spi, uint8_t byte)
 void SPI_TxMessageIrq(Spi *spi, uint8_t *msg, uint8_t *recv, uint32_t len)
 {    
     assert((spi == SPI0) || (spi == SPI1), __FILE__, __LINE__);
+
+    if (xSemaphoreTake(spiMutex, pdMS_TO_TICKS(10)) == pdTRUE)
+    {    
+        /* Fill TX FIFO then enable IRQ */
+        for (uint32_t i = 0; i < len; i++)
+        {
+            if (xQueueSend(xTxQ, &msg[i], pdMS_TO_TICKS(5)) != pdTRUE)
+            {
+                xTaskNotify(xJournalTask, SPI_ERROR, eSetBits);
+            }
+        }
+
+        /* Enable Local Loopback */
+        spi->SPI_MR |= SPI_MR_LLB_Msk;
+
+        /* Enable SPI */
+        spi->SPI_CR  |= SPI_CR_SPIEN_Msk;
+        spi->SPI_IER |= SPI_IER_TDRE_Msk | SPI_IER_RDRF_Msk;
     
-    /* Fill TX FIFO then enable IRQ */
-    for (uint32_t i = 0; i < len; i++)
+        /* Fill RX FIFO then disable IRQ */
+        for (uint32_t i = 0; i < len; i++)
+        {        
+            if (xQueueReceive(xRxQ, &recv[i], portMAX_DELAY) != pdTRUE)
+            {
+                xTaskNotify(xJournalTask, SPI_ERROR, eSetBits);
+            }
+        }
+
+        /* Disable SPI */
+        spi->SPI_IDR |= (SPI_IDR_TDRE_Msk | SPI_IDR_RDRF_Msk);
+        spi->SPI_CR  |= SPI_CR_SPIDIS_Msk;
+    
+        /* Disable Local Loopback */
+        spi->SPI_MR &= ~SPI_MR_LLB_Msk;
+
+        xSemaphoreGive(spiMutex);
+    }
+    else
     {
-        if (xQueueSend(xTxQ, &msg[i], pdMS_TO_TICKS(5)) != pdTRUE)
-        {
-            xTaskNotify(xJournalTask, SPI_ERROR, eSetBits);
-        }
+        xTaskNotify(xJournalTask, SPI_ERROR, eSetBits);
     }
-
-    /* Enable Local Loopback */
-    spi->SPI_MR |= SPI_MR_LLB_Msk;
-
-    /* Enable SPI */
-    spi->SPI_CR  |= SPI_CR_SPIEN_Msk;
-    spi->SPI_IER |= SPI_IER_TDRE_Msk | SPI_IER_RDRF_Msk;
-    
-    /* Fill RX FIFO then disable IRQ */
-    for (uint32_t i = 0; i < len; i++)
-    {        
-        if (xQueueReceive(xRxQ, &recv[i], portMAX_DELAY) != pdTRUE)
-        {
-            xTaskNotify(xJournalTask, SPI_ERROR, eSetBits);
-        }
-    }
-
-    /* Disable SPI */
-    spi->SPI_IDR |= (SPI_IDR_TDRE_Msk | SPI_IDR_RDRF_Msk);
-    spi->SPI_CR  |= SPI_CR_SPIDIS_Msk;
-    
-    /* Disable Local Loopback */
-    spi->SPI_MR &= ~SPI_MR_LLB_Msk;
 }
 
 
@@ -266,9 +276,9 @@ void SPI0_Handler(void)
     Spi *spi = SPI0;
     BaseType_t xTaskWoken = pdFALSE;
     
-    SEGGER_SYSVIEW_RecordEnterISR();
+    //SEGGER_SYSVIEW_RecordEnterISR();
     
-    spi->SPI_IDR |= SPI_IDR_TDRE_Msk;
+    spi->SPI_IDR |= SPI_IDR_TDRE_Msk | SPI_IDR_RDRF_Msk;
     
     status = spi->SPI_SR;
     assert(status != SPI_SR_OVRES_Msk, __FILE__, __LINE__);
@@ -300,16 +310,18 @@ void SPI0_Handler(void)
         }
     }
     
+    spi->SPI_IER |= SPI_IER_RDRF_Msk;
+
     /* Do context switch */
     portEND_SWITCHING_ISR(xTaskWoken);    
     
     if (xTaskWoken != pdFALSE)
     {
-        SEGGER_SYSVIEW_RecordExitISRToScheduler();
+        //SEGGER_SYSVIEW_RecordExitISRToScheduler();
         portYIELD();
     }
     else
     {
-        SEGGER_SYSVIEW_RecordExitISR();
+        //SEGGER_SYSVIEW_RecordExitISR();
     }
 }

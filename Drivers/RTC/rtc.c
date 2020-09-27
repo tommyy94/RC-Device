@@ -81,7 +81,7 @@ void RTC_Handler(void)
     BaseType_t xTaskWoken = pdFALSE;
     uint32_t status;
 
-    SEGGER_SYSVIEW_RecordEnterISR();
+    //SEGGER_SYSVIEW_RecordEnterISR();
 
     /* Read status register */
     status = rtc->RTC_SR;
@@ -100,12 +100,12 @@ void RTC_Handler(void)
 
     if (xTaskWoken != pdFALSE)
     {
-        SEGGER_SYSVIEW_RecordExitISRToScheduler();
+        //SEGGER_SYSVIEW_RecordExitISRToScheduler();
         portYIELD();
     }
     else
     {
-        SEGGER_SYSVIEW_RecordExitISR();
+        //SEGGER_SYSVIEW_RecordExitISR();
     }
 }
 
@@ -284,7 +284,7 @@ void CalendarTask(void *arg)
     calendar.time.hour    = 20;
     calendar.time.minutes = 25;
     calendar.time.seconds = 0;
-    RTC_SetTime(&calendar);
+    //RTC_SetTime(&calendar);
     
     while (1)
     {
@@ -293,7 +293,7 @@ void CalendarTask(void *arg)
         {
             RTC_GetTime(&calendar);
         }
-        else if(event == RTC_SET_TIME)
+        if (event == RTC_SET_TIME)
         {
             ret = xQueueReceive(xTsQ, &calendar, pdMS_TO_TICKS(10));
             assert(ret != errQUEUE_EMPTY, __FILE__, __LINE__);
@@ -303,14 +303,10 @@ void CalendarTask(void *arg)
             RTC_SetTime(&calendar);
             rtc->RTC_IER = RTC_IER_SECEN_Msk;
         }
-        else if(event == RTC_RETURN_TIME)
+        if (event == RTC_RETURN_TIME)
         {
             ret = xQueueSend(xTsQ, &calendar, pdMS_TO_TICKS(10));
             assert(ret != errQUEUE_FULL, __FILE__, __LINE__);
-        }
-        else
-        {
-            /* Timeout/unknown command */
         }
     }
 }

@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2015, Atmel Corporation                                        */
+/* Copyright (c) %copyright_year%, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -25,13 +25,9 @@
 /* LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING         */
 /* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, */
 /* EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           */
-/*                                                                              */
-/* 14/08/2018 - Modified by Rowley Associates to allow on-chip RC oscillator to */
-/*              be selected if __USE_ON_CHIP_RC_OSCILLATOR__ is defined.        */
-/*                                                                              */
 /* ---------------------------------------------------------------------------- */
 
-#include "sam.h" 
+#include "sam.h"
 
 /* @cond 0 */
 /**INDENT-OFF**/
@@ -42,14 +38,14 @@ extern "C" {
 /* @endcond */
 
 /* %ATMEL_SYSTEM% */
-/* Clock Settings (300MHz PLL VDDIO 3.3V and VDDCORE 1.2V) */
-/* Clock Settings (300MHz HCLK, 150MHz MCK)=> PRESC = 1, MDIV = 2 */
+/* Clock Settings (600MHz PLL VDDIO 3.3V and VDDCORE 1.2V) */
+/* Clock Settings (300MHz HCLK, 150MHz MCK)=> PRESC = 2, MDIV = 2 */
 #define SYS_BOARD_OSCOUNT   (CKGR_MOR_MOSCXTST(0x8U))
-#define SYS_BOARD_PLLAR     (CKGR_PLLAR_ONE | CKGR_PLLAR_MULA(0x18U) | \
+#define SYS_BOARD_PLLAR     (CKGR_PLLAR_ONE | CKGR_PLLAR_MULA(0x31U) | \
                             CKGR_PLLAR_PLLACOUNT(0x3fU) | CKGR_PLLAR_DIVA(0x1U))
-#define SYS_BOARD_MCKR      (PMC_MCKR_PRES_CLK_1 | PMC_MCKR_CSS_PLLA_CLK | (1<<8))
+#define SYS_BOARD_MCKR      (PMC_MCKR_PRES_CLK_2 | PMC_MCKR_CSS_PLLA_CLK | (1<<8))
 
-uint32_t SystemCoreClock = CHIP_FREQ_CPU_MAX;
+uint32_t SystemCoreClock = CHIP_FREQ_MAINCK_RC_4MHZ;
 
 /**
  * \brief Setup the microcontroller system.
@@ -58,17 +54,7 @@ uint32_t SystemCoreClock = CHIP_FREQ_CPU_MAX;
  void SystemInit( void )
 {
   /* Set FWS according to SYS_BOARD_MCKR configuration */
-  EFC->EEFC_FMR = EEFC_FMR_FWS(5)|EEFC_FMR_CLOE;
-
-#if defined(__USE_ON_CHIP_RC_OSCILLATOR__)
-
-  /* Configure the on-chip RC oscillator to run at 12MHz */
-  PMC->CKGR_MOR = PMC->CKGR_MOR | CKGR_MOR_KEY_PASSWD | CKGR_MOR_MOSCRCF_12_MHz;
-
-  /* Wait the on-chip RC oscillator to stabilize */
-  while (!(PMC->PMC_SR & PMC_SR_MOSCRCS));
-
-#else
+  EFC->EEFC_FMR = EEFC_FMR_FWS(5);
 
   /* Initialize main oscillator */
   if ( !(PMC->CKGR_MOR & CKGR_MOR_MOSCSEL) )
@@ -86,8 +72,6 @@ uint32_t SystemCoreClock = CHIP_FREQ_CPU_MAX;
   while ( !(PMC->PMC_SR & PMC_SR_MOSCSELS) )
   {
   }
-
-#endif
 
   PMC->PMC_MCKR = (PMC->PMC_MCKR & ~(uint32_t)PMC_MCKR_CSS_Msk) | PMC_MCKR_CSS_MAIN_CLK;
 

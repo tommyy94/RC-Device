@@ -17,6 +17,7 @@ TaskHandle_t		    xCalendarTask;
 QueueHandle_t		    xTsQ;
 QueueHandle_t		    xTxQ;
 QueueHandle_t		    xRxQ;
+SemaphoreHandle_t           spiMutex;
 
 
 void commTask(void *arg);
@@ -88,7 +89,7 @@ void commTask(void *arg)
         SPI_TxMessageIrq(spi, txData, rxData, SPI_QUEUE_SIZE);
         
         /* Wait until TX buffer full */
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -96,6 +97,8 @@ void commTask(void *arg)
 void RTOS_Init(void)
 {
     BaseType_t xRet;
+
+    spiMutex = xSemaphoreCreateMutex();
     
     xTsQ = xQueueCreate(TS_QUEUE_SIZE, sizeof(struct Calendar));
     xTxQ = xQueueCreate(SPI_QUEUE_SIZE, sizeof(uint8_t));

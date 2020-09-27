@@ -122,11 +122,11 @@ Revision: $Rev: 17066 $
 *       SystemView buffer configuration
 */
 #ifndef   SEGGER_SYSVIEW_RTT_BUFFER_SIZE
-  #define SEGGER_SYSVIEW_RTT_BUFFER_SIZE        4096 * 2                           // Number of bytes that SystemView uses for the buffer.
+  #define SEGGER_SYSVIEW_RTT_BUFFER_SIZE        4096                            // Number of bytes that SystemView uses for the buffer.
 #endif
 
 #ifndef   SEGGER_SYSVIEW_RTT_CHANNEL
-  #define SEGGER_SYSVIEW_RTT_CHANNEL            1                               // The RTT channel that SystemView will use. 0: Auto selection
+  #define SEGGER_SYSVIEW_RTT_CHANNEL            2                               // The RTT channel that SystemView will use. 0: Auto selection
 #endif
 
 #ifndef   SEGGER_SYSVIEW_USE_STATIC_BUFFER
