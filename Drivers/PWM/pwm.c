@@ -1,39 +1,36 @@
 #include <same70q21b.h>
+#include "pwm.h"
 
 
-enum
+#define PWM_CH_COUNT  (4u)
+
+
+uint16_t freq_tbl[FREQ_COUNT] =
 {
-    FREQ_2KHZ,
-    FREQ_3KHZ,
-    FREQ_4KHZ,
-    FREQ_5KHZ,
-    FREQ_6KHZ,
-    FREQ_7KHZ,
-    FREQ_8KHZ,
-    FREQ_9KHZ,
-    FREQ_10KHZ,
-    FREQ_11KHZ,
-    FREQ_12KHZ,
-    FREQ_13KHZ,
-    FREQ_14KHZ,
-    FREQ_15KHZ,
-    FREQ_16KHZ,
-    FREQ_17KHZ,
-    FREQ_18KHZ,
-    FREQ_19KHZ,
-    FREQ_20KHZ,
-    FREQ_COUNT = 19
-};
-
-
-/* Need CPRD and PREx values to calculate frequency */
-uint32_t freq_khz[FREQ_COUNT] =
-{
-    0 /* 2 kHz */
+    1172, /*  2 kHz */
+    781,  /*  3 kHz */
+    586,  /*  4 kHz */
+    469,  /*  5 kHz */
+    391,  /*  6 kHz */
+    335,  /*  7 kHz */
+    293,  /*  8 kHz */
+    260,  /*  9 kHz */
+    234,  /* 10 kHz */
+    213,  /* 11 kHz */
+    195,  /* 12 kHz */
+    180,  /* 13 kHz */
+    167,  /* 14 kHz */
+    156,  /* 15 kHz */
+    146,  /* 16 kHz */
+    138,  /* 17 kHz */
+    130,  /* 18 kHz */
+    123,  /* 19 kHz */
+    117   /* 20 kHz */
 };
 
 
 static void PWM_IO_Init(void);
+static uint16_t PWM_GetChannelDutyCycle(float dutyPer);
 
 
 /* Could use 2-20 kHz signal for driving DC motors.
@@ -41,44 +38,66 @@ static void PWM_IO_Init(void);
  */
 void PWM_Init(void)
 {
+    uint16_t chDuty;
     Pmc *pmc = PMC;
     Pwm *pwm = PWM0;
 
     PWM_IO_Init();
 
     /**
-     * Enable PWM clock gating
-     * - PWM clock = 75 kHz
+     * Enable PWM0 clock gating
+     * - PWM0 clock = 75 MHz
      */
     pmc->PMC_PCR = PMC_PCR_CMD_Msk | PMC_PCR_PID(PWM0_CLOCK_ID) | PMC_PCR_EN_Msk;
                                   
-    /* clkA & clkB = 75 kHz / 16 = 4 kHz => center-aligned so 4 kHz */
+    /* clkA & clkB = 75 MHz / 16 = 4,68 MHz => center-aligned so 2,34 MHz */
     pwm->PWM_CLK = PWM_CLK_PREA_CLK_DIV16 | PWM_CLK_DIVA_PREA;
     
     /* Center-aligned, clk A as source */
     pwm->PwmChNum[0].PWM_CMR = PWM_CMR_CPRE_CLKA | PWM_CMR_CALG_Msk;
+    pwm->PwmChNum[2].PWM_CMR = PWM_CMR_CPRE_CLKA | PWM_CMR_CALG_Msk;
 
-    /* period = (2 *  2^PREx * CPRD * DIVx) / SCLK
+    /* period = (2 * 2^PREx * CPRD * DIVx) / Pclk
+     *        = (2 * 16 * 1175 * 1) / 75 MHz
+     *        = 0,0005s
      *
-     *
+     * Channel period for desired frequency:
+     * f(T) = (T * (75 * 10^6)) / 32
      */
-    pwm->PwmChNum[0].PWM_CPRD = PWM_CPRD_CPRD(1000);
+    pwm->PwmChNum[0].PWM_CPRD = PWM_CPRD_CPRD(freq_tbl[FREQ_2KHZ]);
+    pwm->PwmChNum[2].PWM_CPRD = PWM_CPRD_CPRD(freq_tbl[FREQ_2KHZ]);
     
-    /* Set duty cycle
+    /* Duty cycle = ((period / 2) - 1 / channel_clk x CDTY) / (period / 2)
+     *            = ((0,0005s / 2) - 1 / 4,68 MHz x CDTY) / (0,0005s / 2)
      * 
-     * Duty cycle = ((period / 2) - 1 / channel_clk x CDTY) / (period / 2)
+     * Converting desired duty cycle to CDTY:
+     *    D = ((0,0005s / 2) - 1 / 4,68 MHz x CDTY) / (0,0005s / 2)
+     * => D = ((0,00025) - 1 / (4,68 MHz x CDTY) / (0,00025)      | x 0.00025
+     * => 0.00025 x D = 0.00025 - 1 / (4,68 MHz x CDTY)           | - 0.00025
+     * => 0.00025 x D - 0.00025 = -1 / (4,68 MHz x CDTY)          | x 4,68 MHz
+     * => 1170 x CDTY x D - 1170 x CDTY = -1                      | / 1170(D - 1)
+     * => CDTY = -(1 / 1170(D - 1))
+     *
+     * The result is in the divisor, so:
+     * f(D) = -(1170(D - 1170))
      */
-    pwm->PwmChNum[0].PWM_CDTY = 0x00A0;
+    chDuty = PWM_GetChannelDutyCycle(50.0);
+    pwm->PwmChNum[0].PWM_CDTY = PWM_CDTY_CDTY(chDuty);
+    pwm->PwmChNum[2].PWM_CDTY = PWM_CDTY_CDTY(chDuty);
 
-    /* Enable PWM on channel 0 */
+    /* Enable PWM0 on channel 0 & channel 2 */
     pwm->PWM_ENA = PWM_ENA_CHID0_Msk;
+    pwm->PWM_ENA = PWM_ENA_CHID2_Msk;
 }
 
 
-/* Select PA0 for PWM0 CH0 */
+/* Select PA0 for PWM0 CH0+
+ * and PC19 for PWM0 CH2+
+ */
 static void PWM_IO_Init(void)
 {
     Pio *pioa = PIOA;
+    Pio *pioc = PIOC;
     
     /*
      * _______________________________________
@@ -92,10 +111,90 @@ static void PWM_IO_Init(void)
      * |____________|___________|_____________|
      */
 
-    /* Select peripheral A */
+    /* Select peripheral A for PA0 */
     pioa->PIO_ABCDSR[0] &= ~PIO_ABCDSR_P0_Msk;
     pioa->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P0_Msk;
+    
+    /* Select peripheral B for PC19 */
+    pioc->PIO_ABCDSR[0] |=  PIO_ABCDSR_P19_Msk;
+    pioc->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P19_Msk;
 
     /* Set peripheral function */
-    pioa->PIO_PDR |= PIO_PDR_P0_Msk;
+    pioa->PIO_PDR |= PIO_ABCDSR_P0_Msk;
+    pioc->PIO_PDR |= PIO_ABCDSR_P19_Msk;
+}
+
+
+void PWM_UpdateDutyCycle(Pwm *pwm, uint32_t ch, float dutyPer)
+{
+  uint16_t chDuty;
+  assert(ch < PWM_CH_COUNT, __FILE__, __LINE__);
+
+  chDuty = PWM_GetChannelDutyCycle(dutyPer);
+  pwm->PwmChNum[ch].PWM_CDTYUPD = PWM_CDTYUPD_CDTYUPD(chDuty);
+}
+
+
+void PWM_UpdateFrequency(Pwm *pwm, uint32_t ch, Frequency freq)
+{
+  assert(ch < PWM_CH_COUNT, __FILE__, __LINE__);
+  pwm->PwmChNum[ch].PWM_CPRDUPD = PWM_CPRDUPD_CPRDUPD(freq_tbl[freq]);
+}
+
+
+static uint16_t PWM_GetChannelDutyCycle(float dutyPer)
+{
+  /* Step can be calculated as follows:
+   *    f(D)    = -(1170(D - 1170))
+   * => f(0.99) = 11.7
+   */
+  const float step = 11.7;
+
+  /* Calculate positive duty cycle */
+  dutyPer = 100.0 - dutyPer;
+  return dutyPer * step;
+}
+
+
+/* These functions could be used when accelerating/decelerating
+ * the device..
+ *
+ * NOTE: Might have to use a lookup table for the values,
+ * to avoid DMA interrupt between each update.
+ */
+void PWM_IncrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps)
+{
+  assert(ch < PWM_CH_COUNT, __FILE__, __LINE__);
+  uint16_t curDuty;
+  const float step = 11.7;
+
+  curDuty  = pwm->PwmChNum[ch].PWM_CDTY & PWM_CDTY_CDTY_Msk;
+  curDuty += (uint16_t)(step * steps); /* CDTY rounded down */
+  pwm->PwmChNum[ch].PWM_CDTYUPD = PWM_CDTYUPD_CDTYUPD(curDuty);
+}
+
+
+void PWM_DecrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps)
+{
+  assert(ch < PWM_CH_COUNT, __FILE__, __LINE__);
+  uint16_t curDuty;
+  const float step = 11.7;
+
+  curDuty  = pwm->PwmChNum[ch].PWM_CDTY & PWM_CDTY_CDTY_Msk;
+  curDuty -= (uint16_t)(step * steps); /* CDTY rounded down */
+  pwm->PwmChNum[ch].PWM_CDTYUPD = PWM_CDTYUPD_CDTYUPD(curDuty);
+}
+
+
+void PWM_Enable(Pwm *pwm, uint32_t ch)
+{
+    assert(ch <= PWM_DIS_CHID3_Pos, __FILE__, __LINE__);
+    pwm->PWM_ENA = (0x1U << ch) & PWM_ENA_Msk;
+}
+
+
+void PWM_Disable(Pwm *pwm, uint32_t ch)
+{
+    assert(ch <= PWM_DIS_CHID3_Pos, __FILE__, __LINE__);
+    pwm->PWM_DIS = (0x1U << ch) & PWM_DIS_Msk;
 }
