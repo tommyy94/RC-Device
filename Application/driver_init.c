@@ -245,7 +245,7 @@ void system_init(void)
     init_mcu();
 
     /* Disable Watchdog */
-    hri_wdt_set_MR_WDDIS_bit(WDT);
+    //hri_wdt_set_MR_WDDIS_bit(WDT);
 
     MCI_0_init();
 }

@@ -14,19 +14,19 @@
       arm_fpu_type="FPv5-D16"
       arm_interwork="No"
       arm_keep_assembly="Yes"
-      arm_linker_heap_size="2048"
+      arm_linker_heap_size="4096"
       arm_linker_process_stack_size="256"
-      arm_linker_stack_size="2048"
+      arm_linker_stack_size="4096"
       arm_simulator_memory_simulation_filename="$(ProjectDir)/SAM_E_SimulatorMemory_linux_x64.so"
       arm_simulator_memory_simulation_parameter="SAM E;FLASH,0x00400000,0x00200000,ROM;RAM,0x20400000,0x00060000,RAM"
       arm_target_debug_interface_type="ADIv5"
-      arm_target_device_name="ATSAME70Q21"
+      arm_target_device_name="ATSAME70Q21B"
       arm_target_interface_type="SWD"
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
       batch_build_configurations="Clang Debug;GCC Debug"
-      c_preprocessor_definitions="__SAME70Q21B__;__SAM_E_FAMILY;ARM_MATH_CM7;FLASH_PLACEMENT=1;__USE_CRYSTAL_OSCILLATOR__;__TCM_CONFIG__=0;NO_SYSTEM_INIT;STARTUP_FROM_RESET"
-      c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Config;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/RTC;$(ProjectDir)/Drivers/PWM;$(ProjectDir)/Drivers/sd_mmc;$(ProjectDir)/Source Files;$(ProjectDir)/Middleware;$(ProjectDir)/Middleware/diskio;$(ProjectDir)/Middleware/fatfs/src;$(ProjectDir)/Middleware/ASF;$(ProjectDir)/Middleware/ASF/hal/include;$(ProjectDir)/Middleware/ASF/hal/src;$(ProjectDir)/Middleware/ASF/hal/utils/include;$(ProjectDir)/Middleware/ASF/hpl/core;$(ProjectDir)/Middleware/ASF/hpl/pio;$(ProjectDir)/Middleware/ASF/hpl/pmc;$(ProjectDir)/Middleware/ASF/hri;$(ProjectDir)/Application/include;$(ProjectDir)/Middleware/FreeRTOS/Source/include;$(ProjectDir)/Middleware/FreeRTOS/Source/portable/GCC/ARM_CM7;$(ProjectDir)/SEGGER;$(ProjectDir)/SEGGER/SystemView;$(ProjectDir)/SEGGER/RTT;$(ProjectDir)/RTOS/FreeRTOS/Source/include;$(ProjectDir)/RTOS/FreeRTOS/Source/portable/GCC/ARM_CM7"
+      c_preprocessor_definitions="__SAME70Q21B__;__SAM_E_FAMILY;ARM_MATH_CM7;FLASH_PLACEMENT=1;__USE_CRYSTAL_OSCILLATOR__;__TCM_CONFIG__=0;STARTUP_FROM_RESET"
+      c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Config;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/RTC;$(ProjectDir)/Drivers/PWM;$(ProjectDir)/Drivers/sd_mmc;$(ProjectDir)/Source Files;$(ProjectDir)/Middleware;$(ProjectDir)/Middleware/diskio;$(ProjectDir)/Middleware/fatfs/src;$(ProjectDir)/Middleware/ASF;$(ProjectDir)/Middleware/ASF/hal/include;$(ProjectDir)/Middleware/ASF/hal/src;$(ProjectDir)/Middleware/ASF/hal/utils/include;$(ProjectDir)/Middleware/ASF/hpl/core;$(ProjectDir)/Middleware/ASF/hpl/pio;$(ProjectDir)/Middleware/ASF/hpl/pmc;$(ProjectDir)/Middleware/ASF/hri;$(ProjectDir)/Application/include;$(ProjectDir)/SEGGER;$(ProjectDir)/SEGGER/RTT;$(SolutionDir)/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
       debug_register_definition_file="$(DeviceRegisterDefinitionFile)"
       debug_threads_script=""
       gcc_c_language_standard="gnu11"
@@ -36,7 +36,7 @@
       gcc_entry_point="Reset_Handler"
       gcc_optimization_level="Debug"
       libctl="No"
-      linker_additional_files="$(SolutionDir)/RTOS/RTOS Clang Debug/RTOS.a"
+      linker_additional_files="$(SolutionDir)/FreeRTOS/FreeRTOS.a"
       linker_memory_map_file="$(DeviceMemoryMapFile)"
       linker_printf_fmt_level="long"
       linker_printf_fp_enabled="No"
@@ -44,9 +44,9 @@
       linker_scanf_fmt_level="long"
       linker_scanf_fp_enabled="No"
       linker_section_placement_file="$(ProjectDir)/flash_placement_tcm.xml"
-      macros="DeviceIncludePath=$(TargetsDir)/SAM_E/CMSIS/same70b/include;DeviceHeaderFile=$(TargetsDir)/SAM_E/CMSIS/same70b/include/sam.h;DeviceMemoryMapFile=$(TargetsDir)/SAM_E/XML/ATSAME70Q21_MemoryMap.xml;DeviceRegisterDefinitionFile=$(TargetsDir)/SAM_E/XML/ATSAME70Q21_Registers.xml;DeviceSystemFile=$(TargetsDir)/SAM_E/CMSIS/source/system_SAME70.c;DeviceVectorsFile=$(TargetsDir)/SAM_E/Source/ATSAME70Q21_Vectors.s;DeviceFamily=SAM E;DeviceLoaderFile=$(TargetsDir)/SAM_E/Loader/SAME70_Loader.elf;Target=ATSAME70Q21B;Placement=Flash;Startup=Release Only;on-chip-oscillator=No;tcm-configuration=ITCM and DTCM Disabled"
+      macros="DeviceIncludePath=$(TargetsDir)/SAM_E/CMSIS/same70b/include;DeviceHeaderFile=$(TargetsDir)/SAM_E/CMSIS/same70b/include/sam.h;DeviceMemoryMapFile=$(TargetsDir)/SAM_E/XML/ATSAME70Q21B_MemoryMap.xml;DeviceRegisterDefinitionFile=$(TargetsDir)/SAM_E/XML/ATSAME70Q21B_Registers.xml;DeviceSystemFile=$(TargetsDir)/SAM_E/CMSIS/source/system_SAME70.c;DeviceVectorsFile=$(TargetsDir)/SAM_E/Source/ATSAME70Q21B_Vectors.s;DeviceFamily=SAM E;DeviceLoaderFile=$(TargetsDir)/SAM_E/Loader/SAME70_Loader.elf;Target=ATSAME70Q21B;Placement=Flash;Startup=Release Only;on-chip-oscillator=No;tcm-configuration=ITCM and DTCM Disabled"
       package_dependencies="SAM_E"
-      project_dependencies="RTOS"
+      project_dependencies="FreeRTOS"
       project_directory=""
       project_type="Executable"
       target_get_partname_script="GetPartName()"
@@ -70,7 +70,6 @@
       <file file_name="targets/SAM_E/Scripts/SAM_E_Target.js">
         <configuration Name="Common" file_type="Reset Script" />
       </file>
-      <file file_name="libraries/libctl/source/threads.js" />
     </folder>
     <folder Name="System Files">
       <file file_name="thumb_crt0.s">
@@ -277,6 +276,7 @@
         <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW_FreeRTOS.c" />
         <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW_FreeRTOS.h" />
         <file file_name="SEGGER/SystemView/SEGGER_SYSVIEW_Int.h" />
+        <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
       </folder>
       <file file_name="SEGGER/Global.h" />
       <file file_name="SEGGER/SEGGER.h" />
@@ -336,7 +336,7 @@
     hidden="Yes" />
   <configuration Name="Clang Debug" inherited_configurations="Debug;THUMB" />
   <configuration Name="THUMB Debug" inherited_configurations="THUMB;Debug" />
-  <project Name="RTOS">
+  <project Name="FreeRTOS_SystemView">
     <configuration
       CMSIS_CORE="Yes"
       Name="Common"
@@ -454,5 +454,110 @@
       </folder>
     </folder>
     <file file_name="FreeRTOSConfig.h" />
+  </project>
+  <project Name="FreeRTOS">
+    <configuration
+      CMSIS_CORE="Yes"
+      Name="Common"
+      Placement="Flash"
+      Target="ATSAME70Q21B"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M7"
+      arm_endian="Little"
+      arm_fp_abi="Hard"
+      arm_fpu_type="FPv5-D16"
+      arm_interwork="No"
+      arm_simulator_memory_simulation_filename="$(TargetsDir)/SAM_E/Simulator/SAM_E_SimulatorMemory_$(HostOS)_$(HostArch)$(HostDLLExt)"
+      arm_simulator_memory_simulation_parameter="SAM E;FLASH,0x00400000,0x00200000,ROM;RAM,0x20400000,0x00060000,RAM"
+      arm_target_debug_interface_type="ADIv5"
+      arm_target_device_name="ATSAME70Q21B"
+      arm_target_interface_type="SWD"
+      arm_target_loader_applicable_loaders="Flash"
+      arm_target_loader_default_loader="Flash"
+      build_output_directory="$(ProjectDir)/Documents/CrossWorks Projects/Executable_1/FreeRTOS"
+      c_user_include_directories="$(DeviceIncludePath);$(SolutionDir)/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
+      debug_register_definition_file="$(DeviceRegisterDefinitionFile)"
+      linker_memory_map_file="$(DeviceMemoryMapFile)"
+      linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement_tcm.xml"
+      macros="DeviceIncludePath=$(TargetsDir)/SAM_E/CMSIS/same70b/include;DeviceHeaderFile=$(TargetsDir)/SAM_E/CMSIS/same70b/include/sam.h;DeviceMemoryMapFile=$(TargetsDir)/SAM_E/XML/ATSAME70Q21B_MemoryMap.xml;DeviceRegisterDefinitionFile=$(TargetsDir)/SAM_E/XML/ATSAME70Q21B_Registers.xml;DeviceSystemFile=$(TargetsDir)/SAM_E/CMSIS/source/system_SAME70.c;DeviceVectorsFile=$(TargetsDir)/SAM_E/Source/ATSAME70Q21B_Vectors.s;DeviceFamily=SAM E;DeviceLoaderFile=$(TargetsDir)/SAM_E/Loader/SAME70_Loader.elf"
+      package_dependencies="SAM_E"
+      project_directory="../../.."
+      project_type="Library"
+      property_groups_file_path="$(TargetsDir)/SAM_E/XML/property_groups.xml"
+      target_get_partname_script="GetPartName()"
+      target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)"
+      target_reset_script="Reset();"
+      target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
+    <configuration
+      Name="Flash"
+      arm_target_flash_loader_file_path="$(DeviceLoaderFile)" />
+    <folder Name="Source">
+      <folder Name="include">
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/atomic.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/croutine.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/deprecated_definitions.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/event_groups.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/FreeRTOS.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/list.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/message_buffer.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/mpu_prototypes.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/mpu_wrappers.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/portable.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/projdefs.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/queue.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/semphr.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/stack_macros.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/StackMacros.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/stdint.readme" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/stream_buffer.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/task.h" />
+        <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/include/timers.h" />
+      </folder>
+      <folder Name="portable">
+        <folder Name="GCC">
+          <folder Name="ARM_CM7">
+            <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/port.c" />
+            <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/portmacro.h" />
+          </folder>
+        </folder>
+        <folder Name="MemMang">
+          <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/MemMang/heap_1.c">
+            <configuration
+              Name="Clang Debug"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/MemMang/heap_2.c">
+            <configuration
+              Name="Clang Debug"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/MemMang/heap_3.c">
+            <configuration
+              Name="Clang Debug"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/MemMang/heap_4.c" />
+          <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/MemMang/heap_5.c">
+            <configuration
+              Name="Clang Debug"
+              build_exclude_from_build="Yes" />
+          </file>
+        </folder>
+        <folder Name="Common">
+          <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/Common/mpu_wrappers.c">
+            <configuration
+              Name="Clang Debug"
+              build_exclude_from_build="Yes" />
+          </file>
+        </folder>
+      </folder>
+      <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/croutine.c" />
+      <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/event_groups.c" />
+      <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/list.c" />
+      <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/queue.c" />
+      <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/stream_buffer.c" />
+      <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/tasks.c" />
+      <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/timers.c" />
+    </folder>
   </project>
 </solution>

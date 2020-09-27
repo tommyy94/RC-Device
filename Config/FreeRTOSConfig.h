@@ -58,7 +58,7 @@ void assert_triggered(const char *file, uint32_t line);
 // <q> Enable counting semaphore
 // <id> freertos_use_counting_semaphores
 #ifndef configUSE_COUNTING_SEMAPHORES
-#define configUSE_COUNTING_SEMAPHORES 1
+#define configUSE_COUNTING_SEMAPHORES 0
 #endif
 
 // </h>
@@ -78,7 +78,7 @@ void assert_triggered(const char *file, uint32_t line);
 // <q> Use recursive mutex
 // <id> freertos_use_recursive_mutexes
 #ifndef configUSE_RECURSIVE_MUTEXES
-#define configUSE_RECURSIVE_MUTEXES 1
+#define configUSE_RECURSIVE_MUTEXES 0
 #endif
 
 // <q> Generate runtime stats
@@ -261,7 +261,7 @@ to exclude the API function. */
 // <q> Include the function to get idle task handler
 // <id> freertos_xtaskgetidletaskhandle
 #ifndef INCLUDE_xTaskGetIdleTaskHandle
-#define INCLUDE_xTaskGetIdleTaskHandle 0
+#define INCLUDE_xTaskGetIdleTaskHandle 1
 #endif
 
 #define INCLUDE_xTimerGetTimerDaemonTaskHandle 0
@@ -270,6 +270,12 @@ to exclude the API function. */
 // <id> freertos_pctaskgettaskname
 #ifndef INCLUDE_pcTaskGetTaskName
 #define INCLUDE_pcTaskGetTaskName 0
+#endif
+
+// <q> Include the function to get stack start
+// <id> freertos_pxTaskGetStackStart
+#ifndef INCLUDE_pxTaskGetStackStart
+#define INCLUDE_pxTaskGetStackStart 1
 #endif
 
 // <q> Include the function to get task state
@@ -338,7 +344,5 @@ to all Cortex-M ports, and do not rely on any particular library functions. */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS))
 
 // <<< end of configuration section >>>
-
-#include "SEGGER_SYSVIEW_FreeRTOS.h"
 
 #endif // FREERTOSCONFIG_H
