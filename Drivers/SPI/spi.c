@@ -1,9 +1,9 @@
+#include <same70q21b.h>
+#include <utils_assert.h>
+
 #include "spi.h"
 #include "osConfig.h"
 #include "logWriter.h"
-
-#include <utils_assert.h>
-
 
 
 extern QueueHandle_t      xTxQ;
@@ -162,7 +162,7 @@ static uint8_t SPI_TxByte(Spi *spi, uint8_t byte)
 
 
 void SPI_TxMessageIrq(Spi *spi, uint8_t *msg, uint8_t *recv, uint32_t len)
-{    
+{
     assert((spi == SPI0) || (spi == SPI1), __FILE__, __LINE__);
 
     if (xSemaphoreTake(spiMutex, pdMS_TO_TICKS(10)) == pdTRUE)
@@ -276,8 +276,6 @@ void SPI0_Handler(void)
     Spi *spi = SPI0;
     BaseType_t xTaskWoken = pdFALSE;
     
-    //SEGGER_SYSVIEW_RecordEnterISR();
-    
     spi->SPI_IDR |= SPI_IDR_TDRE_Msk | SPI_IDR_RDRF_Msk;
     
     status = spi->SPI_SR;
@@ -312,16 +310,10 @@ void SPI0_Handler(void)
     
     spi->SPI_IER |= SPI_IER_RDRF_Msk;
 
-    /* Do context switch */
+    /* Do context switch if higher prio task woke up */
     portEND_SWITCHING_ISR(xTaskWoken);    
-    
     if (xTaskWoken != pdFALSE)
     {
-        //SEGGER_SYSVIEW_RecordExitISRToScheduler();
         portYIELD();
-    }
-    else
-    {
-        //SEGGER_SYSVIEW_RecordExitISR();
     }
 }

@@ -81,8 +81,6 @@ void RTC_Handler(void)
     BaseType_t xTaskWoken = pdFALSE;
     uint32_t status;
 
-    //SEGGER_SYSVIEW_RecordEnterISR();
-
     /* Read status register */
     status = rtc->RTC_SR;
 
@@ -95,17 +93,11 @@ void RTC_Handler(void)
     /* Clear all status flags */
     rtc->RTC_SCCR = status;
 
-    /* Do context switch if needed */
+    /* Do context switch if higher prio task woke up */
     portEND_SWITCHING_ISR(xTaskWoken);
-
     if (xTaskWoken != pdFALSE)
     {
-        //SEGGER_SYSVIEW_RecordExitISRToScheduler();
         portYIELD();
-    }
-    else
-    {
-        //SEGGER_SYSVIEW_RecordExitISR();
     }
 }
 

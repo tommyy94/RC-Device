@@ -3,9 +3,6 @@
 
 int main(void)
 {    
-    //SEGGER_SYSVIEW_Conf();
-    //SEGGER_SYSVIEW_Start();
-    
     /* Initializes MCU, drivers and middleware */
     atmel_start_init();
 

@@ -10,7 +10,8 @@ enum
 {
 	SPI_ERROR		= (1u << 0),
 	SPI_SELFTEST_FAIL	= (1u << 1),
-	RTC_SETTIME_ERROR	= (1u << 2)
+	RTC_SETTIME_ERROR	= (1u << 2),
+	DMA_ERROR               = (1u << 3)
 };
 
 

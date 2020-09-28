@@ -8,6 +8,8 @@
 #include "rtc.h"
 #include "pwm.h"
 
+#include "dma.h"
+
 #include <string.h>
 
 TaskHandle_t		    xStartupTask;
@@ -26,12 +28,21 @@ void journalTask(void *arg);
 void CalendarTask(void *arg);
 
 
+
+uint16_t src = 0xABCD;
+uint16_t dst = 0x0000;
+
 void startupTask(void *arg)
 {
     (void)arg;
     BaseType_t xRet;
 
-    PWM_Init();
+    DMA_Init();
+    //DMA_memcpy(&dst, &src, 1);
+    SPI0_DMA_Init();
+    SPI_DMA_TransmitMessage(SPI0, &src, &dst, 1);
+
+    //PWM_Init();
 
     xRet = xTaskCreate(commTask,
                        "Comm",
