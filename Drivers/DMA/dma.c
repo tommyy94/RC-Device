@@ -82,19 +82,28 @@ void DMA_memcpy(uint32_t *dest, uint32_t *src, uint32_t n)
   while ((dma->XDMAC_GS & XDMAC_GS_ST0_Msk) != 0);
 }
 
-
 void XDMAC_Handler(void)
 {
   Xdmac *dma = XDMAC;
   BaseType_t xTaskWoken = pdFALSE;
+  uint32_t dmaErrMask = XDMAC_CIS_ROIS_Msk | XDMAC_CIS_WBEIS_Msk | XDMAC_CIS_RBEIS_Msk;
+  uint32_t spiTxStatus;
+  uint32_t spiRxStatus;
 
   /* Pending IRQ cleared by reading XDMAC_CISx */
-  if (xEventGroupSetBitsFromISR(dmaEvent,
-                                dma->XDMAC_GIM,
-                                &xTaskWoken) != pdPASS)
+  spiTxStatus = (dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIS & dmaErrMask);
+  spiRxStatus = (dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIS & dmaErrMask);
+  if ((spiTxStatus != 0) || (spiRxStatus != 0))
+  {
+    xTaskNotifyFromISR(xJournalTask, DMA_ERROR, eSetBits, &xTaskWoken);
+    __BKPT();
+  }
+
+  /* Signal task */
+  if (xEventGroupSetBitsFromISR(dmaEvent, dma->XDMAC_GIS, &xTaskWoken) != pdPASS)
   {
     /* Timer service queue full */
-    xTaskNotifyFromISR(xJournalTask, DMA_ERROR, eSetBits, &xTaskWoken);
+    xTaskNotifyFromISR(xJournalTask, RTOS_ERROR, eSetBits, &xTaskWoken);
   }
 
   /* Do context switch if higher prio task woke up */

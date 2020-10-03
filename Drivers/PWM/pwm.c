@@ -93,7 +93,8 @@ void PWM_Init(void)
 
 
 /* Select PA0 for PWM0 CH0+
- * and PC19 for PWM0 CH2+
+ * and PC19 for PWM0 CH2+ 
+ * NOTE: PC19 used by ISI!
  */
 static void PWM_IO_Init(void)
 {

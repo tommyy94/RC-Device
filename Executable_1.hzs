@@ -1,7 +1,10 @@
 <!DOCTYPE CrossStudio_Session_File>
 <session>
  <Bookmarks/>
- <Breakpoints groups="Breakpoints" active_group="Breakpoints"/>
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints">
+  <BreakpointListItem trigger="" line="98" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="Application/rtos_start.c" useHWbreakpoint="false"/>
+  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
+ </Breakpoints>
  <ExecutionProfileWindow/>
  <FrameBufferWindow>
   <FrameBufferWindow bufferHeight="-1" addressSpace="" addressText="" bufferWidth="-1"/>
@@ -22,8 +25,11 @@
   <ProjectSessionItem path="Executable_1"/>
   <ProjectSessionItem path="Executable_1;Executable_1"/>
   <ProjectSessionItem path="Executable_1;Executable_1;Application"/>
+  <ProjectSessionItem path="Executable_1;Executable_1;Application;include"/>
   <ProjectSessionItem path="Executable_1;Executable_1;CMSIS Files"/>
+  <ProjectSessionItem path="Executable_1;Executable_1;Config"/>
   <ProjectSessionItem path="Executable_1;Executable_1;Drivers"/>
+  <ProjectSessionItem path="Executable_1;Executable_1;Drivers;DMA"/>
   <ProjectSessionItem path="Executable_1;Executable_1;Drivers;PWM"/>
   <ProjectSessionItem path="Executable_1;Executable_1;Drivers;RTC"/>
   <ProjectSessionItem path="Executable_1;Executable_1;Drivers;SPI"/>
@@ -31,6 +37,18 @@
   <ProjectSessionItem path="Executable_1;Executable_1;Middleware;ASF"/>
   <ProjectSessionItem path="Executable_1;Executable_1;Middleware;ASF;hal"/>
   <ProjectSessionItem path="Executable_1;Executable_1;Middleware;ASF;hal;include"/>
+  <ProjectSessionItem path="Executable_1;Executable_1;Middleware;ASF;hal;src"/>
+  <ProjectSessionItem path="Executable_1;Executable_1;Middleware;ASF;hpl"/>
+  <ProjectSessionItem path="Executable_1;Executable_1;Middleware;ASF;hpl;core"/>
+  <ProjectSessionItem path="Executable_1;Executable_1;Middleware;ASF;hpl;pmc"/>
+  <ProjectSessionItem path="Executable_1;Executable_1;Middleware;ASF;hri"/>
+  <ProjectSessionItem path="Executable_1;Executable_1;System Files"/>
+  <ProjectSessionItem path="Executable_1;FreeRTOS"/>
+  <ProjectSessionItem path="Executable_1;FreeRTOS;Source"/>
+  <ProjectSessionItem path="Executable_1;FreeRTOS;Source;include"/>
+  <ProjectSessionItem path="Executable_1;FreeRTOS;Source;portable"/>
+  <ProjectSessionItem path="Executable_1;FreeRTOS;Source;portable;GCC"/>
+  <ProjectSessionItem path="Executable_1;FreeRTOS;Source;portable;GCC;ARM_CM7"/>
  </Project>
  <Register1>
   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="Executable_1" decimalNodes="" octalNodes="" unsignedNodes=""/>
@@ -64,24 +82,24 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="Drivers/RTC/rtc.c" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="23" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="Drivers/SPI/spi.c" selected="0" top="27" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="20" y="14" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/rtos_start.c" useBinaryEdit="0" left="0" path="Drivers/DMA/dma.c" selected="0" top="33" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="4" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="Drivers/SPI/spi_dma.c" selected="0" top="9" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="3" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Drivers/SPI/spi_dma.c" useBinaryEdit="0" left="0" path="Drivers/DMA/dma.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="1364" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Drivers/SPI/spi_dma.c" useBinaryEdit="0" left="0" path="../../../.rowley_associates_limited/CrossWorks for ARM/v4/packages/targets/SAM_E/CMSIS/same70b/include/component/xdmac.h" selected="0" top="1338" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="6" y="43" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="Application/rtos_start.c" selected="0" top="24" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/rtos_start.c" useBinaryEdit="0" left="0" path="Drivers/SPI/spi.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="14" y="6" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="Application/main.c" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="11" y="7" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/main.c" useBinaryEdit="0" left="0" path="Application/atmel_start.c" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="9" y="244" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/atmel_start.c" useBinaryEdit="0" left="0" path="Application/driver_init.c" selected="0" top="216" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="19" y="55" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/driver_init.c" useBinaryEdit="0" left="0" path="Middleware/ASF/hal/include/hal_init.h" selected="1" top="24" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="51" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Middleware/ASF/hal/include/hal_init.h" useBinaryEdit="0" left="0" path="Middleware/ASF/hpl/core/hpl_init.c" selected="0" top="15" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="72" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Middleware/ASF/hpl/core/hpl_init.c" useBinaryEdit="0" left="0" path="Middleware/ASF/hpl/pmc/hpl_pmc.h" selected="0" top="46" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="959" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Drivers/DMA/dma.c" useBinaryEdit="0" left="0" path="../../../.rowley_associates_limited/CrossWorks for ARM/v4/packages/CMSIS_5/CMSIS/Core/Include/cmsis_gcc.h" selected="0" top="933" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="Drivers/PWM/pwm.c" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="47" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="targets/SAM_E/CMSIS/same70b/include/sam.h" selected="0" top="18" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/targets/SAM_E/CMSIS/same70b/include/sam.h" useBinaryEdit="0" left="0" path="../../../.rowley_associates_limited/CrossWorks for ARM/v4/packages/targets/SAM_E/CMSIS/same70b/include/same70q21b.h" selected="0" top="558" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="5" y="261" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Drivers/SPI/spi.c" useBinaryEdit="0" left="0" path="Drivers/RTC/rtc.c" selected="0" top="235" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="5" y="93" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/rtos_start.c" useBinaryEdit="0" left="0" path="Drivers/DMA/dma.c" selected="0" top="2" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="24" y="165" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/rtos_start.c" useBinaryEdit="0" left="0" path="Drivers/SPI/spi.c" selected="0" top="150" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="29" y="64" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Drivers/SPI/spi.c" useBinaryEdit="0" left="0" path="Drivers/SPI/spi_dma.c" selected="1" top="49" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="28" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Drivers/SPI/spi_dma.c" useBinaryEdit="0" left="0" path="Drivers/DMA/dma.h" selected="0" top="9" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="4" y="93" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="Application/rtos_start.c" selected="0" top="66" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="6" y="11" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Drivers/SPI/spi.c" useBinaryEdit="0" left="0" path="Drivers/SPI/spi.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="12" y="6" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="Application/main.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="Application/include/rtos_start.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="2004" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Drivers/SPI/spi_dma.c" useBinaryEdit="0" left="0" path="FreeRTOS/Source/include/task.h" selected="0" top="1975" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="7" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/main.c" useBinaryEdit="0" left="0" path="Application/atmel_start.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="244" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/atmel_start.c" useBinaryEdit="0" left="0" path="Application/driver_init.c" selected="0" top="216" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="57" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Application/driver_init.c" useBinaryEdit="0" left="0" path="Middleware/ASF/hal/include/hal_init.h" selected="0" top="28" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="55" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Middleware/ASF/hal/include/hal_init.h" useBinaryEdit="0" left="0" path="Middleware/ASF/hpl/core/hpl_init.c" selected="0" top="12" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="89" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Middleware/ASF/hpl/core/hpl_init.c" useBinaryEdit="0" left="0" path="Middleware/ASF/hpl/pmc/hpl_pmc.h" selected="0" top="46" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="938" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Middleware/ASF/hpl/pmc/hpl_pmc.h" useBinaryEdit="0" left="0" path="Middleware/ASF/hri/hri_pmc_e70b.h" selected="0" top="912" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="173" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Middleware/ASF/hpl/core/hpl_init.c" useBinaryEdit="0" left="0" path="Middleware/ASF/hpl/pmc/hpl_pmc.c" selected="0" top="147" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="445" useTextEdit="1" openedFrom="/home/tommy/Documents/CrossWorks Projects/Executable_1/Drivers/SPI/spi_dma.c" useBinaryEdit="0" left="0" path="../../../.rowley_associates_limited/CrossWorks for ARM/v4/packages/targets/SAM_E/CMSIS/same70b/include/component/xdmac.h" selected="0" top="419" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="Executable_1" fileDialogDefaultFilter="*.c" autoConnectTarget="SEGGER J-Link" buildConfiguration="Clang Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="/home/tommy/Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/Common" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

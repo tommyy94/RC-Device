@@ -2,6 +2,8 @@
 .orig
 .rej
 .atmelstart
+*.user
 Debug/
 Executable_1 Clang Debug/
 Executable_1 GCC Debug/
+
