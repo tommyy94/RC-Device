@@ -34,12 +34,11 @@ void OnProjectLoad (void) {
   //
   // Dialog-generated settings
   //
+  Project.SetTraceSource ("Trace Pins");
   Project.SetDevice ("ATSAME70Q21");
   Project.SetHostIF ("IP", "192.168.10.5");
   Project.SetTargetIF ("SWD");
   Project.SetTIFSpeed ("Automatic");
-  Project.SetTraceSource ("Trace Pins");
-  Project.SetTracePortWidth (4);
   Project.AddSvdFile ("Cortex-M7F.svd");
   Project.AddSvdFile ("$(InstallDir)/Config/Peripherals/ARMv7M.svd");
   Project.AddSvdFile ("$(InstallDir)/Config/Peripherals/ATSAME70Q21.svd");
@@ -48,8 +47,10 @@ void OnProjectLoad (void) {
   //
   // User settings
   //
+  Edit.SysVar (VAR_TRACE_MAX_INST_CNT, 100000000);
+  Edit.SysVar (VAR_TRACE_CORE_CLOCK, 300000000);
   File.Open ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Executable_1 Clang Debug/Executable_1.elf");
-	//File.Open ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Executable_1 GCC Debug/Executable_1.elf");
+  //File.Open ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Executable_1 GCC Debug/Executable_1.elf");
   Project.SetOSPlugin("FreeRTOSPlugin_CM7");
 }
 
