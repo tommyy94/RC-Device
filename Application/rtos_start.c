@@ -16,10 +16,8 @@ TaskHandle_t		    xStartupTask;
 TaskHandle_t		    xCommTask;
 TaskHandle_t		    xJournalTask;
 TaskHandle_t		    xCalendarTask;
+
 QueueHandle_t		    xTsQ;
-QueueHandle_t		    xTxQ;
-QueueHandle_t		    xRxQ;
-SemaphoreHandle_t           spiMutex;
 
 
 void commTask(void *arg);
@@ -106,16 +104,9 @@ void commTask(void *arg)
 void RTOS_Init(void)
 {
     BaseType_t xRet;
-    
-    xTsQ = xQueueCreate(TS_QUEUE_SIZE, sizeof(struct Calendar));
-    xTxQ = xQueueCreate(SPI_QUEUE_SIZE, sizeof(uint8_t));
-    xRxQ = xQueueCreate(SPI_QUEUE_SIZE, sizeof(uint8_t));
-    assert(xTsQ != NULL, __FILE__, __LINE__);
-    assert(xTxQ != NULL, __FILE__, __LINE__);
-    assert(xRxQ != NULL, __FILE__, __LINE__);
 
-    spiMutex = xSemaphoreCreateMutex();
-    assert(spiMutex != NULL, __FILE__, __LINE__);
+    xTsQ = xQueueCreate(TS_QUEUE_SIZE, sizeof(struct Calendar));
+    assert(xTsQ != NULL, __FILE__, __LINE__);
 
     xRet = xTaskCreate(startupTask,
                        "Startup",

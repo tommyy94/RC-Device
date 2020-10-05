@@ -6,10 +6,6 @@
 #include "logWriter.h"
 
 
-extern QueueHandle_t      xTxQ;
-extern QueueHandle_t      xRxQ;
-extern SemaphoreHandle_t  spiMutex;
-
 typedef enum
 {
     MODE_0,

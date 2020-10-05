@@ -14,7 +14,6 @@
 
 #define SPI_DMA_TIMEOUT   (10u) /* ms */
 
-extern SemaphoreHandle_t  spiMutex;
 extern EventGroupHandle_t dmaEvent;
 
 
@@ -93,14 +92,12 @@ void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t l
   EventBits_t evtBits;
   Xdmac *dma = XDMAC;
 
-  if (xSemaphoreTake(spiMutex, pdMS_TO_TICKS(SPI_DMA_TIMEOUT)) == pdTRUE)
-  {
     /* Clear pending interrupt requests */
     (void)dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIS;
     (void)dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIS;
 
-    /* Clean DCache before DMA tansfer (AT17417) */
-    SCB_CleanDCache();
+  /* Clean DCache before DMA tansfer (AT17417) */
+  SCB_CleanDCache();
 
     /* Should actually use the following functions as it is faster:
      * SCB_CleanInvalidateDCache_byAddr();
@@ -114,14 +111,14 @@ void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t l
     dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CUBC = len;
     dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CUBC = len;
 
-    /* Enable DMA IRQ */
-    dma->XDMAC_GIE = XDMAC_GIE_IE2_Msk | XDMAC_GIE_IE1_Msk;
-    dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIE = XDMAC_CIE_BIE_Msk;
-    dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIE = XDMAC_CIE_BIE_Msk;
+  /* Enable DMA IRQ */
+  dma->XDMAC_GIE = XDMAC_GIE_IE2_Msk | XDMAC_GIE_IE1_Msk;
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIE = XDMAC_CIE_BIE_Msk;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIE = XDMAC_CIE_BIE_Msk;
 
-    /* Enable SPI & DMA */
-    dma->XDMAC_GE  = XDMAC_GE_EN2_Msk | XDMAC_GE_EN1_Msk;
-    spi->SPI_CR   |= SPI_CR_SPIEN_Msk;
+  /* Enable SPI & DMA */
+  dma->XDMAC_GE  = XDMAC_GE_EN2_Msk | XDMAC_GE_EN1_Msk;
+  spi->SPI_CR   |= SPI_CR_SPIEN_Msk;
 
     /* Wait for signal from DMA handler */
     evtBits = xEventGroupWaitBits(
@@ -131,17 +128,17 @@ void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t l
       pdTRUE,
       pdMS_TO_TICKS(SPI_DMA_TIMEOUT));
 
-    /* Disable SPI & DMA */
-    spi->SPI_CR   |= SPI_CR_SPIDIS_Msk;
-    dma->XDMAC_GD  = XDMAC_GD_DI2_Msk | XDMAC_GD_DI1_Msk;
-      
-    /* Disable DMA IRQ */
-    dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CID = XDMAC_CID_BID_Msk;
-    dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CID = XDMAC_CID_BID_Msk;
-    dma->XDMAC_GID = XDMAC_GID_ID2_Msk | XDMAC_GID_ID1_Msk;
+  /* Disable SPI & DMA */
+  spi->SPI_CR   |= SPI_CR_SPIDIS_Msk;
+  dma->XDMAC_GD  = XDMAC_GD_DI2_Msk | XDMAC_GD_DI1_Msk;
     
-    /* Invalidate DCache after DMA tansfer (AT17417) */
-    SCB_InvalidateDCache();
+  /* Disable DMA IRQ */
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CID = XDMAC_CID_BID_Msk;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CID = XDMAC_CID_BID_Msk;
+  dma->XDMAC_GID = XDMAC_GID_ID2_Msk | XDMAC_GID_ID1_Msk;
+  
+  /* Invalidate DCache after DMA tansfer (AT17417) */
+  SCB_InvalidateDCache();
 
     /* Check for errors */
     if (((evtBits & DMA_EVENT_SPI0_TX) != 0)
@@ -151,6 +148,5 @@ void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t l
       xTaskNotify(xJournalTask, DMA_ERROR, eSetBits);
     }
 
-    xSemaphoreGive(spiMutex);
-  }
+  xEventGroupClearBits(dmaEvent, DMA_EVENT_SPI0_TX | DMA_EVENT_SPI0_RX);
 }
