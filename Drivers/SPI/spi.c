@@ -64,6 +64,9 @@ void SPI0_Init(void)
     /* CPOL = 0, CPHA = 1, SPCK inactive LOW */
     SPI_SetMode(spi, SLAVE_1, MODE_0);
     
+    /* Send data only when receive register empty */
+    spi->SPI_MR |= SPI_MR_WDRBT_Msk;
+
     /* Enable error interrupts for:
      * - Overrun error
      * - Mode Fault error
@@ -182,7 +185,6 @@ void SPI0_Handler(void)
     BaseType_t xTaskWoken = pdFALSE;
 
     status = spi->SPI_SR;
-    assert((status & SPI_SR_OVRES_Msk) == 0, __FILE__, __LINE__);
     assert((status & SPI_SR_MODF_Msk)  == 0, __FILE__, __LINE__);
 
     /* Do context switch if higher prio task woke up */
