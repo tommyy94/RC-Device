@@ -7,3 +7,5 @@ Debug/
 Executable_1 Clang Debug/
 Executable_1 GCC Debug/
 
+
+FreeRTOS/FreeRTOS.a
