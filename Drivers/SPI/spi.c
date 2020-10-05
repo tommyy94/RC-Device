@@ -6,10 +6,6 @@
 #include "logWriter.h"
 
 
-extern QueueHandle_t      xTxQ;
-extern QueueHandle_t      xRxQ;
-extern SemaphoreHandle_t  spiMutex;
-
 typedef enum
 {
     MODE_0,
@@ -68,6 +64,9 @@ void SPI0_Init(void)
     /* CPOL = 0, CPHA = 1, SPCK inactive LOW */
     SPI_SetMode(spi, SLAVE_1, MODE_0);
     
+    /* Send data only when receive register empty */
+    spi->SPI_MR |= SPI_MR_WDRBT_Msk;
+
     /* Enable error interrupts for:
      * - Overrun error
      * - Mode Fault error
@@ -130,10 +129,6 @@ static void SPI_SetMode(Spi *spi, SPI_SlaveSelect slave, SPI_Mode mode)
 }
 
 
-uint16_t msg[SPI_QUEUE_SIZE];
-uint16_t recv[SPI_QUEUE_SIZE];
-
-
 /* Loop Back Mode connected to SS0 (undocumented) */
 bool SPI_SelfTest(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
 {
@@ -183,19 +178,17 @@ __STATIC_INLINE void SPI_Reset(Spi *spi)
     spi->SPI_CR |= SPI_CR_SWRST_Msk;
 }
 
-
 void SPI0_Handler(void)
 {
     uint32_t status;
     Spi *spi = SPI0;
     BaseType_t xTaskWoken = pdFALSE;
-    
+
     status = spi->SPI_SR;
-    assert(status != SPI_SR_OVRES_Msk, __FILE__, __LINE__);
-    assert(status != SPI_SR_MODF_Msk, __FILE__, __LINE__);
-    
+    assert((status & SPI_SR_MODF_Msk)  == 0, __FILE__, __LINE__);
+
     /* Do context switch if higher prio task woke up */
-    portEND_SWITCHING_ISR(xTaskWoken);    
+    portEND_SWITCHING_ISR(xTaskWoken);
     if (xTaskWoken != pdFALSE)
     {
         portYIELD();

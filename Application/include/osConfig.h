@@ -33,10 +33,8 @@ extern TaskHandle_t         xStartupTask;
 extern TaskHandle_t         xCommTask;
 extern TaskHandle_t         xJournalTask;
 extern TaskHandle_t         xCalendarTask;
+
 extern QueueHandle_t        xTsQ;
-extern QueueHandle_t        xTxQ;
-extern QueueHandle_t        xRxQ;
-extern SemaphoreHandle_t    spiMutex;
 
 
 #endif /* OSCONFIG_H_ */
