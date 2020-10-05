@@ -1,6 +1,8 @@
 #ifndef DMA_H_
 #define DMA_H_
 
+#include <same70q21b.h>
+
 #include <FreeRTOS.h>
 #include <event_groups.h>
 
@@ -21,9 +23,9 @@
 
 enum
 {
-  DMA_EVENT_MEMCPY  = (1u << DMA_MEMCPY_CH),
-  DMA_EVENT_SPI0_TX = (1u << DMA_SPI0_TX_CH),
-  DMA_EVENT_SPI0_RX = (1u << DMA_SPI0_RX_CH)
+  DMA_EVENT_MEMCPY  = (XDMAC_GIS_IS0_Msk),
+  DMA_EVENT_SPI0_TX = (XDMAC_GIS_IS1_Msk),
+  DMA_EVENT_SPI0_RX = (XDMAC_GIS_IS2_Msk)
 };
 
 

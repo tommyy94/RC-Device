@@ -120,13 +120,13 @@ void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t l
   dma->XDMAC_GE  = XDMAC_GE_EN2_Msk | XDMAC_GE_EN1_Msk;
   spi->SPI_CR   |= SPI_CR_SPIEN_Msk;
 
-    /* Wait for signal from DMA handler */
-    evtBits = xEventGroupWaitBits(
-      dmaEvent,
-      DMA_EVENT_SPI0_TX | DMA_EVENT_SPI0_RX,
-      pdTRUE,
-      pdTRUE,
-      pdMS_TO_TICKS(SPI_DMA_TIMEOUT));
+  /* Wait for signal from DMA handler */
+  evtBits = xEventGroupWaitBits(
+    dmaEvent,
+    DMA_EVENT_SPI0_TX | DMA_EVENT_SPI0_RX,
+    pdFALSE,
+    pdTRUE,
+    pdMS_TO_TICKS(SPI_DMA_TIMEOUT));
 
   /* Disable SPI & DMA */
   spi->SPI_CR   |= SPI_CR_SPIDIS_Msk;
@@ -140,13 +140,13 @@ void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t l
   /* Invalidate DCache after DMA tansfer (AT17417) */
   SCB_InvalidateDCache();
 
-    /* Check for errors */
-    if (((evtBits & DMA_EVENT_SPI0_TX) != 0)
-     || ((evtBits & DMA_EVENT_SPI0_RX) != 0))
-    {
-      __BKPT();
-      xTaskNotify(xJournalTask, DMA_ERROR, eSetBits);
-    }
+  /* Check for errors */
+  if (((evtBits & DMA_EVENT_SPI0_TX) == 0)
+   || ((evtBits & DMA_EVENT_SPI0_RX) == 0))
+  {
+    __BKPT();
+    xTaskNotify(xJournalTask, DMA_ERROR, eSetBits);
+  }
 
   xEventGroupClearBits(dmaEvent, DMA_EVENT_SPI0_TX | DMA_EVENT_SPI0_RX);
 }
