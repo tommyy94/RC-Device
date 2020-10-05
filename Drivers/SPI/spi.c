@@ -126,10 +126,6 @@ static void SPI_SetMode(Spi *spi, SPI_SlaveSelect slave, SPI_Mode mode)
 }
 
 
-uint16_t msg[SPI_QUEUE_SIZE];
-uint16_t recv[SPI_QUEUE_SIZE];
-
-
 /* Loop Back Mode connected to SS0 (undocumented) */
 bool SPI_SelfTest(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
 {
