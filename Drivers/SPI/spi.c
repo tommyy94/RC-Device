@@ -175,19 +175,18 @@ __STATIC_INLINE void SPI_Reset(Spi *spi)
     spi->SPI_CR |= SPI_CR_SWRST_Msk;
 }
 
-
 void SPI0_Handler(void)
 {
     uint32_t status;
     Spi *spi = SPI0;
     BaseType_t xTaskWoken = pdFALSE;
-    
+
     status = spi->SPI_SR;
-    assert(status != SPI_SR_OVRES_Msk, __FILE__, __LINE__);
-    assert(status != SPI_SR_MODF_Msk, __FILE__, __LINE__);
-    
+    assert((status & SPI_SR_OVRES_Msk) == 0, __FILE__, __LINE__);
+    assert((status & SPI_SR_MODF_Msk)  == 0, __FILE__, __LINE__);
+
     /* Do context switch if higher prio task woke up */
-    portEND_SWITCHING_ISR(xTaskWoken);    
+    portEND_SWITCHING_ISR(xTaskWoken);
     if (xTaskWoken != pdFALSE)
     {
         portYIELD();
