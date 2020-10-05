@@ -33,7 +33,6 @@ void SPI0_DMA_Init(void)
    */
   dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CC
     |= XDMAC_CC_CSIZE_CHK_1
-    |  XDMAC_CC_MBSIZE_FOUR
     |  XDMAC_CC_DWIDTH_HALFWORD
     |  XDMAC_CC_DSYNC_MEM2PER
     |  XDMAC_CC_TYPE_PER_TRAN
@@ -54,7 +53,6 @@ void SPI0_DMA_Init(void)
    */
   dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CC
     |= XDMAC_CC_CSIZE_CHK_1
-    |  XDMAC_CC_MBSIZE_FOUR
     |  XDMAC_CC_DWIDTH_HALFWORD
     |  XDMAC_CC_DSYNC_PER2MEM
     |  XDMAC_CC_TYPE_PER_TRAN
@@ -85,6 +83,59 @@ void SPI0_DMA_Init(void)
 }
 
 
+static void SPI_DMA_InitTransaction(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
+{
+  uint32_t bsize = 0;
+  Xdmac *dma = XDMAC;
+
+  assert(len > 0, __FILE__, __LINE__);
+
+  /* Clear pending interrupt requests */
+  (void)dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIS;
+  (void)dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIS;
+
+  /* Set addresses and transfer length */
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CSA  = (uint32_t)msg;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CSA  = (uint32_t)&spi->SPI_RDR;
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CDA  = (uint32_t)&spi->SPI_TDR;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CDA  = (uint32_t)recv;
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CUBC = len;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CUBC = len;
+
+  if ((len % 16) == 0)
+  {
+    if ((len / 16) > 0)
+    {
+      bsize = XDMAC_CC_MBSIZE_SIXTEEN;
+    }
+  }
+  else if ((len % 8) == 0)
+  {
+    if ((len / 8) > 0)
+    {
+      bsize = XDMAC_CC_MBSIZE_EIGHT;
+    }
+  }
+  else if ((len % 4) == 0)
+  {
+    if ((len / 4) > 0)
+    {
+      bsize = XDMAC_CC_MBSIZE_FOUR;
+    }
+  }
+  else
+  {
+    bsize = XDMAC_CC_MBSIZE_SINGLE;
+  }
+
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CC &= ~XDMAC_CC_MBSIZE_Msk;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CC &= ~XDMAC_CC_MBSIZE_Msk;
+
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CC |= bsize;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CC |= bsize;
+}
+
+
 void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
 {
   assert((spi == SPI0) || (spi == SPI1), __FILE__, __LINE__);
@@ -92,24 +143,14 @@ void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t l
   EventBits_t evtBits;
   Xdmac *dma = XDMAC;
 
-    /* Clear pending interrupt requests */
-    (void)dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIS;
-    (void)dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIS;
-
   /* Clean DCache before DMA tansfer (AT17417) */
   SCB_CleanDCache();
 
-    /* Should actually use the following functions as it is faster:
-     * SCB_CleanInvalidateDCache_byAddr();
-     */
+  /* Should actually use the following functions as it is faster:
+   * SCB_CleanInvalidateDCache_byAddr();
+   */
 
-    /* Set addresses and transfer length */
-    dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CSA  = (uint32_t)msg;
-    dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CSA  = (uint32_t)&spi->SPI_RDR;
-    dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CDA  = (uint32_t)&spi->SPI_TDR;
-    dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CDA  = (uint32_t)recv;
-    dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CUBC = len;
-    dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CUBC = len;
+  SPI_DMA_InitTransaction(spi, msg, recv, len);
 
   /* Enable DMA IRQ */
   dma->XDMAC_GIE = XDMAC_GIE_IE2_Msk | XDMAC_GIE_IE1_Msk;
