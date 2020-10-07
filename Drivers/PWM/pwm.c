@@ -6,30 +6,6 @@
 #define PWM_CH_COUNT  (4u)
 
 
-uint16_t freq_tbl[FREQ_COUNT] =
-{
-    1172, /*  2 kHz */
-    781,  /*  3 kHz */
-    586,  /*  4 kHz */
-    469,  /*  5 kHz */
-    391,  /*  6 kHz */
-    335,  /*  7 kHz */
-    293,  /*  8 kHz */
-    260,  /*  9 kHz */
-    234,  /* 10 kHz */
-    213,  /* 11 kHz */
-    195,  /* 12 kHz */
-    180,  /* 13 kHz */
-    167,  /* 14 kHz */
-    156,  /* 15 kHz */
-    146,  /* 16 kHz */
-    138,  /* 17 kHz */
-    130,  /* 18 kHz */
-    123,  /* 19 kHz */
-    117   /* 20 kHz */
-};
-
-
 static void PWM_IO_Init(void);
 static uint16_t PWM_GetChannelDutyCycle(float dutyPer);
 
@@ -80,15 +56,14 @@ void PWM_Init(void)
      * => CDTY = -(1 / 1170(D - 1))
      *
      * The result is in the divisor, so:
-     * f(D) = -(1170(D - 1170))
+     *    f(D)    = (-((1170 * D) - 1170))
      */
     chDuty = PWM_GetChannelDutyCycle(50.0);
     pwm->PwmChNum[0].PWM_CDTY = PWM_CDTY_CDTY(chDuty);
     pwm->PwmChNum[2].PWM_CDTY = PWM_CDTY_CDTY(chDuty);
 
     /* Enable PWM0 on channel 0 & channel 2 */
-    pwm->PWM_ENA = PWM_ENA_CHID0_Msk;
-    pwm->PWM_ENA = PWM_ENA_CHID2_Msk;
+    pwm->PWM_ENA = PWM_ENA_CHID2_Msk | PWM_ENA_CHID0_Msk;
 }
 
 
@@ -147,7 +122,7 @@ void PWM_UpdateFrequency(Pwm *pwm, uint32_t ch, Frequency freq)
 static uint16_t PWM_GetChannelDutyCycle(float dutyPer)
 {
   /* Step can be calculated as follows:
-   *    f(D)    = -(1170(D - 1170))
+   *    f(D)    = (-((1170 * D) - 1170))
    * => f(0.99) = 11.7
    */
   const float step = 11.7;
@@ -176,6 +151,10 @@ void PWM_IncrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps)
 }
 
 
+/* Decelerating could be done by inverting the PWM polarity and
+ * updating the registers. The register value should be swapped to
+ * the beginning/end of the lookup table.
+ */
 void PWM_DecrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps)
 {
   assert(ch < PWM_CH_COUNT, __FILE__, __LINE__);

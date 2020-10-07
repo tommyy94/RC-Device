@@ -107,6 +107,10 @@
       <folder Name="PWM">
         <file file_name="Drivers/PWM/pwm.c" />
         <file file_name="Drivers/PWM/pwm.h" />
+        <file file_name="pwm_tables.c" />
+        <file file_name="Drivers/PWM/duty_cycle.py">
+          <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
+        </file>
       </folder>
       <folder Name="DMA">
         <file file_name="Drivers/DMA/dma.c" />

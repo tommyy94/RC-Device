@@ -24,8 +24,7 @@ void SPI0_DMA_Init(void)
   Xdmac *dma = XDMAC;
   
   /* Configure SPI0 TX:
-   * - Single byte transfer
-   * - Single byte bursts
+   * - Single halfword transfer
    * - 16-bit data
    * - Read and write data through the system bus interface 0
    * - Hardware request
@@ -44,8 +43,7 @@ void SPI0_DMA_Init(void)
     |  XDMAC_CC_DAM_FIXED_AM;
 
   /* Configure SPI0 RX:
-   * - Single byte transfer
-   * - Single byte bursts
+   * - Single halfword transfer
    * - 16-bit data
    * - Read and write data through the system bus interface 0
    * - Hardware request
@@ -95,12 +93,12 @@ static void SPI_DMA_InitTransaction(Spi *spi, uint16_t *msg, uint16_t *recv, uin
   (void)dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIS;
 
   /* Set addresses and transfer length */
-  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CSA  = (uint32_t)msg;
-  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CSA  = (uint32_t)&spi->SPI_RDR;
-  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CDA  = (uint32_t)&spi->SPI_TDR;
-  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CDA  = (uint32_t)recv;
-  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CUBC = len;
-  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CUBC = len;
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CSA  = XDMAC_CSA_SA((uint32_t)msg);
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CSA  = XDMAC_CSA_SA((uint32_t)&spi->SPI_RDR);
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CDA  = XDMAC_CDA_DA((uint32_t)&spi->SPI_TDR);
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CDA  = XDMAC_CDA_DA((uint32_t)recv);
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CUBC = XDMAC_CUBC_UBLEN(len);
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CUBC = XDMAC_CUBC_UBLEN(len);
 
   if ((len % 16) == 0)
   {
