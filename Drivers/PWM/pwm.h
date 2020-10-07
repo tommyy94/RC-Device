@@ -1,6 +1,8 @@
 #ifndef PWM_H_
 #define PWM_H_
 
+#include <same70q21b.h>
+
 
 typedef enum
 {
@@ -25,6 +27,12 @@ typedef enum
     FREQ_20KHZ,
     FREQ_COUNT
 } Frequency;
+
+
+#define DUTY_CYCLE_COUNT  (100u)
+
+const extern uint16_t dutyCycle[DUTY_CYCLE_COUNT];
+const extern uint16_t freq_tbl[FREQ_COUNT];
 
 
 void PWM_Init(void);
