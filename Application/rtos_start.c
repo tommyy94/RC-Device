@@ -10,6 +10,8 @@
 
 #include "dma.h"
 
+#include "nRF24L01.h"
+
 #include <string.h>
 
 TaskHandle_t		    xStartupTask;
@@ -71,29 +73,17 @@ void startupTask(void *arg)
 void commTask(void *arg)
 {
     (void)arg;
-    uint16_t txData[SPI_QUEUE_SIZE];
-    uint16_t rxData[SPI_QUEUE_SIZE];
-    bool spiOk;
-    Spi *spi = SPI0;
+    uint8_t txData[SPI_QUEUE_SIZE];
 
     SPI0_Init();
+    nRF24L01_vInit();
 
-    /* Dummy data, seems to be able to write only 8-bit values */
-    memset(txData, 0xAA, SPI_QUEUE_SIZE * 2);
-    memset(rxData, 0x00, SPI_QUEUE_SIZE * 2);
-    
-    /* Test SPI before tasking */
-    spiOk = SPI_SelfTest(spi, txData, rxData, SPI_QUEUE_SIZE);
-    if (spiOk != true)
-    {
-        /* Log error and suspend task */
-        xTaskNotify(xJournalTask, SPI_SELFTEST_FAIL, eSetBits);
-        vTaskSuspend(NULL);
-    }
+    /* Set test data */
+    memset(txData, 0xAA, SPI_QUEUE_SIZE);
 
     while (1)
     {
-        SPI_DMA_TransmitMessage(spi, txData, rxData, SPI_QUEUE_SIZE);
+        nRF24L01_vSendPayload((const char *)txData, SPI_QUEUE_SIZE);
         
         /* Wait until TX buffer full */
         vTaskDelay(pdMS_TO_TICKS(100));

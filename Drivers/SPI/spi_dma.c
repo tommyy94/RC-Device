@@ -81,16 +81,20 @@ void SPI0_DMA_Init(void)
 }
 
 
-static void SPI_DMA_InitTransaction(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
+static void SPI0_DMA_InitTransaction(uint16_t *msg, uint16_t *recv, uint32_t len)
 {
   uint32_t bsize = 0;
   Xdmac *dma = XDMAC;
+  Spi *spi = SPI0;
 
   assert(len > 0, __FILE__, __LINE__);
 
   /* Clear pending interrupt requests */
   (void)dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIS;
   (void)dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIS;
+
+  /* Flush channels */
+  dma->XDMAC_GSWF = XDMAC_GSWF_SWF1_Msk | XDMAC_GSWF_SWF0_Msk;
 
   /* Set addresses and transfer length */
   dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CSA  = XDMAC_CSA_SA((uint32_t)msg);
@@ -134,21 +138,17 @@ static void SPI_DMA_InitTransaction(Spi *spi, uint16_t *msg, uint16_t *recv, uin
 }
 
 
-void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
+void SPI0_DMA_TransmitMessage(uint16_t *msg, uint16_t *recv, uint32_t len)
 {
-  assert((spi == SPI0) || (spi == SPI1), __FILE__, __LINE__);
-
   EventBits_t evtBits;
   Xdmac *dma = XDMAC;
+  Spi *spi = SPI0;
 
   /* Clean DCache before DMA tansfer (AT17417) */
-  SCB_CleanDCache();
+  SCB_CleanDCache_by_Addr((uint32_t *)msg,  len);
+  SCB_CleanDCache_by_Addr((uint32_t *)recv, len);
 
-  /* Should actually use the following functions as it is faster:
-   * SCB_CleanInvalidateDCache_byAddr();
-   */
-
-  SPI_DMA_InitTransaction(spi, msg, recv, len);
+  SPI0_DMA_InitTransaction(msg, recv, len);
 
   /* Enable DMA IRQ */
   dma->XDMAC_GIE = XDMAC_GIE_IE2_Msk | XDMAC_GIE_IE1_Msk;
@@ -177,7 +177,8 @@ void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t l
   dma->XDMAC_GID = XDMAC_GID_ID2_Msk | XDMAC_GID_ID1_Msk;
   
   /* Invalidate DCache after DMA tansfer (AT17417) */
-  SCB_InvalidateDCache();
+  SCB_InvalidateDCache_by_Addr((uint32_t *)msg,  len);
+  SCB_InvalidateDCache_by_Addr((uint32_t *)recv, len);
 
   /* Check for errors */
   if (((evtBits & DMA_EVENT_SPI0_TX) == 0)
