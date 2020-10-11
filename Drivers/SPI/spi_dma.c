@@ -145,12 +145,8 @@ void SPI0_DMA_TransmitMessage(uint16_t *msg, uint16_t *recv, uint32_t len)
   Spi *spi = SPI0;
 
   /* Clean DCache before DMA tansfer (AT17417) */
-  SCB_CleanDCache();
-
-  /* Should actually use the following functions as it is faster:
-   * SCB_CleanInvalidateDCache_byAddr();
-   * Whole cache clean and invalidate 1536 passes
-   */
+  SCB_CleanDCache_by_Addr((uint32_t *)msg,  len);
+  SCB_CleanDCache_by_Addr((uint32_t *)recv, len);
 
   SPI0_DMA_InitTransaction(msg, recv, len);
 
@@ -181,7 +177,8 @@ void SPI0_DMA_TransmitMessage(uint16_t *msg, uint16_t *recv, uint32_t len)
   dma->XDMAC_GID = XDMAC_GID_ID2_Msk | XDMAC_GID_ID1_Msk;
   
   /* Invalidate DCache after DMA tansfer (AT17417) */
-  SCB_InvalidateDCache();
+  SCB_InvalidateDCache_by_Addr((uint32_t *)msg,  len);
+  SCB_InvalidateDCache_by_Addr((uint32_t *)recv, len);
 
   /* Check for errors */
   if (((evtBits & DMA_EVENT_SPI0_TX) == 0)
