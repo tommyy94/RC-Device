@@ -154,7 +154,7 @@ bool SPI_SelfTest(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
     /* Enable Local Loopback */
     spi->SPI_MR |= SPI_MR_LLB_Msk;
        
-    SPI_DMA_TransmitMessage(spi, msg, recv, len);
+    SPI0_DMA_TransmitMessage(msg, recv, len);
     
     for (uint32_t i = 0; i < len; i++)
     {

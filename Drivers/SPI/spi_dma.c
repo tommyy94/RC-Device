@@ -81,10 +81,11 @@ void SPI0_DMA_Init(void)
 }
 
 
-static void SPI_DMA_InitTransaction(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
+static void SPI0_DMA_InitTransaction(uint16_t *msg, uint16_t *recv, uint32_t len)
 {
   uint32_t bsize = 0;
   Xdmac *dma = XDMAC;
+  Spi *spi = SPI0;
 
   assert(len > 0, __FILE__, __LINE__);
 
@@ -134,21 +135,21 @@ static void SPI_DMA_InitTransaction(Spi *spi, uint16_t *msg, uint16_t *recv, uin
 }
 
 
-void SPI_DMA_TransmitMessage(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
+void SPI0_DMA_TransmitMessage(uint16_t *msg, uint16_t *recv, uint32_t len)
 {
-  assert((spi == SPI0) || (spi == SPI1), __FILE__, __LINE__);
-
   EventBits_t evtBits;
   Xdmac *dma = XDMAC;
+  Spi *spi = SPI0;
 
   /* Clean DCache before DMA tansfer (AT17417) */
   SCB_CleanDCache();
 
   /* Should actually use the following functions as it is faster:
    * SCB_CleanInvalidateDCache_byAddr();
+   * Whole cache clean and invalidate 1536 passes
    */
 
-  SPI_DMA_InitTransaction(spi, msg, recv, len);
+  SPI0_DMA_InitTransaction(msg, recv, len);
 
   /* Enable DMA IRQ */
   dma->XDMAC_GIE = XDMAC_GIE_IE2_Msk | XDMAC_GIE_IE1_Msk;
