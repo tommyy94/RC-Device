@@ -173,6 +173,47 @@ bool SPI_SelfTest(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
 }
 
 
+uint16_t SPI0_vTransmitHalfword(uint16_t const halfword)
+{
+    Spi *spi = SPI0;
+
+    spi->SPI_CR  |= SPI_CR_SPIEN_Msk;
+
+    /* Clear RX register */
+    (void)spi->SPI_RDR;
+
+    /* Transmit character */
+    spi->SPI_TDR  = SPI_TDR_TD(halfword);
+    while ((spi->SPI_SR & SPI_SR_RDRF_Msk) == 0)
+    {
+        ; /* Wait until character received */
+    }
+
+    spi->SPI_CR  |= SPI_CR_SPIDIS_Msk;
+
+    return spi->SPI_RDR & 0xFFFF;
+}
+
+
+void SPI0_vTransmitByte(uint8_t const byte)
+{
+    Spi *spi = SPI0;
+
+    /* Temporarily set Bit Per Transfer = 8 */
+    spi->SPI_CSR[SLAVE_1] &= ~SPI_CSR_BITS_Msk;
+
+    spi->SPI_CR  |= SPI_CR_SPIEN_Msk;
+    spi->SPI_TDR  = SPI_TDR_TD(byte & 0xFF);
+    (void)spi->SPI_RDR;
+    __DMB();
+    spi->SPI_CR  |= SPI_CR_SPIDIS_Msk;
+
+    /* Restore Bit Per Transfer = 16 */
+    spi->SPI_CSR[SLAVE_1] |= SPI_CSR_BITS_16_BIT;
+
+}
+
+
 __STATIC_INLINE void SPI_Reset(Spi *spi)
 {
     spi->SPI_CR |= SPI_CR_SWRST_Msk;
