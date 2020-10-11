@@ -93,6 +93,9 @@ static void SPI0_DMA_InitTransaction(uint16_t *msg, uint16_t *recv, uint32_t len
   (void)dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIS;
   (void)dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIS;
 
+  /* Flush channels */
+  dma->XDMAC_GSWF = XDMAC_GSWF_SWF1_Msk | XDMAC_GSWF_SWF0_Msk;
+
   /* Set addresses and transfer length */
   dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CSA  = XDMAC_CSA_SA((uint32_t)msg);
   dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CSA  = XDMAC_CSA_SA((uint32_t)&spi->SPI_RDR);
