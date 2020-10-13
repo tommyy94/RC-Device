@@ -9,3 +9,8 @@ Executable_1 GCC Debug/
 
 
 FreeRTOS/FreeRTOS.a
+*.o
+*.d
+
+Controller/Kinetis
+

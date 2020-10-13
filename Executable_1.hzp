@@ -456,4 +456,158 @@
       <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/timers.c" />
     </folder>
   </project>
+  <project Name="Controller">
+    <configuration
+      CMSIS_CORE="Yes"
+      Name="Common"
+      Placement="Flash"
+      Target="MKL25Z128xxx4"
+      arm_architecture="v6M"
+      arm_core_type="Cortex-M0"
+      arm_gcc_target="arm-unknown-eabi"
+      arm_linker_heap_size="4800"
+      arm_linker_stack_size="2000"
+      arm_simulator_memory_simulation_filename="$(ProjectDir)/KinetisSimulatorMemory.so_x64"
+      arm_simulator_memory_simulation_parameter="MKL25Z128xxx4;0x20000;0x0;0x0;0x4000;4"
+      arm_target_debug_interface_type="ADIv5"
+      arm_target_loader_applicable_loaders="Flash"
+      arm_target_loader_default_loader="Flash"
+      arm_target_restrict_memory_accesses="Yes"
+      c_additional_options="-fms-extensions"
+      c_preprocessor_definitions="__TARGET_PROCESSOR=MKL25Z128xxx4;MKL25Z4=1;__VECTORS=&quot;MKL25Z4.vec&quot;;L_SERIES"
+      c_user_include_directories="$(ProjectDir)/Kinetis;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/nRF24L01;$(ProjectDir)/Drivers/DMA;$(ProjectDir)/Drivers/TPM;$(ProjectDir)/FreeRTOS/port/gcc;$(ProjectDir)/FreeRTOS/include;$(ProjectDir)/FreeRTOS/config/KL25Z4/gcc;$(ProjectDir)/Application/include;$(ProjectDir)/KL25Z4"
+      debug_register_definition_file="$(ProjectDir)/MKL25Z4_Peripherals.xml"
+      linker_memory_map_file="$(ProjectDir)/MKL25Z128xxx4_MemoryMap.xml"
+      linker_printf_fmt_level="int"
+      linker_printf_fp_enabled="No"
+      linker_printf_width_precision_supported="No"
+      linker_scanf_character_group_matching_enabled="No"
+      linker_scanf_fmt_level="int"
+      linker_scanf_fp_enabled="No"
+      linker_section_placement_file="$(ProjectDir)/flash_placement.xml"
+      macros="DeviceVectorsFile=MKL25Z4.vec;Target=MKL25Z128xxx4;Placement=Flash"
+      project_directory="Controller"
+      project_type="Executable"
+      target_connect_script="Connect()"
+      target_get_partname_script="GetPartName()"
+      target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)"
+      target_reset_script="Reset()"
+      target_script_file="$(ProjectDir)/Kinetis_Target.js"
+      target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
+    <configuration
+      Name="Flash"
+      arm_target_flash_loader_file_path="$(ProjectDir)/LoaderL_8K.elf"
+      arm_target_flash_loader_type="LIBMEM RPC Loader"
+      arm_target_loader_can_lock_all="No"
+      arm_target_loader_can_lock_range="No"
+      arm_target_loader_can_unlock_all="No"
+      arm_target_loader_can_unlock_range="No" />
+    <folder Name="Application">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+      <file file_name="Application/main.c" />
+      <file file_name="Application/system.c" />
+      <folder Name="include">
+        <file file_name="Application/include/system.h" />
+        <file file_name="Application/include/comm.h" />
+        <file file_name="Application/include/defines.h" />
+      </folder>
+      <file file_name="Application/comm.c" />
+    </folder>
+    <folder Name="System Files">
+      <file file_name="thumb_crt0.s" />
+      <file file_name="targets/Kinetis/Kinetis_Startup.s" />
+      <file file_name="targets/Kinetis/MKL25Z4.vec" />
+      <file file_name="KL25Z4/system_MKL25Z4.c" />
+      <file file_name="KL25Z4/system_MKL25Z4.h" />
+    </folder>
+    <folder Name="Drivers">
+      <folder Name="SPI">
+        <file file_name="Drivers/SPI/spi.h" />
+        <file file_name="Drivers/SPI/spi.c" />
+      </folder>
+      <folder Name="nRF24L01">
+        <file file_name="Drivers/nRF24L01/nRF24L01.c" />
+        <file file_name="Drivers/nRF24L01/nRF24L01.h" />
+      </folder>
+      <folder Name="DMA">
+        <file file_name="Drivers/DMA/dma.c" />
+        <file file_name="Drivers/DMA/dma.h" />
+      </folder>
+      <folder Name="TPM">
+        <file file_name="Drivers/TPM/tpm.c" />
+        <file file_name="Drivers/TPM/tpm.h" />
+      </folder>
+      <folder Name="ADC">
+        <file file_name="Drivers/ADC/adc.c" />
+        <file file_name="Drivers/ADC/adc.h" />
+        <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
+      </folder>
+    </folder>
+    <folder Name="FreeRTOS">
+      <folder Name="src">
+        <file file_name="FreeRTOS/src/croutine.c" />
+        <file file_name="FreeRTOS/src/event_groups.c" />
+        <file file_name="FreeRTOS/src/FreeRTOS_license.txt" />
+        <file file_name="FreeRTOS/src/heap_1.c">
+          <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="FreeRTOS/src/heap_2.c">
+          <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="FreeRTOS/src/heap_3.c">
+          <configuration Name="Clang Debug" build_exclude_from_build="No" />
+        </file>
+        <file file_name="FreeRTOS/src/heap_4.c">
+          <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="FreeRTOS/src/heap_5.c">
+          <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="FreeRTOS/src/list.c" />
+        <file file_name="FreeRTOS/src/queue.c" />
+        <file file_name="FreeRTOS/src/tasks.c" />
+        <file file_name="FreeRTOS/src/timers.c" />
+      </folder>
+      <folder Name="port">
+        <folder Name="gcc">
+          <file file_name="FreeRTOS/port/gcc/portasm.S">
+            <configuration
+              Name="Clang Debug"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="FreeRTOS/port/gcc/port.c" />
+          <file file_name="FreeRTOS/port/gcc/portmacro.h" />
+          <file file_name="FreeRTOS/port/gcc/portTicks.h" />
+        </folder>
+      </folder>
+      <folder Name="config">
+        <folder Name="KL25Z4">
+          <folder Name="gcc">
+            <file file_name="FreeRTOS/config/KL25Z4/gcc/FreeRTOSConfig.h" />
+          </folder>
+        </folder>
+      </folder>
+      <folder Name="include">
+        <file file_name="FreeRTOS/include/croutine.h" />
+        <file file_name="FreeRTOS/include/deprecated_definitions.h" />
+        <file file_name="FreeRTOS/include/event_groups.h" />
+        <file file_name="FreeRTOS/include/FreeRTOS.h" />
+        <file file_name="FreeRTOS/include/list.h" />
+        <file file_name="FreeRTOS/include/mpu_wrappers.h" />
+        <file file_name="FreeRTOS/include/portable.h" />
+        <file file_name="FreeRTOS/include/projdefs.h" />
+        <file file_name="FreeRTOS/include/queue.h" />
+        <file file_name="FreeRTOS/include/semphr.h" />
+        <file file_name="FreeRTOS/include/StackMacros.h" />
+        <file file_name="FreeRTOS/include/task.h" />
+        <file file_name="FreeRTOS/include/timers.h" />
+      </folder>
+    </folder>
+    <folder Name="Kinetis">
+      <file file_name="KL25Z4/fsl_bitaccess.h" />
+      <file file_name="KL25Z4/MKL25Z4_extension.h" />
+      <file file_name="KL25Z4/MKL25Z4_features.h" />
+      <file file_name="KL25Z4/MKL25Z4.h" />
+    </folder>
+  </project>
 </solution>
