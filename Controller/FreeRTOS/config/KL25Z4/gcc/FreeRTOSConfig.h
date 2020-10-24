@@ -214,6 +214,8 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 
 /* Normal assert() semantics without relying on the provision of an assert.h header file. */
 #ifdef DEBUG
+#include <stdint.h>
+void vAssertCalled(const uint32_t ulLine, char *const pcFile);
 #define configASSERT(x) if ((x) == 0) vAssertCalled(__LINE__, __FILE__)
 #else
 #define configASSERT(x)
