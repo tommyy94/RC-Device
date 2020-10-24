@@ -20,7 +20,7 @@ int main(void)
     /* Start multitasking */
     vTaskStartScheduler();
     
-    for (;;)
+    while (1)
     {
         ; /* Should not get here! */
     }

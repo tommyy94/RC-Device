@@ -40,6 +40,6 @@
     
 
 /* Global function prototypes */
-void vStartupTask(void *const pvMotorTimers);
+void vStartupTask(void *const pvParam);
 void vApplicationIdleHook(void);
 void vAssertCalled(const uint32_t ulLine, char *const pcFile);
