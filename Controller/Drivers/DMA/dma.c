@@ -75,7 +75,7 @@ void DMA0_vInit(void)
      * Enable peripheral request
      * Cycle stealing mode
      */
-    DMA0->DMA[DMA_CHANNEL0].DCR |= DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(1) | DMA_DCR_DSIZE(1) | DMA_DCR_SINC(1);
+    //DMA0->DMA[DMA_CHANNEL0].DCR = DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(1) | DMA_DCR_DSIZE(1) | DMA_DCR_SINC(1);
 
     /**
      * Configure channel 1:
@@ -84,11 +84,19 @@ void DMA0_vInit(void)
      * Enable peripheral request
      * Cycle stealing mode
      */
-    DMA0->DMA[DMA_CHANNEL1].DCR |= DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(1) | DMA_DCR_DSIZE(1) | DMA_DCR_DINC(1);
+    //DMA0->DMA[DMA_CHANNEL1].DCR = DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(1) | DMA_DCR_DSIZE(1) | DMA_DCR_DINC(1);
+
+    /**
+     * Configure channel 0:
+     * Increment destination address
+     * Transfer halfwords
+     * Enable peripheral request
+     * Cycle stealing mode
+     */
+    DMA0->DMA[DMA_CHANNEL0].DCR = DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(2) | DMA_DCR_DSIZE(2) | DMA_DCR_DINC(1);
     
-    /* Clear done flags */
-    DMA0->DMA[DMA_CHANNEL0].DSR_BCR &= ~DMA_DSR_BCR_DONE(1);
-    DMA0->DMA[DMA_CHANNEL1].DSR_BCR &= ~DMA_DSR_BCR_DONE(1);
+    /* Clear all status bits */
+    DMA0->DMA[DMA_CHANNEL0].DSR_BCR |= DMA_DSR_BCR_DONE(1);
 }
 
 
@@ -105,16 +113,16 @@ void DMA0_vInit(void)
  * 
  * @return  None
  */
-void DMA0_vInitTransaction(const uint32_t ulChannel, uint32_t *const pulSrcAddr, uint32_t *const pulDstAddr, const uint32_t ulLength)
+void DMA0_vInitTransaction(const uint32_t ulChannel, void *const pvSrcAddr, void *const pvDstAddr, const uint32_t ulLength)
 {
     configASSERT(ulChannel < DMAMUX_CHCFG_COUNT);
-    configASSERT(VALIDATE_ADDR_REG((uint32_t)pulSrcAddr));
-    configASSERT(VALIDATE_ADDR_REG((uint32_t)pulDstAddr));
+    configASSERT(VALIDATE_ADDR_REG((uint32_t)pvSrcAddr));
+    configASSERT(VALIDATE_ADDR_REG((uint32_t)pvDstAddr));
     configASSERT(ulLength < BCR_MAX_LEN);
     
     /* Initialize source & destination pointers */
-    DMA0->DMA[ulChannel].SAR = DMA_SAR_SAR((uint32_t)pulSrcAddr);
-    DMA0->DMA[ulChannel].DAR = DMA_DAR_DAR((uint32_t)pulDstAddr);
+    DMA0->DMA[ulChannel].SAR = DMA_SAR_SAR((uint32_t)pvSrcAddr);
+    DMA0->DMA[ulChannel].DAR = DMA_DAR_DAR((uint32_t)pvDstAddr);
     
     /* Number of bytes to transmit */
     DMA0->DMA[ulChannel].DSR_BCR |= DMA_DSR_BCR_BCR(ulLength);

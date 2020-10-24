@@ -475,8 +475,10 @@
       arm_target_restrict_memory_accesses="Yes"
       c_additional_options="-fms-extensions"
       c_preprocessor_definitions="__TARGET_PROCESSOR=MKL25Z128xxx4;MKL25Z4=1;__VECTORS=&quot;MKL25Z4.vec&quot;;L_SERIES"
-      c_user_include_directories="$(ProjectDir)/Kinetis;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/nRF24L01;$(ProjectDir)/Drivers/DMA;$(ProjectDir)/Drivers/TPM;$(ProjectDir)/FreeRTOS/port/gcc;$(ProjectDir)/FreeRTOS/include;$(ProjectDir)/FreeRTOS/config/KL25Z4/gcc;$(ProjectDir)/Application/include;$(ProjectDir)/KL25Z4"
+      c_user_include_directories="$(ProjectDir)/Kinetis;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/nRF24L01;$(ProjectDir)/Drivers/DMA;$(ProjectDir)/Drivers/TPM;$(ProjectDir)/Drivers/ADC;$(ProjectDir)/FreeRTOS/port/gcc;$(ProjectDir)/FreeRTOS/include;$(ProjectDir)/FreeRTOS/config/KL25Z4/gcc;$(ProjectDir)/Application/include;$(ProjectDir)/KL25Z4"
       debug_register_definition_file="$(ProjectDir)/MKL25Z4_Peripherals.xml"
+      gcc_debugging_level="Level 3"
+      gcc_optimization_level="Level 3"
       linker_memory_map_file="$(ProjectDir)/MKL25Z128xxx4_MemoryMap.xml"
       linker_printf_fmt_level="int"
       linker_printf_fp_enabled="No"
@@ -510,8 +512,12 @@
         <file file_name="Application/include/system.h" />
         <file file_name="Application/include/comm.h" />
         <file file_name="Application/include/defines.h" />
+        <file file_name="Application/include/joystick.h" />
+        <file file_name="Application/include/hmi.h" />
       </folder>
       <file file_name="Application/comm.c" />
+      <file file_name="Application/joystick.c" />
+      <file file_name="Application/hmi.c" />
     </folder>
     <folder Name="System Files">
       <file file_name="thumb_crt0.s" />
@@ -540,7 +546,7 @@
       <folder Name="ADC">
         <file file_name="Drivers/ADC/adc.c" />
         <file file_name="Drivers/ADC/adc.h" />
-        <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
+        <configuration Name="Clang Debug" build_exclude_from_build="No" />
       </folder>
     </folder>
     <folder Name="FreeRTOS">

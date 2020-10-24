@@ -12,8 +12,10 @@
 
 /* User headers */
 #include "comm.h"
-//#include "adc.h"
-//#include "tpm.h"
+#include "joystick.h"
+#include "hmi.h"
+#include "adc.h"
+#include "tpm.h"
 #include "dma.h"
 #include "nRF24L01.h"
 
@@ -22,19 +24,20 @@
 #define MAX_QUEUE_SIZE          (32UL)
 
 /* Task priorities */
-//#define ANALOGTASKPRIORITY      (4UL)
 #define COMMTASKPRIORITY        (7UL)
+#define HMITASKPRIORITY         (6UL)
+#define JOYSTICKTASKPRIORITY    (8UL)
 #define STARTUPTASKPRIORITY     (10UL)
 
 /* Task sizes */
-//#define ANALOGTASKSIZE          (2048UL)
-#define COMMTASKSIZE            (256UL)
-#define STARTUPTASKSIZE         (1024L)
+#define COMMTASKSIZE            (128UL)
+#define HMITASKSIZE             (128UL)
+#define JOYSTICKTASKSIZE        (128UL)
+#define STARTUPTASKSIZE         (512L)
 
     
 /* Global variables */
 extern QueueHandle_t      xCommQueue;
-//extern QueueHandle_t      xAnalogQueue;
 extern EventGroupHandle_t xCommEvent;
     
 

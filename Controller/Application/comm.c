@@ -7,9 +7,11 @@
 #define COMM_TIMEOUT    (10U)
 
 /* Global variables */
-QueueHandle_t      xCommQueue;
-TaskHandle_t       xCommTask = NULL;
-EventGroupHandle_t xCommEvent;
+extern TaskHandle_t         xCommTaskHandle;
+extern SemaphoreHandle_t    xSpiSema;
+
+QueueHandle_t       xCommQueue;
+EventGroupHandle_t  xCommEvent;
 
 
 typedef struct
@@ -92,7 +94,7 @@ void TPM2_IRQHandler(void)
         TPM2_vStop();
 
         /* Notify task */
-        vTaskNotifyGiveFromISR(xCommTask, &xHigherPriorityTaskWoken);
+        xSemaphoreGiveFromISR(xSpiSema, &xHigherPriorityTaskWoken);
     }
 
     /* Clear Timer Overflow Flag */
