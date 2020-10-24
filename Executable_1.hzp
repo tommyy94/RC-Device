@@ -511,9 +511,11 @@
         <file file_name="Application/include/comm.h" />
         <file file_name="Application/include/defines.h" />
         <file file_name="Application/include/joystick.h" />
+        <file file_name="Application/include/hmi.h" />
       </folder>
       <file file_name="Application/comm.c" />
       <file file_name="Application/joystick.c" />
+      <file file_name="Application/hmi.c" />
     </folder>
     <folder Name="System Files">
       <file file_name="thumb_crt0.s" />

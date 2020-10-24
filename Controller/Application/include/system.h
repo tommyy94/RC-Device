@@ -13,7 +13,7 @@
 /* User headers */
 #include "comm.h"
 #include "joystick.h"
-//#include "tpm.h"
+#include "hmi.h"
 #include "dma.h"
 #include "nRF24L01.h"
 
@@ -24,12 +24,13 @@
 /* Task priorities */
 //#define ANALOGTASKPRIORITY      (4UL)
 #define COMMTASKPRIORITY        (7UL)
+#define HMITASKPRIORITY         (6UL)
 #define JOYSTICKTASKPRIORITY    (8UL)
 #define STARTUPTASKPRIORITY     (10UL)
 
 /* Task sizes */
 //#define ANALOGTASKSIZE          (2048UL)
-#define COMMTASKSIZE            (256UL)
+#define HMITASKSIZE             (128UL)
 #define JOYSTICKTASKSIZE        (128UL)
 
     

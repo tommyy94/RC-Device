@@ -3,6 +3,7 @@
 
 /* Global variables */
 TaskHandle_t        xCommTaskHandle;
+TaskHandle_t        xHmiTaskHandle;
 TaskHandle_t        xJoystickTaskHandle;
 SemaphoreHandle_t   xSpiSema;
 
@@ -33,16 +34,16 @@ static void vSystemInit(void)
     vEnableClockGating();
 
     /* Analog functionalities */
-    //ADC0_vInit();
-    TPM2_vInit();
+    DMA0_vInit();
+    ADC0_vInit();
     
     /* Communications */
-    DMA0_vInit();
-    DMAMUX0_vInit(DMA_CHANNEL0, DMAMUX_CHCFG_SOURCE_SPI1_TX);
-    DMAMUX0_vInit(DMA_CHANNEL1, DMAMUX_CHCFG_SOURCE_SPI1_RX);
-    DMA0_vLinkChannel(DMA_CHANNEL0, DMA_CHANNEL1);
-    SPI1_vInit();
-    nRF24L01_vInit();
+   // TPM2_vInit();
+   // DMAMUX0_vInit(DMA_CHANNEL0, DMAMUX_CHCFG_SOURCE_SPI1_TX);
+    //DMAMUX0_vInit(DMA_CHANNEL1, DMAMUX_CHCFG_SOURCE_SPI1_RX);
+    //DMA0_vLinkChannel(DMA_CHANNEL0, DMA_CHANNEL1);
+    //SPI1_vInit();
+    //nRF24L01_vInit();
 }
 
 
@@ -57,7 +58,7 @@ static void vEnableClockGating(void)
 {
     SIM->SCGC4 |= SIM_SCGC4_SPI1(1);
     SIM->SCGC5 |= SIM_SCGC5_PORTA(1) | SIM_SCGC5_PORTB(1) | SIM_SCGC5_PORTD(1) | SIM_SCGC5_PORTE(1);
-    SIM->SCGC6 |= SIM_SCGC6_TPM0(1) | SIM_SCGC6_TPM1(1) | SIM_SCGC6_TPM2(1) | SIM_SCGC6_ADC0(1) | SIM_SCGC6_DMAMUX(1);
+    SIM->SCGC6 |= SIM_SCGC6_TPM2(1) | SIM_SCGC6_ADC0(1) | SIM_SCGC6_DMAMUX(1);
     SIM->SCGC7 |= SIM_SCGC7_DMA(1);
 }
 
@@ -98,11 +99,11 @@ static void vCreateEvents(void)
  */
 static void vCreateTasks(void)
 {
-    TaskHandle_t xHandle;
     BaseType_t xAssert;
     xAssert = xTaskCreate(vCommTask, (const char *)"Comm", COMMTASKSIZE / sizeof(portSTACK_TYPE), 0, COMMTASKPRIORITY, &xCommTaskHandle);
     configASSERT(xAssert == pdTRUE);
-    configASSERT(xAssert);
+    xAssert = xTaskCreate(vHmiTask, (const char *)"HMI", HMITASKSIZE / sizeof(portSTACK_TYPE), 0, HMITASKPRIORITY, &xHmiTaskHandle);
+    configASSERT(xAssert == pdTRUE);
     xAssert = xTaskCreate(vJoystickTask, (const char *)"Joystick", HMITASKSIZE / sizeof(portSTACK_TYPE), 0, JOYSTICKTASKPRIORITY, &xJoystickTaskHandle);
     configASSERT(xAssert == pdTRUE);
 }
