@@ -32,6 +32,7 @@
 #define ADC_SC3_AVGS_16SAMPLES                  (0x02)          /* 16 samples averaged */
 #define ADC_SC3_AVGS_32SAMPLES                  (0x03)          /* 32 samples averaged */
 
+
 enum ADC_Channels
 {
     ADC_CH_DADP0,
@@ -44,31 +45,38 @@ enum ADC_Channels
     ADC_CH_AD7,
     ADC_CH_AD8,
     ADC_CH_AD9,
-    ADC_CH_AD10,
+    ADC_CH_RESERVED0,
     ADC_CH_AD11,
     ADC_CH_AD12,
     ADC_CH_AD13,
     ADC_CH_AD14,
     ADC_CH_AD15,
-    ADC_CH_AD16,
-    ADC_CH_AD17,
-    ADC_CH_AD18,
-    ADC_CH_AD19,
-    ADC_CH_AD20,
-    ADC_CH_AD21,
-    ADC_CH_AD22,
-    ADC_CH_AD23,
-    ADC_CH_RESERVED0,
     ADC_CH_RESERVED1,
+    ADC_CH_RESERVED2,
+    ADC_CH_RESERVED3,
+    ADC_CH_RESERVED4,
+    ADC_CH_RESERVED5,
+    ADC_CH_RESERVED6,
+    ADC_CH_RESERVED7,
+    ADC_CH_AD23,
+    ADC_CH_RESERVED8,
+    ADC_CH_RESERVED9,
     ADC_CH_TEMP_SENSOR,
     ADCH_CH_BANDGAP,
+    ADC_CH_RESERVED10,
     ADC_CH_VREFSH,
     ADC_CH_VREFSL,
     ADC_CH_DISABLED
 };
 
+#define ADC_BANK_A      (0UL)
+#define ADC_BANK_B      (1UL)
+
+#define ADC_CH_COUNT    (ADC_CH_DISABLED)
+
 
 /* Global function prototypes */
 void ADC0_vInit(void);
-uint16_t ADC0_usReadPolling(const uint8_t ucChannel);
-void CMP0_vInit(void);
+uint16_t ADC0_usReadPolling(const uint32_t ulBank, const uint32_t ulChannel);
+uint16_t ADC0_usReadChannel(const uint32_t ulChannel);
+void ADC0_DMA_vMeasure(const uint32_t ulBank, const uint32_t ulChannel);

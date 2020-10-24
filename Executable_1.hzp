@@ -544,7 +544,7 @@
       <folder Name="ADC">
         <file file_name="Drivers/ADC/adc.c" />
         <file file_name="Drivers/ADC/adc.h" />
-        <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
+        <configuration Name="Clang Debug" build_exclude_from_build="No" />
       </folder>
     </folder>
     <folder Name="FreeRTOS">
