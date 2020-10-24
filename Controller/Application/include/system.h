@@ -22,7 +22,6 @@
 
 
 /* Global defines */
-#define MAX_QUEUE_SIZE          (32UL)
 
 /* Task priorities */
 #define COMMTASKPRIORITY        (7UL)
@@ -38,8 +37,6 @@
 
     
 /* Global variables */
-extern QueueHandle_t      xCommQueue;
-extern EventGroupHandle_t xCommEvent;
     
 
 /* Global function prototypes */

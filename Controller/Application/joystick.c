@@ -17,11 +17,14 @@ extern QueueHandle_t       xTxQueue;
 
 void vJoystickTask(void *const pvParam)
 {
-    MessageQueue  xMsg;
-    uint32_t      ulNotified;
-    BaseType_t    xPassed;
-    uint32_t      ulXaxis;
-    uint32_t      ulYaxis;
+    uint32_t        ulNotified;
+    BaseType_t      xPassed;
+    uint32_t        ulXaxis;
+    uint32_t        ulYaxis;
+    MessageQueue    xMsg;
+    MessageQueue   *pxMsg = &xMsg;
+
+    (void)pvParam;
 
     /* Load timer */
     PIT_vTimerLoad(PIT_CH_0, PIT_CH0_TIMEOUT);
@@ -41,14 +44,17 @@ void vJoystickTask(void *const pvParam)
           ulYaxis = ADC0_usReadChannel(ADC_CH_AD9);
 
           /* Partition the message as we send bytes over SPI */
+          xMsg.ulTxLen = 0;
           xMsg.pucTxData[xMsg.ulTxLen++] = ulXaxis & 0x00FF;
           xMsg.pucTxData[xMsg.ulTxLen++] = ulXaxis & 0xFF00;
           xMsg.pucTxData[xMsg.ulTxLen++] = ulYaxis & 0x00FF;
           xMsg.pucTxData[xMsg.ulTxLen++] = ulYaxis & 0xFF00;
         
           /* Send values to vCommTask */
-          xPassed = xQueueSend(xTxQueue, &xMsg, NULL);
+          xPassed = xQueueSend(xTxQueue, (void *)&pxMsg, NULL);
           configASSERT(xPassed == pdTRUE);
+
+          vTaskDelay(portMAX_DELAY);
         }
     }
 }

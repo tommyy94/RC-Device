@@ -7,7 +7,7 @@ TaskHandle_t        xHmiTaskHandle;
 TaskHandle_t        xJoystickTaskHandle;
 SemaphoreHandle_t   xSpiSema;
 QueueHandle_t       xTxQueue;
-QueueHandle_t       xRxQueue;
+EventGroupHandle_t  xCommEvent;
 
 
 /* Local defines */
@@ -77,11 +77,8 @@ static void vEnableClockGating(void)
  */
 static void vCreateQueues(void)
 {
-    xTxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
+    xTxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(MessageQueue *));
     configASSERT(xTxQueue != NULL);
-
-    xRxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
-    configASSERT(xRxQueue != NULL);
 }
 
 
