@@ -6,16 +6,12 @@
 #include "task.h"
 
 
-enum
-{
-    PIT_CH_0 = 0,
-    PIT_CH_1,
-    PIT_CH_CNT
-};
+extern TaskHandle_t        xJoystickTaskHandle;
 
 
 /**
  * @brief   Enable PIT module.
+ *          PIT is clocked by bus clock (24 MHz).
  * 
  * @param   None
  * 
@@ -27,8 +23,8 @@ void PIT_vInit(void)
     PIT->MCR &= ~PIT_MCR_MDIS(1);
 
     /* Clear pending IRQs */
-    PIT->CHANNEL[0].TFLG  = PIT_TFLG_TIF(1);
-    PIT->CHANNEL[1].TFLG  = PIT_TFLG_TIF(1);
+    PIT->CHANNEL[PIT_CH_0].TFLG  = PIT_TFLG_TIF(1);
+    PIT->CHANNEL[PIT_CH_1].TFLG  = PIT_TFLG_TIF(1);
 
     NVIC_ClearPendingIRQ(PIT_IRQn);
     NVIC_SetPriority(PIT_IRQn, 5);
@@ -63,6 +59,7 @@ void PIT_vTimerLoad(const uint32_t ulChannel, const uint32_t ulTimerVal)
 }
 
 
+#include "spi.h"
 /**
  * @brief   Periodical Interrupt Timer Interrupt Request Handler.
  * 
@@ -76,14 +73,17 @@ void PIT_IRQHandler(void)
 
     if ((PIT->CHANNEL[PIT_CH_0].TFLG & PIT_TFLG_TIF(1)) != 0)
     {
+        /* Give signal to read user input */
+        vTaskNotifyGiveFromISR(xJoystickTaskHandle, &xHigherPriorityTaskWoken);
+
         /* Clear IRQ flag & restart timer */
-        PIT_vTimerLoad(PIT_CH_0, 1000);
+        PIT_vTimerLoad(PIT_CH_0, PIT_CH0_TIMEOUT);
     }
 
     if ((PIT->CHANNEL[PIT_CH_1].TFLG & PIT_TFLG_TIF(1)) != 0)
     {
         /* Clear IRQ flag & disable timer */
-        PIT_vTimerLoad(PIT_CH_1, 1000);
+        PIT_vTimerLoad(PIT_CH_1, PIT_CH1_TIMEOUT);
     }
 
     portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
