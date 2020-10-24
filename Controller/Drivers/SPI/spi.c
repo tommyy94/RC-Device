@@ -8,13 +8,15 @@
 #include "fsl_bitaccess.h"
 
 
+extern SemaphoreHandle_t   xSpiSema;
+
+
 /* Local defines */
 #define MISO                    (1UL)
 #define SCK                     (2UL)
 #define MOSI                    (3UL)
 #define SS                      (4UL)
 
-#define COMM_TASK_NOTIFICATION  (1UL)
 #define BYTE_OFFSET             (0x01UL)
 
 
@@ -171,11 +173,8 @@ void SPI1_vTransmitPolling(char *const pucData, char *const pucRxData, const uin
  */
 void SPI1_vTransmitDMA(char const *pucTxData, char *const pucRxData, const uint32_t ulLength)
 {
-    uint32_t ulTxDone;
+    BaseType_t uxTxDone;
     const TickType_t xMaxBlockTime = pdMS_TO_TICKS(200);
-
-    /* Store the handle of the calling task */
-    xCommTask = xTaskGetCurrentTaskHandle();
 
     /* Set transfer duration */
     TPM2_vLoadCounter(ulLength);
@@ -205,8 +204,8 @@ void SPI1_vTransmitDMA(char const *pucTxData, char *const pucRxData, const uint3
     /* Send rest of the bytes */
     DMA0_vStart(DMA_CHANNEL0);
 
-    ulTxDone = ulTaskNotifyTake(COMM_TASK_NOTIFICATION, xMaxBlockTime);
-    configASSERT(ulTxDone == COMM_TASK_NOTIFICATION);
+    uxTxDone = xSemaphoreTake(xSpiSema, xMaxBlockTime);
+    configASSERT(uxTxDone != 0);
 
     /* Disable DMA TX & RX */
     BME_AND8(&SPI1->C2, ~(uint8_t)SPI_C2_TXDMAE(1));

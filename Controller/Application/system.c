@@ -2,7 +2,9 @@
 
 
 /* Global variables */
+TaskHandle_t        xCommTaskHandle;
 TaskHandle_t        xJoystickTaskHandle;
+SemaphoreHandle_t   xSpiSema;
 
 
 /* Local defines */
@@ -98,8 +100,8 @@ static void vCreateTasks(void)
 {
     TaskHandle_t xHandle;
     BaseType_t xAssert;
-    
-    xAssert = xTaskCreate(vCommTask, (const char *)"Comm", COMMTASKSIZE / sizeof(portSTACK_TYPE), 0, COMMTASKPRIORITY, &xHandle);
+    xAssert = xTaskCreate(vCommTask, (const char *)"Comm", COMMTASKSIZE / sizeof(portSTACK_TYPE), 0, COMMTASKPRIORITY, &xCommTaskHandle);
+    configASSERT(xAssert == pdTRUE);
     configASSERT(xAssert);
     xAssert = xTaskCreate(vJoystickTask, (const char *)"Joystick", HMITASKSIZE / sizeof(portSTACK_TYPE), 0, JOYSTICKTASKPRIORITY, &xJoystickTaskHandle);
     configASSERT(xAssert == pdTRUE);
@@ -115,7 +117,7 @@ static void vCreateTasks(void)
  */
 static void vCreateSemaphores(void)
 {
-
+    xSpiSema = xSemaphoreCreateBinary();
 }
 
 

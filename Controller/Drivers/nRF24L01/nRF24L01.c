@@ -7,6 +7,9 @@
 #include "fsl_bitaccess.h"
 
 
+extern TaskHandle_t xCommTaskHandle;
+
+
 /* Local defines */
 
 /* Signal edges */
@@ -401,7 +404,7 @@ void PORTA_IRQHandler(void)
         PORTA->ISFR = MASK(IRQ);
 
         /* Signal message available */
-        vTaskNotifyGiveFromISR(xCommTask, &xHigherPriorityTaskWoken);
+        vTaskNotifyGiveFromISR(xCommTaskHandle, &xHigherPriorityTaskWoken);
 
         __BKPT();
 
