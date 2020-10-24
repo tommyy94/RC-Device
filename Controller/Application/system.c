@@ -33,6 +33,9 @@ static void vSystemInit(void)
     /* Power up all necessary peripherals */
     vEnableClockGating();
 
+    /* Timers */
+    PIT_vInit();
+
     /* Analog functionalities */
     DMA0_vInit();
     ADC0_vInit();
@@ -58,7 +61,7 @@ static void vEnableClockGating(void)
 {
     SIM->SCGC4 |= SIM_SCGC4_SPI1(1);
     SIM->SCGC5 |= SIM_SCGC5_PORTA(1) | SIM_SCGC5_PORTB(1) | SIM_SCGC5_PORTD(1) | SIM_SCGC5_PORTE(1);
-    SIM->SCGC6 |= SIM_SCGC6_TPM2(1) | SIM_SCGC6_ADC0(1) | SIM_SCGC6_DMAMUX(1);
+    SIM->SCGC6 |= SIM_SCGC6_TPM2(1) | SIM_SCGC6_ADC0(1) | SIM_SCGC6_DMAMUX(1) | SIM_SCGC6_PIT(1);
     SIM->SCGC7 |= SIM_SCGC7_DMA(1);
 }
 
