@@ -3,45 +3,52 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 
 #include "dma.h"
+#include "pit.h"
 
 
-enum
-{
-    X_AXIS = 0,
-    Y_AXIS,
-    AXIS_COUNT
-};
+#define JOYSTICK_TIMEOUT  (10UL)
 
-static uint16_t usJoystick[AXIS_COUNT];
+
+extern QueueHandle_t       xTxQueue;
+
 
 void vJoystickTask(void *const pvParam)
 {
+    MessageQueue  xMsg;
+    uint32_t      ulNotified;
+    BaseType_t    xPassed;
+    uint32_t      ulXaxis;
+    uint32_t      ulYaxis;
+
+    /* Load timer */
+    PIT_vTimerLoad(PIT_CH_0, PIT_CH0_TIMEOUT);
 
     while (1)
     {
-        /* This task should be kicked by vHmiTask */
+        ulNotified = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(JOYSTICK_TIMEOUT));
+        configASSERT(ulNotified != pdFALSE);
+        if (ulNotified != pdFALSE)
+        {
+          /* Measure and store raw analog values to RAM */
+          ADC0_DMA_vMeasure(ADC_BANK_A, ADC_CH_AD8);
+          ADC0_DMA_vMeasure(ADC_BANK_A, ADC_CH_AD9);
 
-        /* Measure and store raw analog values to RAM */
-        ADC0_DMA_vMeasure(ADC_BANK_A, ADC_CH_AD8);
-        //ADC0_DMA_vMeasure(ADC_BANK_A, ADC_CH_AD9);
+          /* Read ADC channels */
+          ulXaxis = ADC0_usReadChannel(ADC_CH_AD8);
+          ulYaxis = ADC0_usReadChannel(ADC_CH_AD9);
 
-        /* Read ADC channels */
-        usJoystick[X_AXIS] = ADC0_usReadChannel(ADC_CH_AD8);
-        //joystick[Y_AXIS] = ADC0_usReadChannel(ADC_CH_AD9);
+          /* Partition the message as we send bytes over SPI */
+          xMsg.pucTxData[xMsg.ulTxLen++] = ulXaxis & 0x00FF;
+          xMsg.pucTxData[xMsg.ulTxLen++] = ulXaxis & 0xFF00;
+          xMsg.pucTxData[xMsg.ulTxLen++] = ulYaxis & 0x00FF;
+          xMsg.pucTxData[xMsg.ulTxLen++] = ulYaxis & 0xFF00;
         
-
-        /* Send values to vCommTask */
-
-        vTaskDelay(pdMS_TO_TICKS(10));
+          /* Send values to vCommTask */
+          xPassed = xQueueSend(xTxQueue, &xMsg, NULL);
+          configASSERT(xPassed == pdTRUE);
+        }
     }
 }
-
-
-/* 8 samples could be stored to memory by DMA
- * and the software could average them
- *
- * Conversion could be triggered by a timer
- * to avoid unneeded MCU wakeup
- */

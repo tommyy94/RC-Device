@@ -6,6 +6,8 @@ TaskHandle_t        xCommTaskHandle;
 TaskHandle_t        xHmiTaskHandle;
 TaskHandle_t        xJoystickTaskHandle;
 SemaphoreHandle_t   xSpiSema;
+QueueHandle_t       xTxQueue;
+QueueHandle_t       xRxQueue;
 
 
 /* Local defines */
@@ -33,13 +35,16 @@ static void vSystemInit(void)
     /* Power up all necessary peripherals */
     vEnableClockGating();
 
+    /* Timers */
+    PIT_vInit();
+
     /* Analog functionalities */
     DMA0_vInit();
     ADC0_vInit();
     
     /* Communications */
-   // TPM2_vInit();
-   // DMAMUX0_vInit(DMA_CHANNEL0, DMAMUX_CHCFG_SOURCE_SPI1_TX);
+    //TPM2_vInit();
+    //DMAMUX0_vInit(DMA_CHANNEL0, DMAMUX_CHCFG_SOURCE_SPI1_TX);
     //DMAMUX0_vInit(DMA_CHANNEL1, DMAMUX_CHCFG_SOURCE_SPI1_RX);
     //DMA0_vLinkChannel(DMA_CHANNEL0, DMA_CHANNEL1);
     //SPI1_vInit();
@@ -58,7 +63,7 @@ static void vEnableClockGating(void)
 {
     SIM->SCGC4 |= SIM_SCGC4_SPI1(1);
     SIM->SCGC5 |= SIM_SCGC5_PORTA(1) | SIM_SCGC5_PORTB(1) | SIM_SCGC5_PORTD(1) | SIM_SCGC5_PORTE(1);
-    SIM->SCGC6 |= SIM_SCGC6_TPM2(1) | SIM_SCGC6_ADC0(1) | SIM_SCGC6_DMAMUX(1);
+    SIM->SCGC6 |= SIM_SCGC6_TPM2(1) | SIM_SCGC6_ADC0(1) | SIM_SCGC6_DMAMUX(1) | SIM_SCGC6_PIT(1);
     SIM->SCGC7 |= SIM_SCGC7_DMA(1);
 }
 
@@ -72,8 +77,11 @@ static void vEnableClockGating(void)
  */
 static void vCreateQueues(void)
 {
-    xCommQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
-    configASSERT(xCommQueue);
+    xTxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
+    configASSERT(xTxQueue != NULL);
+
+    xRxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
+    configASSERT(xRxQueue != NULL);
 }
 
 

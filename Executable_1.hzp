@@ -475,7 +475,7 @@
       arm_target_restrict_memory_accesses="Yes"
       c_additional_options="-fms-extensions"
       c_preprocessor_definitions="__TARGET_PROCESSOR=MKL25Z128xxx4;MKL25Z4=1;__VECTORS=&quot;MKL25Z4.vec&quot;;L_SERIES"
-      c_user_include_directories="$(ProjectDir)/Kinetis;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/nRF24L01;$(ProjectDir)/Drivers/DMA;$(ProjectDir)/Drivers/TPM;$(ProjectDir)/Drivers/ADC;$(ProjectDir)/FreeRTOS/port/gcc;$(ProjectDir)/FreeRTOS/include;$(ProjectDir)/FreeRTOS/config/KL25Z4/gcc;$(ProjectDir)/Application/include;$(ProjectDir)/KL25Z4"
+      c_user_include_directories="$(ProjectDir)/Kinetis;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/nRF24L01;$(ProjectDir)/Drivers/DMA;$(ProjectDir)/Drivers/TPM;$(ProjectDir)/Drivers/ADC;$(ProjectDir)/Drivers/PIT;$(ProjectDir)/FreeRTOS/port/gcc;$(ProjectDir)/FreeRTOS/include;$(ProjectDir)/FreeRTOS/config/KL25Z4/gcc;$(ProjectDir)/Application/include;$(ProjectDir)/KL25Z4"
       debug_register_definition_file="$(ProjectDir)/MKL25Z4_Peripherals.xml"
       gcc_debugging_level="Level 3"
       gcc_optimization_level="Level 3"
@@ -547,6 +547,10 @@
         <file file_name="Drivers/ADC/adc.c" />
         <file file_name="Drivers/ADC/adc.h" />
         <configuration Name="Clang Debug" build_exclude_from_build="No" />
+      </folder>
+      <folder Name="PIT">
+        <file file_name="Drivers/PIT/pit.c" />
+        <file file_name="Drivers/PIT/pit.h" />
       </folder>
     </folder>
     <folder Name="FreeRTOS">

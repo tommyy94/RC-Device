@@ -18,6 +18,7 @@
 #include "tpm.h"
 #include "dma.h"
 #include "nRF24L01.h"
+#include "pit.h"
 
 
 /* Global defines */
