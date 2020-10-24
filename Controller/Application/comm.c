@@ -10,19 +10,10 @@
 extern TaskHandle_t         xCommTaskHandle;
 extern SemaphoreHandle_t    xSpiSema;
 
-QueueHandle_t       xCommQueue;
-EventGroupHandle_t  xCommEvent;
+extern QueueHandle_t        xTxQueue;
+EventGroupHandle_t          xCommEvent;
 
 
-typedef struct
-{
-    uint8_t *pxTx;
-    uint32_t*pxTxLen;
-    uint8_t *pxRx;
-    uint32_t*pxRxLen;
-} MessageStream;
-
-    
 /* Function descriptions */
 
 /**
@@ -35,22 +26,18 @@ typedef struct
 void vCommTask(void *const pvParam)
 {
     (void)pvParam;
-    uint8_t txData[] = "Test";
-    EventBits_t xEvent;
-    MessageStream xMsgStream;
+    EventBits_t   xEvent;
+    MessageQueue  xMsg;
     
-    for (;;)
+    while (1)
     {
-        //nRF24L01_vSendPayload(txData, 4);
         xEvent = xEventGroupWaitBits(xCommEvent, COMM_EVT_MASK, pdTRUE, pdFALSE, portMAX_DELAY);
         if ((xEvent & COMM_EVT_SEND_PAYLOAD) != 0)
         {
-            /* Check receiving to struct ! ! ! */
-            //if (xQueueReceive(xCommQueue, &xMsgStream, (TickType_t)COMM_TIMEOUT))
-            //{
-            //    nRF24L01_vSendPayload(xMsgStream.pxTx, *xMsgStream.pxTxLen);
-            //}
-            nRF24L01_vSendPayload(txData, 4);
+            if (xQueueReceive(xTxQueue, &xMsg, NULL))
+            {
+                nRF24L01_vSendPayload(xMsg.pucTxData, xMsg.ulTxLen);
+            }
         }
         
         if ((xEvent & COMM_EVT_READ_PAYLOAD) != 0)

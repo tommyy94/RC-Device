@@ -6,6 +6,8 @@ TaskHandle_t        xCommTaskHandle;
 TaskHandle_t        xHmiTaskHandle;
 TaskHandle_t        xJoystickTaskHandle;
 SemaphoreHandle_t   xSpiSema;
+QueueHandle_t       xTxQueue;
+QueueHandle_t       xRxQueue;
 
 
 /* Local defines */
@@ -41,8 +43,8 @@ static void vSystemInit(void)
     ADC0_vInit();
     
     /* Communications */
-   // TPM2_vInit();
-   // DMAMUX0_vInit(DMA_CHANNEL0, DMAMUX_CHCFG_SOURCE_SPI1_TX);
+    //TPM2_vInit();
+    //DMAMUX0_vInit(DMA_CHANNEL0, DMAMUX_CHCFG_SOURCE_SPI1_TX);
     //DMAMUX0_vInit(DMA_CHANNEL1, DMAMUX_CHCFG_SOURCE_SPI1_RX);
     //DMA0_vLinkChannel(DMA_CHANNEL0, DMA_CHANNEL1);
     //SPI1_vInit();
@@ -75,8 +77,11 @@ static void vEnableClockGating(void)
  */
 static void vCreateQueues(void)
 {
-    xCommQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
-    configASSERT(xCommQueue);
+    xTxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
+    configASSERT(xTxQueue != NULL);
+
+    xRxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
+    configASSERT(xRxQueue != NULL);
 }
 
 

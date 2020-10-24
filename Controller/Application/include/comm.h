@@ -33,6 +33,15 @@ enum
 };
 
 
+typedef struct
+{
+    uint8_t  *pucTxData;
+    uint32_t  ulTxLen;
+    uint8_t  *pucRxData;
+    uint32_t  ulRxLen;
+} MessageQueue;
+
+
 /* Global variables */
 extern TaskHandle_t xCommTask;
 
