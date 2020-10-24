@@ -31,9 +31,9 @@
 
 /* Task sizes */
 #define COMMTASKSIZE            (128UL)
-#define HMITASKSIZE             (128UL)
-#define JOYSTICKTASKSIZE        (128UL)
-#define STARTUPTASKSIZE         (512L)
+#define HMITASKSIZE             (64UL)
+#define JOYSTICKTASKSIZE        (512UL)
+#define STARTUPTASKSIZE         (512UL)
 
     
 /* Global variables */
