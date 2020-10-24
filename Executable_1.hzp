@@ -510,8 +510,10 @@
         <file file_name="Application/include/system.h" />
         <file file_name="Application/include/comm.h" />
         <file file_name="Application/include/defines.h" />
+        <file file_name="Application/include/joystick.h" />
       </folder>
       <file file_name="Application/comm.c" />
+      <file file_name="Application/joystick.c" />
     </folder>
     <folder Name="System Files">
       <file file_name="thumb_crt0.s" />

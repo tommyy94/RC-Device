@@ -2,6 +2,7 @@
 
 
 /* Global variables */
+TaskHandle_t        xJoystickTaskHandle;
 
 
 /* Local defines */
@@ -100,6 +101,8 @@ static void vCreateTasks(void)
     
     xAssert = xTaskCreate(vCommTask, (const char *)"Comm", COMMTASKSIZE / sizeof(portSTACK_TYPE), 0, COMMTASKPRIORITY, &xHandle);
     configASSERT(xAssert);
+    xAssert = xTaskCreate(vJoystickTask, (const char *)"Joystick", HMITASKSIZE / sizeof(portSTACK_TYPE), 0, JOYSTICKTASKPRIORITY, &xJoystickTaskHandle);
+    configASSERT(xAssert == pdTRUE);
 }
 
 
