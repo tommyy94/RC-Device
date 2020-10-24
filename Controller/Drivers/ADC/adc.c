@@ -19,6 +19,7 @@
 
 /* Global variables */
 static uint16_t usMeas[ADC_CH_COUNT][ADC_SAMPLE_COUNT]; /* Lots of wasted RAM here */
+static uint32_t ulNextAnalogCh = ADC_CH_AD9;
 
 /* Local function prototypes */
 __STATIC_INLINE bool ADC0_bCalibrate(void);
@@ -226,8 +227,12 @@ void ADC0_DMA_vMeasure(const uint32_t ulBank, const uint32_t ulChannel)
     BME_AND32(&ADC0->CFG2, ~ADC_CFG2_MUXSEL_MASK);
     BME_OR32(&ADC0->CFG2, ADC_CFG2_MUXSEL(ulBank));
 
-    /* Set source and destination addresses */
+    /* Set source and destination addresses
+     * NOTE: multiply sample count by 2 because DMA controller counts in bytes
+     */
     DMA0_vInitTransaction(DMA_CHANNEL0, (uint32_t *)&(ADC0->R[ulBank]), &usMeas[ulChannel][0], ADC_SAMPLE_COUNT * 2);
+    DMA0_vInitTransaction(DMA_CHANNEL1, &ulNextAnalogCh, (uint32_t *)&(ADC0->SC1[ulBank]), sizeof(uint32_t));
+    DMA0_vLinkChannel(DMA_CHANNEL0, DMA_CHANNEL1);
 
     /* Start conversion */
     ADC0->SC1[ulBank] = ADC_SC1_ADCH(ulChannel);

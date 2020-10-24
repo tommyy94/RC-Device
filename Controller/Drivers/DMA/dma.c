@@ -55,7 +55,7 @@ void DMA0_vLinkChannel(const uint32_t ulSrcCh, const uint32_t ulDstCh)
     configASSERT(ulDstCh < DMAMUX_CHCFG_COUNT);
 
     /* Perform a link to channel LCH1 after each cycle-steal transfer */
-    DMA0->DMA[ulSrcCh].DCR |= DMA_DCR_LINKCC(2) | DMA_DCR_LCH1(ulDstCh);
+    DMA0->DMA[ulSrcCh].DCR |= DMA_DCR_LINKCC(3) | DMA_DCR_LCH1(ulDstCh);
 }
 
 
@@ -88,15 +88,23 @@ void DMA0_vInit(void)
 
     /**
      * Configure channel 0:
-     * Increment destination address
-     * Transfer halfwords
-     * Enable peripheral request
-     * Cycle stealing mode
+     * - Increment destination address
+     * - Transfer halfwords
+     * - Enable peripheral request
+     * - Burst mode
      */
-    DMA0->DMA[DMA_CHANNEL0].DCR = DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(2) | DMA_DCR_DSIZE(2) | DMA_DCR_DINC(1);
+    DMA0->DMA[DMA_CHANNEL0].DCR = DMA_DCR_ERQ(1) | DMA_DCR_SSIZE(2) | DMA_DCR_DSIZE(2) | DMA_DCR_DINC(1);
+    
+    /**
+     * Configure channel 1:
+     * - Enable peripheral request
+     * - Burst mode
+     */
+    DMA0->DMA[DMA_CHANNEL1].DCR = DMA_DCR_ERQ(1);
     
     /* Clear all status bits */
     DMA0->DMA[DMA_CHANNEL0].DSR_BCR |= DMA_DSR_BCR_DONE(1);
+    DMA0->DMA[DMA_CHANNEL1].DSR_BCR |= DMA_DSR_BCR_DONE(1);
 }
 
 
