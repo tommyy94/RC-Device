@@ -17,7 +17,7 @@ enum
 };
 
 
-#define JOYSTICK_TIMEOUT  (10UL)
+#define JOYSTICK_TIMEOUT  (15UL)
 
 
 extern QueueHandle_t       xTxQueue;
@@ -38,24 +38,23 @@ void vJoystickTask(void *const pvParam)
 
     while (1)
     {
+        /* Measure and store raw analog values to RAM */
+        ADC0_DMA_vMeasureChannels();
+
         ulNotified = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(JOYSTICK_TIMEOUT));
         configASSERT(ulNotified != pdFALSE);
-        if (ulNotified != pdFALSE)
-        {
-          /* Measure and store raw analog values to RAM */
-          ADC0_DMA_vMeasureChannels();
-          ADC0_vReadChannels(pusAdVals);
-
-          /* Partition the message as we send bytes over SPI */
-          xMsg.ulTxLen = 0;
-          xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0x00FF);
-          xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0xFF00);
-          xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0x00FF);
-          xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0xFF00);
         
-          /* Send values to vCommTask */
-          xPassed = xQueueSend(xTxQueue, (void *)&pxMsg, NULL);
-          configASSERT(xPassed == pdTRUE);
-        }
+        ADC0_vReadChannels(pusAdVals);
+
+        /* Partition the message as we send bytes over SPI */
+        xMsg.ulTxLen = 0;
+        xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0x00FF);
+        xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0xFF00);
+        xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0x00FF);
+        xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0xFF00);
+      
+        /* Send values to vCommTask */
+        xPassed = xQueueSend(xTxQueue, (void *)&pxMsg, NULL);
+        configASSERT(xPassed == pdTRUE);
     }
 }

@@ -36,7 +36,6 @@ void vCommTask(void *const pvParam)
         //{
             if (xQueueReceive(xTxQueue, &pxMsg, portMAX_DELAY))
             {
-                __BKPT();
                 //nRF24L01_vSendPayload(xMsg.pucTxData, xMsg.ulTxLen);
             }
         //}
