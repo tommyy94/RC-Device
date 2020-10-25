@@ -20,6 +20,7 @@
 /* User headers */
 #include "defines.h"
 #include "tpm.h"
+#include "system.h"
 
 /* Global defines */
 enum
@@ -32,13 +33,12 @@ enum
     COMM_EVT_MASK         = 0xF
 };
 
+#define MAX_QUEUE_SIZE          (32UL)
 
 typedef struct
 {
-    uint8_t  *pucTxData;
+    uint8_t   pucTxData[MAX_QUEUE_SIZE];
     uint32_t  ulTxLen;
-    uint8_t  *pucRxData;
-    uint32_t  ulRxLen;
 } MessageQueue;
 
 

@@ -11,7 +11,7 @@ extern TaskHandle_t         xCommTaskHandle;
 extern SemaphoreHandle_t    xSpiSema;
 
 extern QueueHandle_t        xTxQueue;
-EventGroupHandle_t          xCommEvent;
+extern EventGroupHandle_t   xCommEvent;
 
 
 /* Function descriptions */
@@ -27,18 +27,18 @@ void vCommTask(void *const pvParam)
 {
     (void)pvParam;
     EventBits_t   xEvent;
-    MessageQueue  xMsg;
+    MessageQueue *pxMsg;
     
     while (1)
     {
-        xEvent = xEventGroupWaitBits(xCommEvent, COMM_EVT_MASK, pdTRUE, pdFALSE, portMAX_DELAY);
-        if ((xEvent & COMM_EVT_SEND_PAYLOAD) != 0)
-        {
-            if (xQueueReceive(xTxQueue, &xMsg, NULL))
+        //xEvent = xEventGroupWaitBits(xCommEvent, COMM_EVT_MASK, pdTRUE, pdFALSE, portMAX_DELAY);
+        //if ((xEvent & COMM_EVT_SEND_PAYLOAD) != 0)
+        //{
+            if (xQueueReceive(xTxQueue, &pxMsg, portMAX_DELAY))
             {
-                nRF24L01_vSendPayload(xMsg.pucTxData, xMsg.ulTxLen);
+                //nRF24L01_vSendPayload(xMsg.pucTxData, xMsg.ulTxLen);
             }
-        }
+        //}
         
         if ((xEvent & COMM_EVT_READ_PAYLOAD) != 0)
         {

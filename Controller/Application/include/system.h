@@ -22,7 +22,6 @@
 
 
 /* Global defines */
-#define MAX_QUEUE_SIZE          (32UL)
 
 /* Task priorities */
 #define COMMTASKPRIORITY        (7UL)
@@ -32,17 +31,15 @@
 
 /* Task sizes */
 #define COMMTASKSIZE            (128UL)
-#define HMITASKSIZE             (128UL)
-#define JOYSTICKTASKSIZE        (128UL)
-#define STARTUPTASKSIZE         (512L)
+#define HMITASKSIZE             (64UL)
+#define JOYSTICKTASKSIZE        (512UL)
+#define STARTUPTASKSIZE         (512UL)
 
     
 /* Global variables */
-extern QueueHandle_t      xCommQueue;
-extern EventGroupHandle_t xCommEvent;
     
 
 /* Global function prototypes */
-void vStartupTask(void *const pvMotorTimers);
+void vStartupTask(void *const pvParam);
 void vApplicationIdleHook(void);
 void vAssertCalled(const uint32_t ulLine, char *const pcFile);

@@ -10,7 +10,8 @@ enum
 };
 
 
-#define PIT_CH0_TIMEOUT   (24000UL)  /* 1 ms  */
+//#define PIT_CH0_TIMEOUT   (24000UL)  /* 1 ms  */
+#define PIT_CH0_TIMEOUT   (240000UL) /* 10 ms */
 #define PIT_CH1_TIMEOUT   (240000UL) /* 10 ms */
 
 

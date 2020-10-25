@@ -7,7 +7,7 @@ TaskHandle_t        xHmiTaskHandle;
 TaskHandle_t        xJoystickTaskHandle;
 SemaphoreHandle_t   xSpiSema;
 QueueHandle_t       xTxQueue;
-QueueHandle_t       xRxQueue;
+EventGroupHandle_t  xCommEvent;
 
 
 /* Local defines */
@@ -77,11 +77,8 @@ static void vEnableClockGating(void)
  */
 static void vCreateQueues(void)
 {
-    xTxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
+    xTxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(MessageQueue *));
     configASSERT(xTxQueue != NULL);
-
-    xRxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(char *));
-    configASSERT(xRxQueue != NULL);
 }
 
 
@@ -108,11 +105,11 @@ static void vCreateEvents(void)
 static void vCreateTasks(void)
 {
     BaseType_t xAssert;
-    xAssert = xTaskCreate(vCommTask, (const char *)"Comm", COMMTASKSIZE / sizeof(portSTACK_TYPE), 0, COMMTASKPRIORITY, &xCommTaskHandle);
+    xAssert = xTaskCreate(vCommTask, (const char *)"Comm", COMMTASKSIZE / sizeof(portSTACK_TYPE), NULL, COMMTASKPRIORITY, &xCommTaskHandle);
     configASSERT(xAssert == pdTRUE);
-    xAssert = xTaskCreate(vHmiTask, (const char *)"HMI", HMITASKSIZE / sizeof(portSTACK_TYPE), 0, HMITASKPRIORITY, &xHmiTaskHandle);
+    xAssert = xTaskCreate(vHmiTask, (const char *)"HMI", HMITASKSIZE / sizeof(portSTACK_TYPE), NULL, HMITASKPRIORITY, &xHmiTaskHandle);
     configASSERT(xAssert == pdTRUE);
-    xAssert = xTaskCreate(vJoystickTask, (const char *)"Joystick", HMITASKSIZE / sizeof(portSTACK_TYPE), 0, JOYSTICKTASKPRIORITY, &xJoystickTaskHandle);
+    xAssert = xTaskCreate(vJoystickTask, (const char *)"Joystick", JOYSTICKTASKSIZE / sizeof(portSTACK_TYPE), NULL, JOYSTICKTASKPRIORITY, &xJoystickTaskHandle);
     configASSERT(xAssert == pdTRUE);
 }
 
@@ -137,7 +134,7 @@ static void vCreateSemaphores(void)
  * 
  * @return  None
  */
-void vStartupTask(void *const pvMotorTimers)
+void vStartupTask(void *const pvParam)
 {    
     /* Initialize FreeRTOS components */
     vCreateQueues();

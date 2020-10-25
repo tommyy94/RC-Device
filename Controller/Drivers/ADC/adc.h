@@ -79,4 +79,5 @@ enum ADC_Channels
 void ADC0_vInit(void);
 uint16_t ADC0_usReadPolling(const uint32_t ulBank, const uint32_t ulChannel);
 uint16_t ADC0_usReadChannel(const uint32_t ulChannel);
-void ADC0_DMA_vMeasure(const uint32_t ulBank, const uint32_t ulChannel);
+void ADC0_DMA_vMeasureChannels(void);
+void ADC0_vReadChannels(uint16_t pusAnalogValues[]);
