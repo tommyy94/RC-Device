@@ -19,7 +19,7 @@
 /* Function descriptions */
 
 /**
- * @brief   Initialize DMAMUX0.
+ * @brief   Initialize DMAMUX0 channel N.
  * 
  * @param   ulChannel       DMA channel.
  *
@@ -30,13 +30,13 @@
 void DMAMUX0_vInit(uint32_t const ulChannel, uint32_t const ulSource)
 {
     configASSERT(ulChannel < DMAMUX_CHCFG_COUNT);
-    configASSERT(ulSource <= DMAMUX0_CHCFG_SOURCE_TSI);
+    configASSERT(ulSource <= DMAMUX0_CHCFG_SOURCE_DMAMUX3);
 
-    /* Disable DMA channels to configure it */
+    /* Disable DMA channel to configure it */
     DMAMUX0->CHCFG[ulChannel] = 0;
     
-    /* Enable DMA0 MUX channels with SPI1 TX & RX as triggers */
-    DMAMUX0->CHCFG[ulChannel] = DMAMUX_CHCFG_SOURCE(ulSource) & (~DMAMUX_CHCFG_TRIG_MASK);
+    /* Enable DMA0 MUX channel triggers */
+    DMAMUX0->CHCFG[ulChannel] = DMAMUX_CHCFG_SOURCE(ulSource);
 }
 
 
@@ -55,7 +55,7 @@ void DMA0_vLinkChannel(const uint32_t ulSrcCh, const uint32_t ulDstCh)
     configASSERT(ulDstCh < DMAMUX_CHCFG_COUNT);
 
     /* Perform a link to channel LCH1 after each cycle-steal transfer */
-    DMA0->DMA[ulSrcCh].DCR |= DMA_DCR_LINKCC(3) | DMA_DCR_LCH1(ulDstCh);
+    DMA0->DMA[ulSrcCh].DCR |= DMA_DCR_LINKCC(2) | DMA_DCR_LCH1(ulDstCh);
 }
 
 
@@ -70,41 +70,38 @@ void DMA0_vInit(void)
 {
     /**
      * Configure channel 0:
-     * Increment source address
-     * Transfer bytes
-     * Enable peripheral request
-     * Cycle stealing mode
-     */
-    //DMA0->DMA[DMA_CHANNEL0].DCR = DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(1) | DMA_DCR_DSIZE(1) | DMA_DCR_SINC(1);
-
-    /**
-     * Configure channel 1:
-     * Increment destination address
-     * Transfer bytes
-     * Enable peripheral request
-     * Cycle stealing mode
-     */
-    //DMA0->DMA[DMA_CHANNEL1].DCR = DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(1) | DMA_DCR_DSIZE(1) | DMA_DCR_DINC(1);
-
-    /**
-     * Configure channel 0:
      * - Increment destination address
      * - Transfer halfwords
      * - Enable peripheral request
-     * - Burst mode
+     * - Cycle stealing mode
      */
-    DMA0->DMA[DMA_CHANNEL0].DCR = DMA_DCR_ERQ(1) | DMA_DCR_SSIZE(2) | DMA_DCR_DSIZE(2) | DMA_DCR_DINC(1);
+    DMA0->DMA[DMA_CHANNEL0].DCR = DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(2) | DMA_DCR_DSIZE(2) | DMA_DCR_DINC(1);
     
     /**
      * Configure channel 1:
+     * - Increment source address
+     * - Transfer bytes
      * - Enable peripheral request
-     * - Burst mode
+     * - Cycle stealing mode
      */
-    DMA0->DMA[DMA_CHANNEL1].DCR = DMA_DCR_ERQ(1);
+    DMA0->DMA[DMA_CHANNEL1].DCR = DMA_DCR_ERQ(1) | DMA_DCR_CS(1) | DMA_DCR_SSIZE(0) | DMA_DCR_DSIZE(0) | DMA_DCR_SINC(1);
     
-    /* Clear all status bits */
-    DMA0->DMA[DMA_CHANNEL0].DSR_BCR |= DMA_DSR_BCR_DONE(1);
-    DMA0->DMA[DMA_CHANNEL1].DSR_BCR |= DMA_DSR_BCR_DONE(1);
+    DMA0_vClearStatus(DMA_CHANNEL0);
+    DMA0_vClearStatus(DMA_CHANNEL1);
+}
+
+
+/**
+ * @brief   Clear DMA0 channel N status bits.
+ * 
+ * @param   ulChannel       DMA channel.
+ * 
+ * @return  None
+ */
+void DMA0_vClearStatus(const uint32_t ulChannel)
+{
+    configASSERT(ulChannel < DMAMUX_CHCFG_COUNT);
+    DMA0->DMA[ulChannel].DSR_BCR |= DMA_DSR_BCR_DONE(1);
 }
 
 
@@ -144,25 +141,64 @@ void DMA0_vInitTransaction(const uint32_t ulChannel, void *const pvSrcAddr, void
  * 
  * @return  None
  */
-void DMA0_vStart(const uint32_t ulChannel)
+void DMA0_vChannelNEnable(const uint32_t ulChannel)
 {
     configASSERT(ulChannel < DMAMUX_CHCFG_COUNT);
+
+    /* Should use DMA0_vStartChannel0 to write DMA channel 0 */
+    configASSERT(ulChannel > DMA_CHANNEL0);
     
-    /* Set enable flag */
-    BME_OR32(&DMAMUX0->CHCFG[ulChannel], DMAMUX_CHCFG_ENBL(1));
+    DMAMUX0->CHCFG[ulChannel] |= DMAMUX_CHCFG_ENBL(1);
 }
 
 
 /**
- * @brief   Disable DMA0.
+ * @brief   Disable specified DMA0 channel.
  * 
  * @param   ulChannel       DMA channel.
  * 
  * @return  None
  */
-void DMA0_vStop(const uint32_t ulChannel)
+void DMA0_vChannelNDisable(const uint32_t ulChannel)
 {
     configASSERT(ulChannel < DMAMUX_CHCFG_COUNT);
 
-    BME_AND32(&DMAMUX0->CHCFG[ulChannel], ~DMAMUX_CHCFG_ENBL(1));
+    /* Should use DMA0_vStartChannel0 to write DMA channel 0 */
+    configASSERT(ulChannel > DMA_CHANNEL0);
+
+    DMAMUX0->CHCFG[ulChannel] &= ~DMAMUX_CHCFG_ENBL(1);
+}
+
+
+/**
+ * @brief   Enable DMA0 channel 0.
+ *          BME (Bit Manipulatio Engine) is able to access ONLY channel 0.
+ *          Accessing other DMAMUX0 channels with BME results in HardFault.
+ *          This strongly suggests the DMA channels are meant to be linked
+ *          to each other.
+ * 
+ * @param   None
+ * 
+ * @return  None
+ */
+void DMA0_vChannel0Enable(void)
+{
+    BME_OR32(&DMAMUX0->CHCFG[DMA_CHANNEL0], DMAMUX_CHCFG_ENBL(1));
+}
+
+
+/**
+ * @brief   Disable DMA0 Channel 0.
+ *          BME (Bit Manipulatio Engine) is able to access ONLY channel 0.
+ *          Accessing other DMAMUX0 channels with BME results in HardFault.
+ *          This strongly suggests the DMA channels are meant to be linked
+ *          to each other.
+ * 
+ * @param   None
+ * 
+ * @return  None
+ */
+void DMA0_vChannel0Disable(void)
+{
+    BME_AND32(&DMAMUX0->CHCFG[DMA_CHANNEL0], ~DMAMUX_CHCFG_ENBL(1));
 }
