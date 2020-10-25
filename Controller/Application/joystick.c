@@ -9,6 +9,14 @@
 #include "pit.h"
 
 
+enum
+{
+    AXIS_X,
+    AXIS_Y,
+    AXIS_CNT
+};
+
+
 #define JOYSTICK_TIMEOUT  (10UL)
 
 
@@ -19,10 +27,9 @@ void vJoystickTask(void *const pvParam)
 {
     uint32_t        ulNotified;
     BaseType_t      xPassed;
-    uint32_t        ulXaxis;
-    uint32_t        ulYaxis;
     MessageQueue    xMsg;
     MessageQueue   *pxMsg = &xMsg;
+    uint16_t        pusAdVals[AXIS_CNT];
 
     (void)pvParam;
 
@@ -36,25 +43,19 @@ void vJoystickTask(void *const pvParam)
         if (ulNotified != pdFALSE)
         {
           /* Measure and store raw analog values to RAM */
-          ADC0_DMA_vMeasure(ADC_BANK_A, ADC_CH_AD8);
-          ADC0_DMA_vMeasure(ADC_BANK_A, ADC_CH_AD9);
-
-          /* Read ADC channels */
-          ulXaxis = ADC0_usReadChannel(ADC_CH_AD8);
-          ulYaxis = ADC0_usReadChannel(ADC_CH_AD9);
+          ADC0_DMA_vMeasureChannels();
+          ADC0_vReadChannels(pusAdVals);
 
           /* Partition the message as we send bytes over SPI */
           xMsg.ulTxLen = 0;
-          xMsg.pucTxData[xMsg.ulTxLen++] = ulXaxis & 0x00FF;
-          xMsg.pucTxData[xMsg.ulTxLen++] = ulXaxis & 0xFF00;
-          xMsg.pucTxData[xMsg.ulTxLen++] = ulYaxis & 0x00FF;
-          xMsg.pucTxData[xMsg.ulTxLen++] = ulYaxis & 0xFF00;
+          xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0x00FF);
+          xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0xFF00);
+          xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0x00FF);
+          xMsg.pucTxData[xMsg.ulTxLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0xFF00);
         
           /* Send values to vCommTask */
           xPassed = xQueueSend(xTxQueue, (void *)&pxMsg, NULL);
           configASSERT(xPassed == pdTRUE);
-
-          vTaskDelay(portMAX_DELAY);
         }
     }
 }
