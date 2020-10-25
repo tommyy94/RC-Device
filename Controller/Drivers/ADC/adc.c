@@ -31,7 +31,7 @@ static uint32_t pulAdcChTbl[ADC_SAMPLE_COUNT] =
     ADC_SC1_ADCH(ADC_CH_AD9), ADC_SC1_ADCH(ADC_CH_AD8),
     ADC_SC1_ADCH(ADC_CH_AD9), ADC_SC1_ADCH(ADC_CH_AD8),
     ADC_SC1_ADCH(ADC_CH_AD9), ADC_SC1_ADCH(ADC_CH_AD8),
-    ADC_SC1_ADCH(ADC_CH_AD9), ADC_SC1_ADCH(ADC_CH_AD9)
+    ADC_SC1_ADCH(ADC_CH_AD9), ADC_SC1_ADCH(ADC_CH_AD8)
 };
 
 /* Local function prototypes */
@@ -90,15 +90,14 @@ void ADC0_vInit(void)
     /* Use continuous conversion */
     ADC0->SC3 |= ADC_SC3_ADCO(1);
 
-    /* Enable DMA on conversion complete */
-    ADC0->SC2 |= ADC_SC2_DMAEN(1);
-
     /* Configure DMA0 trigger source */
     DMAMUX0_vInit(DMA_CHANNEL0, DMAMUX0_CHCFG_SOURCE_ADC0);
     
     /* Disable both banks */
     ADC0->SC1[ADC_BANK_A] = ADC_SC1_ADCH(ADC_CH_DISABLED);
     ADC0->SC1[ADC_BANK_B] = ADC_SC1_ADCH(ADC_CH_DISABLED);
+    
+    ADC0_vSelectBank(ADC_BANK_A);
 }
 
   
@@ -244,6 +243,7 @@ __STATIC_INLINE void ADC0_vSelectBank(const uint32_t ulBank)
 
 /**
  * @brief   Start ADC0 measurement.
+ *          ADC results are written to RAM.
  * 
  * @param   None
  * 
@@ -251,22 +251,32 @@ __STATIC_INLINE void ADC0_vSelectBank(const uint32_t ulBank)
  */
 void ADC0_DMA_vMeasureChannels(void)
 {
+    uint32_t *const pulChSel = (uint32_t *)&(ADC0->SC1[ADC_BANK_A]);
+    uint32_t *const pulData  = (uint32_t *)&(ADC0->R[ADC_BANK_A]);
+
     /* Convert the transfer length to bytes as the DMA
      * controller counts the transfer length in bytes
      */
-    const uint32_t ulCh0Len = ADC_SAMPLE_COUNT * sizeof(usMeas[0]);
-    const uint32_t ulCh1Len = ADC_SAMPLE_COUNT * sizeof(pulAdcChTbl[0]);
+    uint32_t const ulCh0Len = ADC_SAMPLE_COUNT * sizeof(usMeas[0]);
+    uint32_t const ulCh1Len = ADC_SAMPLE_COUNT * sizeof(pulAdcChTbl[0]);
 
-    uint32_t *pulChSel = (uint32_t *)&(ADC0->SC1[ADC_BANK_A]);
-    uint32_t *pulData  = (uint32_t *)&(ADC0->R[ADC_BANK_A]);
+    /* Disable DMA requests before configuring it */
+    ADC0->SC2 &= ~ADC_SC2_DMAEN(1);
+    DMA0_vChannel0Disable();
 
-    /* Configure DMA to switch to next channel after reading ADC result */
+    /* Need to clear DONE flags before each transaction */
+    DMA0_vClearStatus(DMA_CHANNEL0);
+    DMA0_vClearStatus(DMA_CHANNEL1);
+
+    /* Configure DMA to switch to next channel after reading ADC result.
+     * Need to rewrite all source and destination addresses every time
+     * as the controller increments them.
+     */
     DMA0_vInitTransaction(DMA_CHANNEL0, pulData, usMeas, ulCh0Len);
     DMA0_vInitTransaction(DMA_CHANNEL1, pulAdcChTbl, pulChSel, ulCh1Len);
-    DMA0_vLinkChannel(DMA_CHANNEL0, DMA_CHANNEL1);
-    DMA0_vChannel0Enable();
     
     /* Start conversion */
-    ADC0_vSelectBank(ADC_BANK_A);
+    DMA0_vChannel0Enable();
+    ADC0->SC2 |= ADC_SC2_DMAEN(1);
     ADC0->SC1[ADC_BANK_A] = ADC_SC1_ADCH(ADC_CH_AD8);
 }

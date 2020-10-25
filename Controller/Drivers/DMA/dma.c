@@ -88,6 +88,12 @@ void DMA0_vInit(void)
     
     DMA0_vClearStatus(DMA_CHANNEL0);
     DMA0_vClearStatus(DMA_CHANNEL1);
+    
+    /* Link DMA channels 0 & 1:
+     * - Channel 0 reads ADC results  triggering
+     *   channel 1 selecting new ADC channel
+     */
+    DMA0_vLinkChannel(DMA_CHANNEL0, DMA_CHANNEL1);
 }
 
 
