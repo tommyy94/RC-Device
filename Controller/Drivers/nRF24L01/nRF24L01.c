@@ -315,7 +315,7 @@ void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
     }
 
     /* Transfer bytes to nRF24L01 */
-    SPI1_vTransmitDMA(ucTxData, ucRxData, ulLength);
+    SPI1_vTransmitPolling(ucTxData, ucRxData, ulLength);
     
     nRF24L01_vStartTransmission();
 }
@@ -383,7 +383,7 @@ void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *puc
     }
 
     /* Transfer bytes to nRF24L01 */
-    SPI1_vTransmitDMA(ucTxData, ucRxData, ulLength);
+    SPI1_vTransmitPolling(ucTxData, ucRxData, ulLength);
 }
 
 

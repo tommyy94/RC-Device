@@ -43,12 +43,9 @@ static void vSystemInit(void)
     ADC0_vInit();
     
     /* Communications */
-    //TPM2_vInit();
-    //DMAMUX0_vInit(DMA_CHANNEL0, DMAMUX_CHCFG_SOURCE_SPI1_TX);
-    //DMAMUX0_vInit(DMA_CHANNEL1, DMAMUX_CHCFG_SOURCE_SPI1_RX);
-    //DMA0_vLinkChannel(DMA_CHANNEL0, DMA_CHANNEL1);
-    //SPI1_vInit();
-    //nRF24L01_vInit();
+    TPM2_vInit();
+    SPI1_vInit();
+    nRF24L01_vInit();
 }
 
 

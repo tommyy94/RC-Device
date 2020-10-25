@@ -161,65 +161,6 @@ void SPI1_vTransmitPolling(char *const pucData, char *const pucRxData, const uin
 
 
 /**
- * @brief   Transmit string over SPI by DMA.
- * 
- * @param   pcTxData    String to send
- * 
- * @param   pcRxData    String to receive
- *
- * @param   ulLength    Transaction length
- *             
- * @return  None
- */
-void SPI1_vTransmitDMA(char const *pucTxData, char *const pucRxData, const uint32_t ulLength)
-{
-    BaseType_t uxTxDone;
-    const TickType_t xMaxBlockTime = pdMS_TO_TICKS(200);
-
-    /* Set transfer duration */
-    TPM2_vLoadCounter(ulLength);
-
-    /* Set source and destination addresses */
-    DMA0_vInitTransaction(DMA_CHANNEL0, (uint32_t *)(pucTxData + BYTE_OFFSET), (uint32_t *)&(SPI1->D), ulLength - BYTE_OFFSET);
-    DMA0_vInitTransaction(DMA_CHANNEL1, (uint32_t *)&(SPI1->D), (uint32_t *)(pucRxData), ulLength);
-    
-    /* Begin transfer */
-    SPI1_vSetSlave(LOW);
-
-    /* Reset counter and start timer */
-    TPM2->CNT = 0;
-    TPM2_vStart();
-    
-    /**
-     * Datasheet recommends starting transfer by reading status register
-     * and sending first byte by placing value to register
-     */
-    (void)SPI1->S;
-    SPI1->D = pucTxData[0];
-
-    /* Enable DMA TX & RX */ 
-    BME_OR8(&SPI1->C2, SPI_C2_TXDMAE(1));
-    BME_OR8(&SPI1->C2, SPI_C2_RXDMAE(1));
-
-    /* Send rest of the bytes */
-    DMA0_vStart(DMA_CHANNEL0);
-
-    uxTxDone = xSemaphoreTake(xSpiSema, xMaxBlockTime);
-    configASSERT(uxTxDone != 0);
-
-    /* Disable DMA TX & RX */
-    BME_AND8(&SPI1->C2, ~(uint8_t)SPI_C2_TXDMAE(1));
-    BME_AND8(&SPI1->C2, ~(uint8_t)SPI_C2_RXDMAE(1));
-
-    DMA0_vStop(DMA_CHANNEL0);
-
-    /* Clear DONE & error bits */
-    BME_OR32(&DMA0->DMA[DMA_CHANNEL0].DSR_BCR, DMA_DSR_BCR_DONE(1));
-    BME_OR32(&DMA0->DMA[DMA_CHANNEL1].DSR_BCR, DMA_DSR_BCR_DONE(1));
-}
-
-
-/**
  * @brief   Set SS line high/low.
  * 
  * @param   ulState     HIGH/LOW
