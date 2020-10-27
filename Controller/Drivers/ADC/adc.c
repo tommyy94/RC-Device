@@ -261,7 +261,7 @@ void ADC0_DMA_vMeasureChannels(void)
     uint32_t const ulCh1Len = ADC_SAMPLE_COUNT * sizeof(pulAdcChTbl[0]);
 
     /* Disable DMA requests before configuring it */
-    ADC0->SC2 &= ~ADC_SC2_DMAEN(1);
+    BME_AND32(&ADC0->SC2, ~ADC_SC2_DMAEN(1));
     DMA0_vChannel0Disable();
 
     /* Need to clear DONE flags before each transaction */
@@ -277,6 +277,6 @@ void ADC0_DMA_vMeasureChannels(void)
     
     /* Start conversion */
     DMA0_vChannel0Enable();
-    ADC0->SC2 |= ADC_SC2_DMAEN(1);
+    BME_OR32(&ADC0->SC2, ADC_SC2_DMAEN(1));
     ADC0->SC1[ADC_BANK_A] = ADC_SC1_ADCH(ADC_CH_AD8);
 }

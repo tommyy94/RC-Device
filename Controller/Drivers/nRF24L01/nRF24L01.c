@@ -18,7 +18,7 @@ extern TaskHandle_t xCommTaskHandle;
 
 #define RXTX_ADDR_LEN               (5UL)
 #define MAX_PAYLOAD_LEN             (32UL)
-#define ADDR_40BIT_LEN              (6UL)
+#define ADDR_40BIT_LEN              (5UL)
 
 /* Commands */
 #define R_REGISTER                  (0x00UL)    /* Read command and status registers */
@@ -99,16 +99,15 @@ extern TaskHandle_t xCommTaskHandle;
 
 
 /* Local function prototypes */
-__STATIC_INLINE void nRF24L01_vConfigureIRQ(void);
-__STATIC_INLINE void nRF24L01_vConfigureChipEnable(void);
-__STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState);
-__STATIC_INLINE void nRF24L01_vStartTransmission(void);
+__STATIC_INLINE void    nRF24L01_vConfigureIRQ(void);
+__STATIC_INLINE void    nRF24L01_vConfigureChipEnable(void);
+__STATIC_INLINE void    nRF24L01_vSetChipEnable(const uint32_t ulState);
+__STATIC_INLINE void    nRF24L01_vStartTransmission(void);
+__STATIC_INLINE uint8_t nRF24L01_ucGetStatus(void);
 
 static void nRF24L01_vSetReceiveMode(void);
 
 
-
-    uint8_t txData[] = "Test";
 /* Function descriptions */
 
 /**
@@ -128,7 +127,7 @@ void nRF24L01_vInit(void)
     nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(50));
 
     /* Set RX & TX address matching */
-    const uint8_t ucTxAddr[ADDR_40BIT_LEN] = { 0x11, 0x22, 0x33, 0x44, 0x55, 0x00 }; /* LSB written first, null-terminator at end */
+    const uint8_t ucTxAddr[ADDR_40BIT_LEN] = { 0x11, 0x22, 0x33, 0x44, 0x55 }; /* LSB written first */
     nRF24L01_vWriteAddressRegister(RX_ADDR_P0, ucTxAddr, ADDR_40BIT_LEN);
     nRF24L01_vWriteAddressRegister(TX_ADDR, ucTxAddr, ADDR_40BIT_LEN);
     
@@ -264,6 +263,19 @@ __STATIC_INLINE void nRF24L01_vStartTransmission(void)
 
 
 /**
+ * @brief   Read nRF24L01 status.
+ * 
+ * @param   None
+ *             
+ * @return  nRF24L01 status bits
+ */
+__STATIC_INLINE uint8_t nRF24L01_ucGetStatus(void)
+{
+    return SPI1_ucTransmitByte(NOP);
+}
+
+
+/**
  * @brief   Reset the given mask of status bits.
  * 
  * @param   None
@@ -350,7 +362,7 @@ void nRF24L01_vWriteRegister(const uint8_t ucRegister, const uint8_t ucValue)
  */
 void nRF24L01_vSendCommand(const uint8_t ucCommand)
 {
-    SPI1_vTransmitByte(ucCommand);
+    (void)SPI1_ucTransmitByte(ucCommand);
 }
 
 
@@ -407,7 +419,6 @@ void PORTA_IRQHandler(void)
         vTaskNotifyGiveFromISR(xCommTaskHandle, &xHigherPriorityTaskWoken);
 
         __BKPT();
-
     }
 
     /* Force context switch if xHigherPriorityTaskWoken is set pdTRUE */

@@ -27,7 +27,8 @@ void vCommTask(void *const pvParam)
 {
     (void)pvParam;
     EventBits_t   xEvent;
-    MessageQueue *pxMsg;
+    MessageQueue  xMsg;
+    MessageQueue *pxMsg = &xMsg;
     
     while (1)
     {
@@ -36,7 +37,7 @@ void vCommTask(void *const pvParam)
         //{
             if (xQueueReceive(xTxQueue, &pxMsg, portMAX_DELAY))
             {
-                //nRF24L01_vSendPayload(xMsg.pucTxData, xMsg.ulTxLen);
+                nRF24L01_vSendPayload(xMsg.pucTxData, xMsg.ulTxLen);
             }
         //}
         
