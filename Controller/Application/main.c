@@ -1,3 +1,8 @@
+/* RTOS headers */
+#include "FreeRTOS.h"
+#include "task.h"
+
+/* User headers */
 #include "system.h"
 
 

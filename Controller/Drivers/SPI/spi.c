@@ -4,7 +4,7 @@
  */
 
 
-#include "spi.h"
+/* Device vendor headers */
 #include "MKL25Z4.h"
 #include "fsl_bitaccess.h"
 
@@ -12,7 +12,6 @@
 #include "system.h"
 
 
-extern SemaphoreHandle_t   xSpiSema;
 
 
 /* Local defines */
@@ -21,7 +20,7 @@ extern SemaphoreHandle_t   xSpiSema;
 #define MOSI                    (3UL)
 #define SS                      (4UL)
 
-#define BYTE_OFFSET             (0x01UL)
+#define SPI1_TIMEOUT_MS         (10UL)
 
 
 typedef enum
@@ -155,54 +154,6 @@ uint8_t SPI1_ucTransmitByte(const char ucByte)
     SPI1_vSetSlave(HIGH);
 
     return ucRet;
-}
-
-
-/**
- * @brief   Transmit message over SPI by polling.
- * 
- * @param   pucTxData   Pointer to data to send.
- * 
- * @param   pucRxData   Pointer to data to receive.
- * 
- * @param   ulLength    Data length
- * 
- * @return  None
- */
-void SPI1_vTransmitPolling(char *const pucData, char *const pucRxData, const uint32_t ulLength)
-{
-    /* Disable TPM2 interrupts just to be sure */
-    BME_AND8(&TPM2->SC, ~(uint8_t)TPM_SC_TOIE(1));
-
-    TPM2->CNT = 0;
-    TPM2_vStart();
-    
-    /* Transfer byte */
-    SPI1_vSetSlave(LOW);
-
-    for (uint32_t i = 0; i < ulLength; i++)
-    {
-        while (!BME_UBFX8(&SPI1->S, SPI_S_SPTEF_SHIFT, SPI_S_SPTEF_WIDTH))
-        {
-            ; /* Wait until TX buffer empty */
-        }
-        
-        SPI1->D = pucData[i];
-        pucRxData[i] = SPI1_ucReadPolling();
-    }
-
-    while (TPM2->CNT < (TIME_PER_BYTE * ulLength))
-    {
-        ; /* Wait until transaction done */
-    }
-
-    /* Stop TPM2 first to give small overhead for SS */
-    TPM2_vStop();
-    
-    SPI1_vSetSlave(HIGH);
-
-    /* Turn TPM2 interrupts on again */
-    BME_OR8(&TPM2->SC, TPM_SC_TOIE(1));
 }
 
 

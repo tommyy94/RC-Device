@@ -2,6 +2,10 @@
 #include "fsl_bitaccess.h"
 #include "spi.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "event_groups.h"
+
 
 /* Local defines */
 #define COMM_TIMEOUT    (10U)
@@ -61,33 +65,4 @@ void vCommTask(void *const pvParam)
 
         }
     }
-}
-
-
-/**
- * @brief   Sets SPI1 SS line high and stops DMA0.
- * 
- * @param   None
- * 
- * @return  None
- */
-void TPM2_IRQHandler(void)
-{
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    
-    if (BME_UBFX32(&TPM2->STATUS, TPM_STATUS_TOF_SHIFT, TPM_STATUS_TOF_WIDTH))
-    {
-        /* Cleanup */
-        SPI1_vSetSlave(HIGH);
-        TPM2_vStop();
-
-        /* Notify task */
-        xSemaphoreGiveFromISR(xSpiSema, &xHigherPriorityTaskWoken);
-    }
-
-    /* Clear Timer Overflow Flag */
-    BME_OR32(&TPM2->STATUS, TPM_STATUS_TOF(1));
-
-    /* Force context switch if xHigherPriorityTaskWoken is set pdTRUE */
-    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }

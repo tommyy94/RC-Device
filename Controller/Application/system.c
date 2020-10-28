@@ -1,17 +1,37 @@
+/* System headers */
+
+/* Device vendor headers */
+#include "MKL25Z4.h"
+
+/* RTOS headers */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "timers.h"
+#include "event_groups.h"
+#include "message_buffer.h"
+
+/* User headers */
 #include "system.h"
+#include "comm.h"
+#include "joystick.h"
+#include "hmi.h"
+#include "adc.h"
+#include "tpm.h"
+#include "dma.h"
+#include "nRF24L01.h"
+#include "pit.h"
 
 
 /* Global variables */
-TaskHandle_t        xCommTaskHandle;
-TaskHandle_t        xHmiTaskHandle;
-TaskHandle_t        xJoystickTaskHandle;
-SemaphoreHandle_t   xSpiSema;
-QueueHandle_t       xTxQueue;
+TaskHandle_t            xCommTaskHandle;
+TaskHandle_t            xHmiTaskHandle;
+TaskHandle_t            xJoystickTaskHandle;
+QueueHandle_t           xTxQueue;
+EventGroupHandle_t      xCommEvent;
 EventGroupHandle_t  xCommEvent;
 
 
 /* Local defines */
-#define TIMER_NAME_LEN          (32UL)
 
 
 /* Local function prototypes */
