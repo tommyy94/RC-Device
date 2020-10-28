@@ -133,7 +133,7 @@
 #define configUSE_TICKLESS_IDLE_DECISION_HOOK     0 /* set to 1 to enable application hook, zero otherwise */
 #define configUSE_TICKLESS_IDLE_DECISION_HOOK_NAME xEnterTicklessIdle /* function name of decision hook */
 
-#define configMAX_PRIORITIES                      ((unsigned portBASE_TYPE)18)
+#define configMAX_PRIORITIES                      (18)
 #define configMAX_CO_ROUTINE_PRIORITIES           2
 
 /* Software timer definitions. */
@@ -223,7 +223,16 @@ void vAssertCalled(const uint32_t ulLine, char *const pcFile);
 
 #define portINLINE __inline
 
+/* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
+standard names - or at least those used in the unmodified vector table. */
+
+#define vPortSVCHandler SVC_Handler
+
+#define xPortPendSVHandler PendSV_Handler
+#define xPortSysTickHandler SysTick_Handler
+
 /* Boolean data type for port.c */
 #include "stdbool.h"
+#include "system_MKL25Z4.h"
 
 #endif /* FREERTOS_CONFIG_H */
