@@ -3,6 +3,10 @@
  * This compilation unit handles Direct Memory Access.
  */
 
+#include "FreeRTOS.h"
+#include "task.h"
+
+
 #include "dma.h"
 #include "fsl_bitaccess.h"
 
@@ -80,7 +84,7 @@ void DMA0_vInit(void)
     /**
      * Configure channel 1:
      * - Increment source address
-     * - Transfer bytes
+     * - Transfer words
      * - Enable peripheral request
      * - Cycle stealing mode
      */

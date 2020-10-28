@@ -412,8 +412,13 @@
       <folder Name="portable">
         <folder Name="GCC">
           <folder Name="ARM_CM7">
-            <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/port.c" />
+            <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/port.c">
+              <configuration
+                Name="THUMB Release"
+                build_exclude_from_build="No" />
+            </file>
             <file file_name="Documents/CrossWorks Projects/Executable_1/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/portmacro.h" />
+            <configuration Name="Clang Debug" build_exclude_from_build="No" />
           </folder>
         </folder>
         <folder Name="MemMang">
@@ -476,7 +481,7 @@
       arm_target_restrict_memory_accesses="Yes"
       c_additional_options="-fms-extensions"
       c_preprocessor_definitions="__TARGET_PROCESSOR=MKL25Z128xxx4;MKL25Z4=1;__VECTORS=&quot;MKL25Z4.vec&quot;;L_SERIES"
-      c_user_include_directories="$(ProjectDir)/Kinetis;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/nRF24L01;$(ProjectDir)/Drivers/DMA;$(ProjectDir)/Drivers/TPM;$(ProjectDir)/Drivers/ADC;$(ProjectDir)/Drivers/PIT;$(ProjectDir)/FreeRTOS/port/gcc;$(ProjectDir)/FreeRTOS/include;$(ProjectDir)/FreeRTOS/config/KL25Z4/gcc;$(ProjectDir)/Application/include;$(ProjectDir)/KL25Z4"
+      c_user_include_directories="$(ProjectDir)/Kinetis;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/nRF24L01;$(ProjectDir)/Drivers/DMA;$(ProjectDir)/Drivers/TPM;$(ProjectDir)/Drivers/ADC;$(ProjectDir)/Drivers/PIT;$(ProjectDir)/Application/include;$(ProjectDir)/KL25Z4;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM0"
       debug_register_definition_file="$(ProjectDir)/MKL25Z4_Peripherals.xml"
       gcc_debugging_level="Level 3"
       gcc_optimization_level="Debug"
@@ -515,6 +520,7 @@
         <file file_name="Application/include/defines.h" />
         <file file_name="Application/include/joystick.h" />
         <file file_name="Application/include/hmi.h" />
+        <file file_name="Application/include/FreeRTOSConfig.h" />
       </folder>
       <file file_name="Application/comm.c" />
       <file file_name="Application/joystick.c" />
@@ -554,71 +560,92 @@
         <file file_name="Drivers/PIT/pit.h" />
       </folder>
     </folder>
-    <folder Name="FreeRTOS">
-      <folder Name="src">
-        <file file_name="FreeRTOS/src/croutine.c" />
-        <file file_name="FreeRTOS/src/event_groups.c" />
-        <file file_name="FreeRTOS/src/FreeRTOS_license.txt" />
-        <file file_name="FreeRTOS/src/heap_1.c">
-          <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
-        </file>
-        <file file_name="FreeRTOS/src/heap_2.c">
-          <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
-        </file>
-        <file file_name="FreeRTOS/src/heap_3.c">
-          <configuration Name="Clang Debug" build_exclude_from_build="No" />
-        </file>
-        <file file_name="FreeRTOS/src/heap_4.c">
-          <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
-        </file>
-        <file file_name="FreeRTOS/src/heap_5.c">
-          <configuration Name="Clang Debug" build_exclude_from_build="Yes" />
-        </file>
-        <file file_name="FreeRTOS/src/list.c" />
-        <file file_name="FreeRTOS/src/queue.c" />
-        <file file_name="FreeRTOS/src/tasks.c" />
-        <file file_name="FreeRTOS/src/timers.c" />
-      </folder>
-      <folder Name="port">
-        <folder Name="gcc">
-          <file file_name="FreeRTOS/port/gcc/portasm.S">
-            <configuration
-              Name="Clang Debug"
-              build_exclude_from_build="Yes" />
-          </file>
-          <file file_name="FreeRTOS/port/gcc/port.c" />
-          <file file_name="FreeRTOS/port/gcc/portmacro.h" />
-          <file file_name="FreeRTOS/port/gcc/portTicks.h" />
-        </folder>
-      </folder>
-      <folder Name="config">
-        <folder Name="KL25Z4">
-          <folder Name="gcc">
-            <file file_name="FreeRTOS/config/KL25Z4/gcc/FreeRTOSConfig.h" />
-          </folder>
-        </folder>
-      </folder>
-      <folder Name="include">
-        <file file_name="FreeRTOS/include/croutine.h" />
-        <file file_name="FreeRTOS/include/deprecated_definitions.h" />
-        <file file_name="FreeRTOS/include/event_groups.h" />
-        <file file_name="FreeRTOS/include/FreeRTOS.h" />
-        <file file_name="FreeRTOS/include/list.h" />
-        <file file_name="FreeRTOS/include/mpu_wrappers.h" />
-        <file file_name="FreeRTOS/include/portable.h" />
-        <file file_name="FreeRTOS/include/projdefs.h" />
-        <file file_name="FreeRTOS/include/queue.h" />
-        <file file_name="FreeRTOS/include/semphr.h" />
-        <file file_name="FreeRTOS/include/StackMacros.h" />
-        <file file_name="FreeRTOS/include/task.h" />
-        <file file_name="FreeRTOS/include/timers.h" />
-      </folder>
-    </folder>
     <folder Name="Kinetis">
       <file file_name="KL25Z4/fsl_bitaccess.h" />
       <file file_name="KL25Z4/MKL25Z4_extension.h" />
       <file file_name="KL25Z4/MKL25Z4_features.h" />
       <file file_name="KL25Z4/MKL25Z4.h" />
+    </folder>
+    <folder Name="FreeRTOS">
+      <folder Name="Source">
+        <folder Name="include">
+          <file file_name="../FreeRTOS/Source/include/atomic.h" />
+          <file file_name="../FreeRTOS/Source/include/croutine.h" />
+          <file file_name="../FreeRTOS/Source/include/deprecated_definitions.h" />
+          <file file_name="../FreeRTOS/Source/include/event_groups.h" />
+          <file file_name="../FreeRTOS/Source/include/FreeRTOS.h" />
+          <file file_name="../FreeRTOS/Source/include/list.h" />
+          <file file_name="../FreeRTOS/Source/include/message_buffer.h" />
+          <file file_name="../FreeRTOS/Source/include/mpu_prototypes.h">
+            <configuration
+              Name="Clang Debug"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="../FreeRTOS/Source/include/mpu_wrappers.h">
+            <configuration
+              Name="Clang Debug"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="../FreeRTOS/Source/include/portable.h" />
+          <file file_name="../FreeRTOS/Source/include/projdefs.h" />
+          <file file_name="../FreeRTOS/Source/include/queue.h" />
+          <file file_name="../FreeRTOS/Source/include/semphr.h" />
+          <file file_name="../FreeRTOS/Source/include/stack_macros.h" />
+          <file file_name="../FreeRTOS/Source/include/StackMacros.h" />
+          <file file_name="../FreeRTOS/Source/include/stream_buffer.h" />
+          <file file_name="../FreeRTOS/Source/include/task.h" />
+          <file file_name="../FreeRTOS/Source/include/timers.h" />
+        </folder>
+        <folder Name="portable">
+          <folder Name="Common">
+            <file file_name="../FreeRTOS/Source/portable/Common/mpu_wrappers.c">
+              <configuration
+                Name="Clang Debug"
+                build_exclude_from_build="Yes" />
+            </file>
+          </folder>
+          <folder Name="GCC">
+            <folder Name="ARM_CM0">
+              <file file_name="../FreeRTOS/Source/portable/GCC/ARM_CM0/port.c" />
+              <file file_name="../FreeRTOS/Source/portable/GCC/ARM_CM0/portmacro.h" />
+            </folder>
+          </folder>
+          <folder Name="MemMang">
+            <file file_name="../FreeRTOS/Source/portable/MemMang/heap_1.c">
+              <configuration
+                Name="Clang Debug"
+                build_exclude_from_build="Yes" />
+            </file>
+            <file file_name="../FreeRTOS/Source/portable/MemMang/heap_2.c">
+              <configuration
+                Name="Clang Debug"
+                build_exclude_from_build="Yes" />
+            </file>
+            <file file_name="../FreeRTOS/Source/portable/MemMang/heap_3.c">
+              <configuration
+                Name="Clang Debug"
+                build_exclude_from_build="No" />
+            </file>
+            <file file_name="../FreeRTOS/Source/portable/MemMang/heap_4.c">
+              <configuration
+                Name="Clang Debug"
+                build_exclude_from_build="Yes" />
+            </file>
+            <file file_name="../FreeRTOS/Source/portable/MemMang/heap_5.c">
+              <configuration
+                Name="Clang Debug"
+                build_exclude_from_build="Yes" />
+            </file>
+          </folder>
+        </folder>
+        <file file_name="../FreeRTOS/Source/croutine.c" />
+        <file file_name="../FreeRTOS/Source/event_groups.c" />
+        <file file_name="../FreeRTOS/Source/list.c" />
+        <file file_name="../FreeRTOS/Source/queue.c" />
+        <file file_name="../FreeRTOS/Source/stream_buffer.c" />
+        <file file_name="../FreeRTOS/Source/tasks.c" />
+        <file file_name="../FreeRTOS/Source/timers.c" />
+      </folder>
     </folder>
   </project>
 </solution>
