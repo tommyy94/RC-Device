@@ -80,6 +80,10 @@ void SPI1_vInit(void)
     
     /* Enable module & interrupts */
     SPI1->C1 |= SPI_C1_SPIE_MASK | SPI_C1_SPE_MASK;
+
+    NVIC_ClearPendingIRQ(SPI1_IRQn);
+    NVIC_SetPriority(SPI1_IRQn, SPI1_IRQ_PRIO);
+    NVIC_EnableIRQ(SPI1_IRQn);
 }
 
 
