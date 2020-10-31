@@ -42,6 +42,7 @@ extern MessageBufferHandle_t   xSpiTxBuf;
 extern MessageBufferHandle_t   xSpiRxBuf;
 
 
+__STATIC_INLINE void SPI1_IO_vInit(void);
 __STATIC_INLINE void SPI_vSetMode(SPI_Type *const pxSpi, const SPI_Mode eMode);
 __STATIC_INLINE void SPI1_vSetSlave(const uint32_t ulState);
 
@@ -55,19 +56,19 @@ __STATIC_INLINE void SPI1_vSetSlave(const uint32_t ulState);
  * 
  * @return  None
  */
-void SPI1_vInit(void)
+__STATIC_INLINE void SPI1_IO_vInit(void)
 {
     /* Set PTE2 as SPI1_SCK */
     PORTE->PCR[SCK] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[SCK] |= PORT_PCR_MUX(ALT2);
+    PORTE->PCR[SCK] |=  PORT_PCR_MUX(ALT2);
     
     /* Set PTE3 as SPI1_MOSI */
     PORTE->PCR[MOSI] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[MOSI] |= PORT_PCR_MUX(ALT5);
+    PORTE->PCR[MOSI] |=  PORT_PCR_MUX(ALT5);
     
     /* Set PTE1 as SPI1_MISO */
     PORTE->PCR[MISO] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[MISO] |= PORT_PCR_MUX(ALT5);
+    PORTE->PCR[MISO] |=  PORT_PCR_MUX(ALT5);
     
     /* Set PTE4 as automatic SS */
     PORTE->PCR[SS] &= ~PORT_PCR_MUX_MASK;
@@ -118,6 +119,9 @@ __STATIC_INLINE void SPI_vSetMode(SPI_Type *pxSpi, SPI_Mode eMode)
     pxSpi->C1 |= modeTable[eMode];
 }
 
+
+    
+    SPI1_IO_vInit();
 
 /**
  * @brief   Interrupt driven SPI transmit.
