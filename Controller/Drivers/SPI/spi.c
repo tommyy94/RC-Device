@@ -70,16 +70,15 @@ __STATIC_INLINE void SPI1_IO_vInit(void)
     PORTE->PCR[MISO] &= ~PORT_PCR_MUX_MASK;
     PORTE->PCR[MISO] |=  PORT_PCR_MUX(ALT5);
     
-    /* Set PTE4 as automatic SS */
-    PORTE->PCR[SS] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[SS] |= PORT_PCR_MUX(SS);
+    /* Set PTE4 as GPIO for manual SS */
+    PORTE->PCR[SS]   &= ~PORT_PCR_MUX_MASK;
+    PORTE->PCR[SS]   |= PORT_PCR_MUX(ALT1);
+    FGPIOE->PDDR     |= MASK(SS);
+    FGPIOE->PDOR     |= MASK(SS);
+}
 
-    /* Select master mode with automatic SS output */
-    SPI1->C1 = SPI_C1_SSOE_MASK | SPI_C1_MSTR_MASK;
-    SPI1->C2 = SPI_C2_MODFEN_MASK;
 
-
-    SPI_vSetMode(SPI1, MODE_0);
+/**
  * @brief   Set SS line high/low.
  * 
  * @param   ulState     HIGH/LOW
@@ -99,7 +98,7 @@ __STATIC_INLINE void SPI1_vSetSlave(const uint32_t ulState)
 
 
 /**
- * @brief   Set SPI mode..
+ * @brief   Set SPI mode.
  * 
  * @param   eMode       Selected SPI mode.
  * 
@@ -109,10 +108,10 @@ __STATIC_INLINE void SPI_vSetMode(SPI_Type *pxSpi, SPI_Mode eMode)
 {
     const uint32_t modeTable[MODE_COUNT] =
     {
-        SPI_C1_CPOL(0) | SPI_C1_CPHA(0),  /* Mode 0 */
-        SPI_C1_CPOL(0) | SPI_C1_CPHA(1),  /* Mode 1 */
-        SPI_C1_CPOL(1) | SPI_C1_CPHA(0),  /* Mode 2 */
-        SPI_C1_CPOL(1) | SPI_C1_CPHA(1)   /* Mode 3 */
+        SPI_C1_CPOL(0) | SPI_C1_CPHA(1),  /* Mode 0 */
+        SPI_C1_CPOL(0) | SPI_C1_CPHA(0),  /* Mode 1 */
+        SPI_C1_CPOL(1) | SPI_C1_CPHA(1),  /* Mode 2 */
+        SPI_C1_CPOL(1) | SPI_C1_CPHA(0)   /* Mode 3 */
     };
 
     pxSpi->C1 &= ~(SPI_C1_CPHA_MASK | SPI_C1_CPOL_MASK);
@@ -120,8 +119,40 @@ __STATIC_INLINE void SPI_vSetMode(SPI_Type *pxSpi, SPI_Mode eMode)
 }
 
 
+/**
+ * @brief   Initialize SPI1 peripheral.
+ * 
+ * @details Baud rate = 48 MHz/(3*2�) = 4 MHz = 250 ns/bit
+ *           Mode 3, MSB first, automatic SS.
+ * 
+ * @param   None
+ * 
+ * @return  None
+ */
+void SPI1_vInit(void)
+{    
+    /* Disable SPI during configuration */
+    SPI1->C1 &= ~SPI_C1_SPE_MASK;
     
     SPI1_IO_vInit();
+
+    /* Select master mode with manual SS output */
+    SPI1->C1  =  SPI_C1_MSTR_MASK;
+    SPI1->C2 &= ~SPI_C2_MODFEN_MASK;
+    
+    /* Baudrate = Bus clock / ((SPPR + 1) * 2^^(SPR+1)) */
+    SPI1->BR = SPI_BR_SPPR(0) | SPI_BR_SPR(1);
+    
+    SPI_vSetMode(SPI1, MODE_3);
+    
+    /* Enable module & interrupts */
+    SPI1->C1 |= SPI_C1_SPIE_MASK | SPI_C1_SPE_MASK;
+
+    NVIC_ClearPendingIRQ(SPI1_IRQn);
+    NVIC_SetPriority(SPI1_IRQn, SPI1_IRQ_PRIO);
+    NVIC_EnableIRQ(SPI1_IRQn);
+}
+
 
 /**
  * @brief   Interrupt driven SPI transmit.
