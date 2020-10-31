@@ -1,17 +1,38 @@
+/* System headers */
+
+/* Device vendor headers */
+#include "MKL25Z4.h"
+
+/* RTOS headers */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "timers.h"
+#include "event_groups.h"
+#include "message_buffer.h"
+
+/* User headers */
 #include "system.h"
+#include "comm.h"
+#include "joystick.h"
+#include "hmi.h"
+#include "adc.h"
+#include "tpm.h"
+#include "dma.h"
+#include "nRF24L01.h"
+#include "pit.h"
 
 
 /* Global variables */
-TaskHandle_t        xCommTaskHandle;
-TaskHandle_t        xHmiTaskHandle;
-TaskHandle_t        xJoystickTaskHandle;
-SemaphoreHandle_t   xSpiSema;
-QueueHandle_t       xTxQueue;
-EventGroupHandle_t  xCommEvent;
+TaskHandle_t            xCommTaskHandle;
+TaskHandle_t            xHmiTaskHandle;
+TaskHandle_t            xJoystickTaskHandle;
+QueueHandle_t           xTxQueue;
+EventGroupHandle_t      xCommEvent;
+MessageBufferHandle_t   xSpiTxBuf;
+MessageBufferHandle_t   xSpiRxBuf;
 
 
 /* Local defines */
-#define TIMER_NAME_LEN          (32UL)
 
 
 /* Local function prototypes */
@@ -76,6 +97,12 @@ static void vCreateQueues(void)
 {
     xTxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(MessageQueue *));
     configASSERT(xTxQueue != NULL);
+
+    xSpiTxBuf = xMessageBufferCreate(SPI_QUEUE_SIZE);
+    configASSERT(xSpiTxBuf != NULL);
+
+    xSpiRxBuf = xMessageBufferCreate(SPI_QUEUE_SIZE);
+    configASSERT(xSpiRxBuf != NULL);
 }
 
 
@@ -120,7 +147,7 @@ static void vCreateTasks(void)
  */
 static void vCreateSemaphores(void)
 {
-    xSpiSema = xSemaphoreCreateBinary();
+
 }
 
 

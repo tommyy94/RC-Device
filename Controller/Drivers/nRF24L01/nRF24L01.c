@@ -3,9 +3,16 @@
  * Driver for NRF24l01.
  */
 
-#include "nRF24L01.h"
+
+/* Device vendor headers */
 #include "fsl_bitaccess.h"
 
+/* RTOS headers */
+#include "FreeRTOS.h"
+#include "task.h"
+
+/* User headers */
+#include "nRF24L01.h"
 
 extern TaskHandle_t xCommTaskHandle;
 
