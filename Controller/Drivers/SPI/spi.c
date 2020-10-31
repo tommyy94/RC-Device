@@ -162,7 +162,7 @@ void SPI1_vTransmitISR(uint8_t *const pucTx, uint8_t *const pucRx, uint32_t ulLe
  */
 uint8_t SPI1_ucReadPolling(void)
 {
-    while (!BME_UBFX8(&SPI1->S, SPI_S_SPRF_SHIFT, SPI_S_SPRF_WIDTH))
+    while (BME_UBFX8(&SPI1->S, SPI_S_SPRF_SHIFT, SPI_S_SPRF_WIDTH) == 0)
     {
         ; /* Wait until buffer full */
     }
@@ -182,7 +182,9 @@ uint8_t SPI1_ucTransmitByte(const char ucByte)
 {
     uint8_t ucRet;
 
-    while (!BME_UBFX8(&SPI1->S, SPI_S_SPTEF_SHIFT, SPI_S_SPTEF_WIDTH))
+    BME_AND8(&SPI1->C1, (uint8_t)~SPI_C1_SPIE_MASK);
+
+    while (BME_UBFX8(&SPI1->S, SPI_S_SPTEF_SHIFT, SPI_S_SPTEF_WIDTH) == 0)
     {
         ; /* Wait until buffer empty */
     }
