@@ -5,6 +5,7 @@
 
 
 /* Device vendor headers */
+#include "MKL25Z4.h"
 #include "fsl_bitaccess.h"
 
 /* RTOS headers */
@@ -13,6 +14,14 @@
 
 /* User headers */
 #include "nRF24L01.h"
+#include "defines.h"
+#include "system.h"
+#include "spi.h"
+#include "tpm.h"
+
+/* Global defines */
+
+/* Global variables */
 
 extern TaskHandle_t xCommTaskHandle;
 

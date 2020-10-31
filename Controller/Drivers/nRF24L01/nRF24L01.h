@@ -8,15 +8,8 @@
 #include <stdint.h>
 
 /* Device vendor headers */
-#include "MKL25Z4.h"
-//#include "fsl_bitaccess.h"
-#include "FreeRTOS.h"
 
 /* User headers */
-#include "defines.h"
-#include "system.h"
-#include "spi.h"
-#include "tpm.h"
 
 /* Global defines */
 

@@ -20,6 +20,7 @@
 #include "dma.h"
 #include "nRF24L01.h"
 #include "pit.h"
+#include "spi.h"
 
 
 /* Global variables */
