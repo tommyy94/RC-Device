@@ -22,6 +22,9 @@
 #define JOYSTICKTASKSIZE        (512UL)
 #define STARTUPTASKSIZE         (512UL)
 
+/* Interrupt priorities */
+#define SPI1_IRQ_PRIO           (5UL)
+
     
 /* Global variables */
     

@@ -28,7 +28,8 @@ TaskHandle_t            xHmiTaskHandle;
 TaskHandle_t            xJoystickTaskHandle;
 QueueHandle_t           xTxQueue;
 EventGroupHandle_t      xCommEvent;
-EventGroupHandle_t  xCommEvent;
+MessageBufferHandle_t   xSpiTxBuf;
+MessageBufferHandle_t   xSpiRxBuf;
 
 
 /* Local defines */
@@ -96,6 +97,12 @@ static void vCreateQueues(void)
 {
     xTxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(MessageQueue *));
     configASSERT(xTxQueue != NULL);
+
+    xSpiTxBuf = xMessageBufferCreate(SPI_QUEUE_SIZE);
+    configASSERT(xSpiTxBuf != NULL);
+
+    xSpiRxBuf = xMessageBufferCreate(SPI_QUEUE_SIZE);
+    configASSERT(xSpiRxBuf != NULL);
 }
 
 
@@ -140,7 +147,7 @@ static void vCreateTasks(void)
  */
 static void vCreateSemaphores(void)
 {
-    xSpiSema = xSemaphoreCreateBinary();
+
 }
 
 
