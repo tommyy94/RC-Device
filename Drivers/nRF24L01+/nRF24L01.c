@@ -323,7 +323,7 @@ void nRF24L01_vWriteRegister(const uint8_t ucRegister, const uint8_t ucValue)
  */
 void nRF24L01_vSendCommand(const uint8_t ucCommand)
 {
-    SPI0_vTransmitByte(ucCommand);
+    SPI0_vTransmitHalfword(ucCommand << 8);
 }
 
 
