@@ -171,16 +171,32 @@ void nRF24L01_vInit(void)
 
 
 /**
+ * @brief   Set TX mode.
+ * 
+ * @param   None
+ *             
+ * @return  None
+ */
+__STATIC_INLINE void nRF24L01_vSetTransmitMode(void)
+{
+    nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
+                                  | CONFIG_CRCO(1)
+                                  | CONFIG_PWR_UP(1)
+                                  | CONFIG_PRIM_RX(0));
+    nRF24L01_vSetChipEnable(LOW);
+}
+
+
+/**
  * @brief   Set RX mode.
  * 
  * @param   None
  *             
  * @return  None
  */
-static void nRF24L01_vSetReceiveMode(void)
+__STATIC_INLINE void nRF24L01_vSetReceiveMode(void)
 {
-    nRF24L01_vWriteRegister(CONFIG, CONFIG_MASK_RX_DR(1)
-                                  | CONFIG_EN_CRC(1)
+    nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
                                   | CONFIG_CRCO(1)
                                   | CONFIG_PWR_UP(1)
                                   | CONFIG_PRIM_RX(1));
@@ -224,7 +240,10 @@ __STATIC_INLINE void nRF24L01_vConfigureChipEnable(void)
     PORTA->PCR[CE] = PORT_PCR_MUX(ALT1);
     
     /* Set output */
-    FGPIOA->PDDR |= MASK(CE);    
+    FGPIOA->PDDR |= MASK(CE);
+
+    /* Set LOW */
+    FGPIOA->PCOR |= MASK(CE);
 }
 
 
@@ -256,22 +275,18 @@ __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
  */
 __STATIC_INLINE void nRF24L01_vStartTransmission(void)
 {
-    /* Disable TPM2 interrupts just to be sure */
-    BME_AND8(&TPM2->SC, ~(uint8_t)TPM_SC_TOIE(1));
+    nRF24L01_vSetTransmitMode();
 
     /* Send minimum 10 us pulse */
     TPM2->CNT = 0;
-    nRF24L01_vSetChipEnable(HIGH);
     TPM2_vStart();
-    while (TPM2->CNT < TEN_MICROSECONDS)
+    nRF24L01_vSetChipEnable(HIGH);
+    while (TPM2->CNT < (TEN_MICROSECONDS * 2))
     {
         ; /* Wait until 10 us passed */
     }
-    TPM2_vStop();
     nRF24L01_vSetChipEnable(LOW);
-
-    /* Turn TPM2 interrupts on again */
-    BME_OR8(&TPM2->SC, TPM_SC_TOIE(1));
+    TPM2_vStop();
 
     /* Reset TPM2 counter */
     TPM2->CNT = 0;
@@ -430,6 +445,8 @@ void PORTA_IRQHandler(void)
     {
         /* Clear status flag */
         PORTA->ISFR = MASK(IRQ);
+
+        /* IRQ flags cleared in NRF24L01 by writing '1' to corresponding IRQ bit */
 
         /* Signal message available */
         vTaskNotifyGiveFromISR(xCommTaskHandle, &xHigherPriorityTaskWoken);
