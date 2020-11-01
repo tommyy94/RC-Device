@@ -179,8 +179,6 @@ void SPI1_vTransmitISR(uint8_t *const pucTx, uint8_t *const pucRx, uint32_t ulLe
     /* Fill RX message buffer */
     xRet = xMessageBufferReceive(xSpiRxBuf, pucRx, ulLength, pdMS_TO_TICKS(SPI1_TIMEOUT_MS));
     configASSERT(xRet == (BaseType_t)ulLength);
-    
-    SPI1_vSetSlave(HIGH);
 }
 
 
