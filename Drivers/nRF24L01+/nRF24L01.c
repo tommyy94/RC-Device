@@ -191,6 +191,9 @@ __STATIC_INLINE void nRF24L01_vConfigureChipEnable(void)
     
     /* Configure as output */
     pio->PIO_OER = PIO_OER_P27_Msk;
+
+    /* Set LOW */
+    pio->PIO_CODR = PIO_CODR_P27_Msk;
 }
 
 

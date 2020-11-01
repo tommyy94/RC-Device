@@ -38,14 +38,14 @@ SECTIONS
   __FLASH_segment_end__ = 0x00020000;
   __FLASH_segment_size__ = 0x00020000;
 
-  __HEAPSIZE__ = 4800;
+  __HEAPSIZE__ = 8000;
   __STACKSIZE_ABT__ = 0;
   __STACKSIZE_FIQ__ = 0;
   __STACKSIZE_IRQ__ = 0;
   __STACKSIZE_PROCESS__ = 0;
   __STACKSIZE_SVC__ = 0;
   __STACKSIZE_UND__ = 0;
-  __STACKSIZE__ = 2000;
+  __STACKSIZE__ = 2400;
 
   __vectors_ram_load_start__ = ALIGN(__SRAM_segment_start__ , 256);
   .vectors_ram ALIGN(__SRAM_segment_start__ , 256) (NOLOAD) : AT(ALIGN(__SRAM_segment_start__ , 256))
