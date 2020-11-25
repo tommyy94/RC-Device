@@ -267,7 +267,7 @@ void SPI1_IRQHandler(void)
         pucRxBuf[ulBytesRecv++] = SPI1->D;
 
         /* Check if this was the last byte */
-        if (ulBytesSent >= (uint32_t)xTxLen)
+        if (ulBytesRecv >= (uint32_t)xTxLen)
         {
             SPI1_vSetSlave(HIGH);
             xRxLen = xMessageBufferSendFromISR(xSpiRxBuf, pucRxBuf, ulBytesRecv, &xHigherPriorityTaskWoken);
