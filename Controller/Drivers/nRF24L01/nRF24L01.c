@@ -103,11 +103,12 @@ void nRF24L01_vInit(void)
  */
 __STATIC_INLINE void nRF24L01_vSetTransmitMode(void)
 {
+    nRF24L01_vSetChipEnable(LOW);
     nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
                                   | CONFIG_CRCO(1)
                                   | CONFIG_PWR_UP(1)
-                                  | CONFIG_PRIM_RX(0));
-    nRF24L01_vSetChipEnable(LOW);
+                                  | CONFIG_PRIM_RX(0)
+                                  | CONFIG_MASK_TX_DS(1));
 }
 
 
@@ -123,7 +124,8 @@ __STATIC_INLINE void nRF24L01_vSetReceiveMode(void)
     nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
                                   | CONFIG_CRCO(1)
                                   | CONFIG_PWR_UP(1)
-                                  | CONFIG_PRIM_RX(1));
+                                  | CONFIG_PRIM_RX(1)
+                                  | CONFIG_MASK_TX_DS(1));
     nRF24L01_vSetChipEnable(HIGH);
 }
 
@@ -199,8 +201,6 @@ __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
  */
 __STATIC_INLINE void nRF24L01_vStartTransmission(void)
 {
-    nRF24L01_vSetTransmitMode();
-
     /* Send minimum 10 us pulse */
     TPM2->CNT = 0;
     TPM2_vStart();
