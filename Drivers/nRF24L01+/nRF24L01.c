@@ -142,7 +142,7 @@ __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
 
 
 /**
- * @brief   Pulse CE line low for 10 �s to start transmission.
+ * @brief   Pulse CE line high for 10 us to start transmission.
  * 
  * @param   None
  * 
@@ -150,10 +150,17 @@ __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
  */
 __STATIC_INLINE void nRF24L01_vStartTransmission(void)
 {
+    Pio *piod = PIOD;
+
     /* Send minimum 10 us pulse */
     nRF24L01_vSetChipEnable(HIGH);
-    vTaskDelay(1);
+    for (uint32_t i = 0; i < 0x800; i++)
+    {
+        __NOP(); /* ~20 us for testing */
+    }
     nRF24L01_vSetChipEnable(LOW);
+
+    PIO_EnableIRQ(piod, IRQ);
 }
 
 
@@ -283,7 +290,7 @@ __STATIC_INLINE  uint8_t nRF24L01_ucGetRxFifoDepth(void)
  */
 void nRF24L01_vSendCommand(const uint8_t ucCommand)
 {
-    SPI0_vTransmitHalfword(ucCommand << 8);
+    SPI0_vTransmitByte(ucCommand);
 }
 
 
