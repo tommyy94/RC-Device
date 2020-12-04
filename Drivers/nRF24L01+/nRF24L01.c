@@ -7,9 +7,19 @@
 
 #include <FreeRTOS.h>
 #include <task.h>
+#include <queue.h>
 
 #include "nRF24L01.h"
 #include "spi.h"
+#include "osConfig.h"
+#include "pio.h"
+#include "logWriter.h"
+#include "rtos_start.h"
+
+/* Local variables */
+
+extern QueueHandle_t        xJobQueue;
+extern TaskHandle_t         xJournalTask;
 
 
 /* Local defines */
@@ -78,7 +88,33 @@ void nRF24L01_vInit(void)
      * Power Up
      * TX mode
      */
-    nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1) | CONFIG_CRCO(1) | CONFIG_PWR_UP(1));
+    nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1) | CONFIG_CRCO(1) | CONFIG_PWR_UP(1) | CONFIG_PRIM_RX(0));
+
+    /* Transfer 4 bytes */
+    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(5));
+
+    nRF24L01_vResetStatusFlags();
+}
+
+/**
+ * @brief   Read and clear nRF24L01 status flags.
+ * 
+ * @param   None
+ *             
+ * @return  nRF24L01 status bits
+ */
+uint8_t nRF24L01_ucGetStatus(void)
+{
+    uint8_t ucStatus;
+
+    /* Could this be done in a single function call?
+     *  1st: TX = NOP      RX = STATUS
+     *  2nd: TX = STATUS   RX = 0
+     */
+    ucStatus = SPI0_vTransmitByte(NOP);
+    nRF24L01_vWriteRegister(STATUS, ucStatus);
+
+    return ucStatus;
 }
 
 
