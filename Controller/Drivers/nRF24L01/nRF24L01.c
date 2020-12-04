@@ -28,14 +28,14 @@ extern QueueHandle_t        xJobQueue;
 
 
 /* Local defines */
+#define NRF24L01_PULSE_DURATION     (15UL)
 
 /* Signal edges */
-#define CE                          (1UL)       /* Chip Enable */
-#define IRQ                         (2UL)       /* Interrupt Request */
+#define CE                          (1UL) /* Chip Enable */
+#define IRQ                         (2UL) /* Interrupt Request - active LOW */
 
-#define RXTX_ADDR_LEN               (5UL)
 #define MAX_PAYLOAD_LEN             (32UL)
-#define ADDR_40BIT_LEN              (5UL)
+#define ADDR_LEN_BYTES              (4UL)
 
 
 /* Local function prototypes */
@@ -43,9 +43,9 @@ __STATIC_INLINE void    nRF24L01_vConfigureIRQ(void);
 __STATIC_INLINE void    nRF24L01_vConfigureChipEnable(void);
 __STATIC_INLINE void    nRF24L01_vSetChipEnable(const uint32_t ulState);
 __STATIC_INLINE void    nRF24L01_vStartTransmission(void);
-__STATIC_INLINE uint8_t nRF24L01_ucGetStatus(void);
-
-static void nRF24L01_vSetReceiveMode(void);
+__STATIC_INLINE void    nRF24L01_vSetTransmitMode(void);
+__STATIC_INLINE void    nRF24L01_vSetReceiveMode(void);
+__STATIC_INLINE uint8_t nRF24L01_ucGetRxFifoDepth(void);
 
 
 /* Function descriptions */
