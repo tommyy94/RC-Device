@@ -18,6 +18,7 @@
 #include "system.h"
 #include "spi.h"
 #include "tpm.h"
+#include "comm.h"
 
 /* Global defines */
 
@@ -64,32 +65,33 @@ void nRF24L01_vInit(void)
     nRF24L01_vSetChipEnable(LOW);
 
     /* RF Channel 2450 MHz */
-    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(50));
+    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(2));
 
-    /* Set RX & TX address matching */
-    const uint8_t ucTxAddr[ADDR_40BIT_LEN] = { 0x11, 0x22, 0x33, 0x44, 0x55 }; /* LSB written first */
-    nRF24L01_vWriteAddressRegister(RX_ADDR_P0, ucTxAddr, ADDR_40BIT_LEN);
-    nRF24L01_vWriteAddressRegister(TX_ADDR, ucTxAddr, ADDR_40BIT_LEN);
+    /* Set address width to 4 bytes */
+    nRF24L01_vWriteRegister(SETUP_AW, SETUP_AW_AW(2));
+
+    /* Set RX & TX address matching
+     * LSB written first
+     */
+    const uint8_t ucTxAddr[ADDR_LEN_BYTES] = { 0x11, 0x22, 0x33, 0x44 };
+    nRF24L01_vWriteAddressRegister(RX_ADDR_P0, ucTxAddr, ADDR_LEN_BYTES);
+    nRF24L01_vWriteAddressRegister(TX_ADDR, ucTxAddr, ADDR_LEN_BYTES);
     
     /* Enable data pipe 0 */
     nRF24L01_vWriteRegister(EN_RXADDR, EN_RXADDR_ERX_P0(1));
 
-    /* Auto ACK data pipe 0 */
-    nRF24L01_vWriteRegister(EN_AA, EN_AA_ENAA_P0(1));
+    /* Enable Auto ACK data pipe 0 */
+    //nRF24L01_vWriteRegister(EN_AA, EN_AA_ENAA_P0(1));
 
     /**
      * 500 us delay between retries
      * 10 retries
      */
-    nRF24L01_vWriteRegister(SETUP_RETR, SETUP_RETR_ARD(1) | SETUP_RETR_ARC(3));
+    //nRF24L01_vWriteRegister(SETUP_RETR, SETUP_RETR_ARD(1) | SETUP_RETR_ARC(3));
 
-    /**
-     * Enable CRC
-     * 2 byte CRC
-     * Power Up
-     * RX mode
-     * IRQ on RX
-     */
+    /* Transfer 4 bytes */
+    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(5));
+
     nRF24L01_vSetReceiveMode();
 }
 
@@ -144,10 +146,11 @@ __STATIC_INLINE void nRF24L01_vConfigureIRQ(void)
      * Interrupt on falling edge
      * Enable internal pullup resistor
      */
-    PORTA->PCR[IRQ] = PORT_PCR_MUX(ALT1) | PORT_PCR_IRQC(10) | PORT_PCR_PE(1) | PORT_PCR_PS(1);
+    PORTA->PCR[IRQ] = PORT_PCR_MUX(ALT1) | PORT_PCR_IRQC(10)
+                    | PORT_PCR_PE(1) | PORT_PCR_PS(1);
     
     /* Configure NVIC */
-    NVIC_SetPriority(PORTA_IRQn, 2);
+    NVIC_SetPriority(PORTA_IRQn, 4);
     NVIC_ClearPendingIRQ(PORTA_IRQn);
     NVIC_EnableIRQ(PORTA_IRQn);
 }
@@ -184,8 +187,11 @@ __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
 {
     configASSERT(ulState == LOW || (ulState == HIGH));
 
-    /* Figure out whether to set or clear bit */
-    const uint32_t *pulReg = (uint32_t *)&FGPIOA->PCOR - ulState; /* Subtract 0 - 1 words from PCOR address => pulReg = FGPIOA->PSOR/PCOR */
+    /* Figure out whether to set or clear bit:
+     * Subtract 0 - 1 words from PCOR address
+     * => pulReg = FGPIOA->PSOR/PCOR
+     */
+    const uint32_t *pulReg = (uint32_t *)&FGPIOA->PCOR - ulState;
 
     /* Perform bitwise operation */
     BME_OR32(&(*pulReg), MASK(CE));
@@ -224,7 +230,7 @@ __STATIC_INLINE void nRF24L01_vStartTransmission(void)
  *             
  * @return  nRF24L01 status bits
  */
-__STATIC_INLINE uint8_t nRF24L01_ucGetStatus(void)
+uint8_t nRF24L01_ucGetStatus(void)
 {
     return SPI1_ucTransmitByte(NOP);
 }
@@ -237,14 +243,25 @@ __STATIC_INLINE uint8_t nRF24L01_ucGetStatus(void)
  *             
  * @return  None
  */
-void nRF24L01_vResetStatusFlags(void)
+uint8_t nRF24L01_ucResetStatusFlags(void)
 {
+    char ucBuffer[2];
+
     /**
      * Reset data received flag
      * Reset transmission succeeded flag
      * Reset transmission failed flag
      */
-    nRF24L01_vWriteRegister(STATUS, STATUS_RX_DR(1) | STATUS_TX_DS(1) | STATUS_MAX_RT(1));
+    const uint8_t ucStatusMask = STATUS_RX_DR(1)
+                               | STATUS_TX_DS(1)
+                               | STATUS_MAX_RT(1);
+
+    char ucData[] = { W_REGISTER | STATUS, ucStatusMask };
+
+    /* First transfer register, then value */
+    SPI1_vTransmitISR(ucData, ucBuffer, 2);
+
+    return ucBuffer[0];
 }
 
 
@@ -261,18 +278,22 @@ void nRF24L01_vResetStatusFlags(void)
  */
 void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
 {
-    ulLength++; /* Allocate byte for W_TX_PAYLOD */
+    BaseType_t xEvent;
+
+    ulLength++; /* Allocate byte for W_TX_PAYLOAD */
     
     configASSERT((ulLength) < MAX_PAYLOAD_LEN);
     char ucRxData[ulLength];
     char ucTxData[ulLength];
 
+    nRF24L01_vSetTransmitMode();
+
     /* Transfer 1...32 bytes */
-    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(ulLength));
+    //nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(ulLength));
+    
+    //nRF24L01_ucResetStatusFlags();
 
     nRF24L01_vSendCommand(FLUSH_TX);
-    
-    nRF24L01_vResetStatusFlags();
 
     /* Build message */
     ucTxData[0] = W_TX_PAYLOAD;
@@ -365,12 +386,12 @@ uint32_t nRF24L01_ulReadPayload(const char *pucPayload)
  */
 void nRF24L01_vWriteRegister(const uint8_t ucRegister, const uint8_t ucValue)
 {
-    char ucBuffer[MAX_PAYLOAD_LEN] = { '\0' };
+    char ucBuffer[2];
 
     char ucData[] = { W_REGISTER | ucRegister, ucValue};
 
     /* First transfer register, then value */
-    SPI1_vTransmitPolling(ucData, ucBuffer, 2);
+    SPI1_vTransmitISR(ucData, ucBuffer, 2);
 }
 
 
@@ -400,9 +421,11 @@ void nRF24L01_vSendCommand(const uint8_t ucCommand)
  * 
  * @return  None
  */
-void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *pucValue, uint32_t ulLength)
+void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister,
+                                    const uint8_t *pucValue,
+                                    uint32_t ulLength)
 {
-    configASSERT((ulLength) <= ADDR_40BIT_LEN);
+    configASSERT((ulLength) <= ADDR_LEN_BYTES);
 
     ulLength++; /* Allocate byte for W_REGISTER */
     char ucRxData[ulLength];
