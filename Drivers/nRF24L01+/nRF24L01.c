@@ -45,13 +45,20 @@ void nRF24L01_vInit(void)
     nRF24L01_vConfigureChipEnable();
     nRF24L01_vSetChipEnable(LOW);
 
+    nRF24L01_vResetStatusFlags();
+
     /* RF Channel 2450 MHz */
-    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(50));
+    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(2));
+
+    nRF24L01_ucReadRegister(RF_CH);
+
+    /* Set address width to 4 bytes */
+    nRF24L01_vWriteRegister(SETUP_AW, SETUP_AW_AW(2));
 
     /* Set RX & TX address matching */
-    const uint8_t ucTxAddr[ADDR_40BIT_LEN] = { 0x11, 0x22, 0x33, 0x44, 0x55 }; /* LSB written first */
-    nRF24L01_vWriteAddressRegister(RX_ADDR_P0, ucTxAddr, ADDR_40BIT_LEN);
-    nRF24L01_vWriteAddressRegister(TX_ADDR, ucTxAddr, ADDR_40BIT_LEN);
+    const uint8_t ucTxAddr[ADDR_LEN_BYTES] = { 0x11, 0x22, 0x33, 0x44 }; /* LSB written first */
+    nRF24L01_vWriteAddressRegister(RX_ADDR_P0, ucTxAddr, ADDR_LEN_BYTES);
+    nRF24L01_vWriteAddressRegister(TX_ADDR, ucTxAddr, ADDR_LEN_BYTES);
     
     /* Enable data pipe 0 */
     nRF24L01_vWriteRegister(EN_RXADDR, EN_RXADDR_ERX_P0(1));
