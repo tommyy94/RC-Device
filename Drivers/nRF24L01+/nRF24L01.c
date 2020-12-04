@@ -233,9 +233,43 @@ void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
 void nRF24L01_vWriteRegister(const uint8_t ucRegister, const uint8_t ucValue)
 {
     /* First transfer register, then value */
-    uint16_t uData = ((W_REGISTER | ucRegister)  << 8) | ucValue;
+    uint8_t ucBuf[2];
+    uint8_t ucData[2] = { W_REGISTER | ucRegister, ucValue };
 
-    SPI0_vTransmitHalfword(uData);
+    SPI0_DMA_TransmitMessage(ucData, ucBuf, 2);
+}
+
+
+/**
+ * @brief   Read nRF24L01 register.
+ * 
+ * @param   ucRegister      Register to read.
+ * 
+ * @return  Register value
+ */
+uint8_t nRF24L01_ucReadRegister(const uint8_t ucRegister)
+{
+    /* First transfer register, then value */
+    uint8_t ucBuf[2];
+    uint8_t ucData[2] = { R_REGISTER | ucRegister, NOP };
+
+    SPI0_DMA_TransmitMessage(ucData, ucBuf, 2);
+
+    /* First element holds status, second the register value */
+    return ucBuf[1];
+}
+
+
+/**
+ * @brief   Simple wrapper to get RX FIFO depth.
+ * 
+ * @param   None
+ * 
+ * @return  RX FIFO length.
+ */
+__STATIC_INLINE  uint8_t nRF24L01_ucGetRxFifoDepth(void)
+{
+    return nRF24L01_ucReadRegister(R_RX_PL_WID);
 }
 
 
@@ -265,27 +299,83 @@ void nRF24L01_vSendCommand(const uint8_t ucCommand)
  */
 void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *pucValue, uint32_t ulLength)
 {
-    assert((ulLength) <= ADDR_40BIT_LEN, __FILE__, __LINE__);
+    assert((ulLength) <= ADDR_LEN_BYTES, __FILE__, __LINE__);
 
-    uint16_t uRxData[MAX_PAYLOAD_LEN] = { 0 };
-    uint16_t uTxData[MAX_PAYLOAD_LEN] = { 0 };
-    uint32_t i = 0;
-    uint32_t j = 0;
+    uint8_t uRxData[MAX_PAYLOAD_LEN] = { 0 };
+    uint8_t uTxData[MAX_PAYLOAD_LEN] = { 0 };
 
-    ulLength += 2; /* "Allocate" 2 bytes for W_REGISTER */
+    ulLength++; /* "Allocate" 1 byte for W_REGISTER */
     configASSERT((ulLength) < MAX_PAYLOAD_LEN);
 
-    /* Transfer 2 bytes at once so halve the length */
-    ulLength = ulLength - (ulLength / 2);
-
     /* Build message */
-    uTxData[i++] = ((W_REGISTER | ucRegister) << 8); /* Lower byte empty */
-    for (; i < ulLength; i++)
+    uTxData[0] = W_REGISTER | ucRegister; /* Lower byte empty */
+    for (uint32_t i = 1; i < ulLength; i++)
     {
-        uTxData[i]  = (pucValue[j++] << 8);
-        uTxData[i] |=  pucValue[j++];
+        uTxData[i] = pucValue[i - 1];
     }
 
     /* Transfer bytes to nRF24L01 */
     SPI0_DMA_TransmitMessage(uTxData, uRxData, ulLength);
+}
+
+
+/**
+ * @brief   Handle nRF24L01 IRQ.
+ * 
+ * @param   None
+ * 
+ * @return  None
+ */
+void PIOD_ISR(void)
+{
+    BaseType_t  xRet;
+    BaseType_t  xHigherPrioTaskAwoken = pdFALSE;
+
+    static xJobStruct  xJob;
+    static xJobStruct *pxJob = &xJob;
+
+    /* Each job needs to have a subscriber, but ISR can't
+     * really have one, so just set subscriber xCommTask.
+     * Also not processing any data when reading status.
+     */
+    xJob.xSubscriber = xCommTask;
+    xJob.ulType      = RF_STATUS;
+
+    xRet = xQueueSendToFrontFromISR(xJobQueue, &pxJob, NULL, &xHigherPrioTaskAwoken);
+    if (xRet != pdTRUE)
+    {
+        xTaskNotifyFromISR(xJournalTask, JOB_QUEUE_FULL, eSetBits, &xHigherPrioTaskAwoken);
+    }
+
+    portEND_SWITCHING_ISR(xHigherPrioTaskAwoken);
+}
+
+
+/**
+ * @brief   Read nRF24L01 payload.
+ * 
+ * @param   pucPayload  Pointer to payload.
+ * 
+ * @return  ulLength    Payload length.
+ */
+uint32_t nRF24L01_ulReadPayload(const char *pucPayload)
+{
+    /* First need to tell RF which register to read,
+     * add to array length.
+     */
+    uint8_t  ucDummy[MAX_PAYLOAD_LEN + 1];
+    uint32_t ulLength;
+
+    /* First figure out transaction length */
+    ulLength = (uint32_t)nRF24L01_ucGetRxFifoDepth();
+    assert(ulLength <= MAX_PAYLOAD_LEN, __FILE__, __LINE__);
+
+    nRF24L01_vSetChipEnable(LOW);
+
+    ucDummy[0] = R_REGISTER | R_RX_PAYLOAD;
+    SPI0_DMA_TransmitMessage(ucDummy, (uint8_t *)pucPayload, ulLength + 1);
+
+    nRF24L01_vSetChipEnable(HIGH);
+
+    return ulLength;
 }
