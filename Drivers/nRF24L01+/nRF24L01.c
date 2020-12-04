@@ -247,31 +247,25 @@ void nRF24L01_vResetStatusFlags(void)
  */
 void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
 {
-    uint32_t i = 0;
-    uint32_t j = 0;
+    uint8_t uRxData[MAX_PAYLOAD_LEN] = { 0 };
+    uint8_t uTxData[MAX_PAYLOAD_LEN] = { 0 };
 
-    uint16_t uRxData[MAX_PAYLOAD_LEN] = { 0 };
-    uint16_t uTxData[MAX_PAYLOAD_LEN] = { 0 };
-
-    ulLength += 2; /* Allocate 2 bytes for W_TX_PAYLOD */
+    ulLength++; /* Allocate 1 byte for W_TX_PAYLOAD */
     configASSERT((ulLength) < MAX_PAYLOAD_LEN);
 
     /* Transfer 1...32 bytes */
-    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(ulLength));
+    //nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(ulLength));
+    
+    //nRF24L01_vResetStatusFlags();
 
     nRF24L01_vSendCommand(FLUSH_TX);
-    
-    nRF24L01_vResetStatusFlags();
-
-    /* Transfer 2 bytes at once so halve the length */
-    ulLength = ulLength - (ulLength / 2);
+    //nRF24L01_vSendCommand(FLUSH_RX);
 
     /* Build message */
-    uTxData[i++] = (W_TX_PAYLOAD << 8); /* Lower byte empty */
-    for (; i < ulLength; i++)
+    uTxData[0] = W_TX_PAYLOAD; /* Lower byte empty */
+    for (uint32_t i = 1; i < ulLength + 1; i++)
     {
-        uTxData[i]  = (pucPayload[j++] << 8);
-        uTxData[i] |=  pucPayload[j++];
+        uTxData[i]  = pucPayload[i - 1];
     }
 
     /* Transfer bytes to nRF24L01 */
