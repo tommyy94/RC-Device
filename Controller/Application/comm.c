@@ -1,6 +1,7 @@
 #include "comm.h"
 #include "fsl_bitaccess.h"
 #include "spi.h"
+#include "nRF24L01.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -8,14 +9,10 @@
 
 
 /* Local defines */
-#define COMM_TIMEOUT    (10U)
 
 /* Global variables */
 extern TaskHandle_t         xCommTaskHandle;
-extern SemaphoreHandle_t    xSpiSema;
-
-extern QueueHandle_t        xTxQueue;
-extern EventGroupHandle_t   xCommEvent;
+extern QueueHandle_t        xJobQueue;
 
 
 /* Function descriptions */
@@ -30,39 +27,48 @@ extern EventGroupHandle_t   xCommEvent;
 void vCommTask(void *const pvParam)
 {
     (void)pvParam;
-    EventBits_t   xEvent;
-    MessageQueue  xMsg;
-    MessageQueue *pxMsg = &xMsg;
+    uint8_t       ucStatus;
+    xJobStruct    xJob;
+    xJobStruct   *pxJob = &xJob;
     
     while (1)
     {
-        //xEvent = xEventGroupWaitBits(xCommEvent, COMM_EVT_MASK, pdTRUE, pdFALSE, portMAX_DELAY);
-        //if ((xEvent & COMM_EVT_SEND_PAYLOAD) != 0)
-        //{
-            if (xQueueReceive(xTxQueue, &pxMsg, portMAX_DELAY))
-            {
-                nRF24L01_vSendPayload(xMsg.pucTxData, xMsg.ulTxLen);
-            }
-        //}
-        
-        if ((xEvent & COMM_EVT_READ_PAYLOAD) != 0)
-        {
+        /* Dequeue new item from the job queue */
+        (void)xQueueReceive(xJobQueue, &pxJob, portMAX_DELAY);
 
-        }
-        
-        if ((xEvent & COMM_EVT_GET_STATUS) != 0)
-        {
+        /* Job should always have a subscriber so we can notify when job done */
+       configASSERT(pxJob->xSubscriber != NULL);
 
-        }
-        
-        if ((xEvent & COMM_EVT_SET_CHANNEL) != 0)
+        switch (xJob.ulType)
         {
-
+            case RF_SEND:
+                nRF24L01_vSendPayload((const char *)pxJob->pucData, pxJob->ulLen);
+                break;
+            case RF_READ:
+                pxJob->ulLen = nRF24L01_ulReadPayload((const char *)pxJob->pucData);
+                break;
+            case RF_STATUS:
+                ucStatus = nRF24L01_ucGetStatus();
+                if ((ucStatus & STATUS_TX_DS(1)) != 0)
+                {
+                    /* Payload sent - no action needed */
+                }
+                if ((ucStatus & STATUS_RX_DR(1)) != 0)
+                {
+                    /* Payload received - order a read operation */
+                }
+                if ((ucStatus & STATUS_MAX_RT(1)) != 0)
+                {
+                    /* Max retransmits - payload not sent */
+                    __BKPT();
+                }
+                break;
+            default:
+                /* Something went wrong real bad */
+                __BKPT();
+                break;
         }
-        
-        if ((xEvent & COMM_EVT_RESET) != 0)
-        {
 
-        }
+        xTaskNotifyGive(pxJob->xSubscriber);
     }
 }

@@ -23,7 +23,8 @@
 
 /* Global variables */
 
-extern TaskHandle_t xCommTaskHandle;
+extern TaskHandle_t         xCommTaskHandle;
+extern QueueHandle_t        xJobQueue;
 
 
 /* Local defines */
@@ -362,21 +363,31 @@ void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *puc
  */
 void PORTA_IRQHandler(void)
 {
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    BaseType_t  xRet;
+    BaseType_t  xHigherPrioTaskAwoken = pdFALSE;
 
-    if (PORTA_ISFR & MASK(IRQ))
+    static xJobStruct  xJob;
+    static xJobStruct *pxJob = &xJob;
+
+    if (PORTA->ISFR & MASK(IRQ))
     {
         /* Clear status flag */
         PORTA->ISFR = MASK(IRQ);
 
-        /* IRQ flags cleared in NRF24L01 by writing '1' to corresponding IRQ bit */
+        /* Each job needs to have a subscriber, but ISR can't
+         * really have one, so just set subscriber xCommTask.
+         * Also not processing any data when reading status.
+         */
+        xJob.xSubscriber = xCommTaskHandle;
+        xJob.ulType      = RF_STATUS;
 
-        /* Signal message available */
-        vTaskNotifyGiveFromISR(xCommTaskHandle, &xHigherPriorityTaskWoken);
-
-        __BKPT();
+        xRet = xQueueSendToFrontFromISR(xJobQueue, &pxJob, &xHigherPrioTaskAwoken);
+        if (xRet != pdTRUE)
+        {
+            __BKPT();
+        }        
     }
 
     /* Force context switch if xHigherPriorityTaskWoken is set pdTRUE */
-    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+    portEND_SWITCHING_ISR(xHigherPrioTaskAwoken);
 }
