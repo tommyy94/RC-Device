@@ -282,9 +282,75 @@ void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
     }
 
     /* Transfer bytes to nRF24L01 */
-    SPI1_vTransmitPolling(ucTxData, ucRxData, ulLength);
+    SPI1_vTransmitISR(ucTxData, ucRxData, ulLength);
     
+    /* Send bytes over the air */
     nRF24L01_vStartTransmission();
+
+    nRF24L01_ucResetStatusFlags();
+}
+
+
+/**
+ * @brief   Read nRF24L01 register.
+ * 
+ * @param   ucRegister      Register to read.
+ * 
+ * @return  ucRegister      Register value.
+ */
+uint8_t nRF24L01_ucReadRegister(uint8_t const ucRegister)
+{
+    /* First transfer register, then value */
+    uint8_t ucBuf[2];
+    uint8_t ucData[2] = { R_REGISTER | ucRegister, NOP };
+
+    SPI1_vTransmitISR(ucData, ucBuf, 2);
+
+    /* First element holds status, second the register value */
+    return ucBuf[1];
+}
+
+
+/**
+ * @brief   Simple wrapper to get RX FIFO depth.
+ * 
+ * @param   None
+ * 
+ * @return  RX FIFO length.
+ */
+__STATIC_INLINE  uint8_t nRF24L01_ucGetRxFifoDepth(void)
+{
+    return nRF24L01_ucReadRegister(R_RX_PL_WID);
+}
+
+
+/**
+ * @brief   Read nRF24L01 payload.
+ * 
+ * @param   pucPayload  Pointer to payload.
+ * 
+ * @return  ulLength    Payload length.
+ */
+uint32_t nRF24L01_ulReadPayload(const char *pucPayload)
+{
+    /* First need to tell RF which register to read,
+     * add to array length.
+     */
+    uint8_t  ucDummy[MAX_PAYLOAD_LEN + 1];
+    uint32_t ulLength;
+
+    /* First figure out transaction length */
+    ulLength = (uint32_t)nRF24L01_ucGetRxFifoDepth();
+    configASSERT(ulLength <= MAX_PAYLOAD_LEN);
+
+    nRF24L01_vSetChipEnable(LOW);
+
+    ucDummy[0] = R_REGISTER | R_RX_PAYLOAD;
+    SPI1_vTransmitISR(ucDummy, (uint8_t *)pucPayload, ulLength + 1);
+
+    nRF24L01_vSetChipEnable(HIGH);
+
+    return ulLength;
 }
 
 
@@ -350,7 +416,7 @@ void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *puc
     }
 
     /* Transfer bytes to nRF24L01 */
-    SPI1_vTransmitPolling(ucTxData, ucRxData, ulLength);
+    SPI1_vTransmitISR(ucTxData, ucRxData, ulLength);
 }
 
 
