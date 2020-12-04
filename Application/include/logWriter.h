@@ -12,7 +12,10 @@ enum
 	SPI_SELFTEST_FAIL	= (1u << 1),
 	RTC_SETTIME_ERROR	= (1u << 2),
 	DMA_ERROR               = (1u << 3),
-	RTOS_ERROR              = (1u << 4)
+	RTOS_ERROR              = (1u << 4),
+	RF_ERROR                = (1u << 5),
+	RF_BAD_JOB              = (1u << 6),
+	JOB_QUEUE_FULL          = (1u << 7) 
 };
 
 
