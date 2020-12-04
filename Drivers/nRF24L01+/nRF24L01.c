@@ -90,18 +90,27 @@ void nRF24L01_vInit(void)
  * @return  None
  */
 __STATIC_INLINE void nRF24L01_vConfigureIRQ(void)
-{
-    /**
-     * Select GPIO
-     * Interrupt on falling edge
-     * Enable internal pullup resistor
-     */
-    //PORTA->PCR[IRQ] = PORT_PCR_MUX(ALT1) | PORT_PCR_IRQC(10) | PORT_PCR_PE(1) | PORT_PCR_PS(1);
-    
+{    
+    Pio *piod = PIOD;
+
+    /* Disable peripheral control on IO pin */
+    piod->PIO_PER = PIO_PER_P28_Msk;
+
+    /* Enable internal pullup as the signal is active LOW */
+    PIO_ConfigurePull(piod, IRQ, PIO_PULLUP);
+
+    /* IRQ is an edge selection event */
+    piod->PIO_ESR |=  PIO_ESR_P28_Msk;
+    piod->PIO_LSR &= ~PIO_LSR_P28_Msk;
+
+    /* IRQ on falling edge */
+    piod->PIO_FELLSR |=  PIO_FELLSR_P28_Msk;
+    piod->PIO_REHLSR &= ~PIO_REHLSR_P28_Msk;
+
     /* Configure NVIC */
-    //NVIC_SetPriority(PORTA_IRQn, 2);
-    //NVIC_ClearPendingIRQ(PORTA_IRQn);
-    //NVIC_EnableIRQ(PORTA_IRQn);
+    NVIC_SetPriority(PIOD_IRQn, PIOD_IRQ_PRIO);
+    NVIC_ClearPendingIRQ(PIOD_IRQn);
+    NVIC_EnableIRQ(PIOD_IRQn);
 }
 
 
