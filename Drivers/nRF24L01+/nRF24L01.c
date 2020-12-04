@@ -24,10 +24,11 @@
 
 
 /* Local function prototypes */
-__STATIC_INLINE void nRF24L01_vConfigureIRQ(void);
-__STATIC_INLINE void nRF24L01_vConfigureChipEnable(void);
-__STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState);
-__STATIC_INLINE void nRF24L01_vStartTransmission(void);
+__STATIC_INLINE void    nRF24L01_vConfigureIRQ(void);
+__STATIC_INLINE void    nRF24L01_vConfigureChipEnable(void);
+__STATIC_INLINE void    nRF24L01_vSetChipEnable(const uint32_t ulState);
+__STATIC_INLINE void    nRF24L01_vStartTransmission(void);
+__STATIC_INLINE uint8_t nRF24L01_ucGetRxFifoDepth(void);
 
 /* Function descriptions */
 
