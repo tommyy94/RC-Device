@@ -20,14 +20,14 @@
 #include "dma.h"
 #include "nRF24L01.h"
 #include "pit.h"
+#include "spi.h"
 
 
 /* Global variables */
 TaskHandle_t            xCommTaskHandle;
 TaskHandle_t            xHmiTaskHandle;
 TaskHandle_t            xJoystickTaskHandle;
-QueueHandle_t           xTxQueue;
-EventGroupHandle_t      xCommEvent;
+QueueHandle_t           xJobQueue;
 MessageBufferHandle_t   xSpiTxBuf;
 MessageBufferHandle_t   xSpiRxBuf;
 
@@ -95,8 +95,8 @@ static void vEnableClockGating(void)
  */
 static void vCreateQueues(void)
 {
-    xTxQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(MessageQueue *));
-    configASSERT(xTxQueue != NULL);
+    xJobQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(xJobStruct *));
+    configASSERT(xJobQueue != NULL);
 
     xSpiTxBuf = xMessageBufferCreate(SPI_QUEUE_SIZE);
     configASSERT(xSpiTxBuf != NULL);
@@ -115,7 +115,7 @@ static void vCreateQueues(void)
  */
 static void vCreateEvents(void)
 {
-    xCommEvent = xEventGroupCreate();
+
 }
 
 

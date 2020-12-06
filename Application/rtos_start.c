@@ -12,7 +12,12 @@
 
 #include "nRF24L01.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+
 #include <string.h>
+
 
 TaskHandle_t		    xStartupTask;
 TaskHandle_t		    xCommTask;
@@ -20,6 +25,7 @@ TaskHandle_t		    xJournalTask;
 TaskHandle_t		    xCalendarTask;
 
 QueueHandle_t		    xTsQ;
+QueueHandle_t               xJobQueue;
 
 
 void commTask(void *arg);
@@ -73,20 +79,60 @@ void startupTask(void *arg)
 void commTask(void *arg)
 {
     (void)arg;
-    uint8_t txData[SPI_QUEUE_SIZE];
+    uint8_t ucStatus;
+    BaseType_t xRet;
+    xJobStruct *pxJob = NULL;
+
+    xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(xJobStruct *));
+    configASSERT(xJobQueue != NULL);
 
     SPI0_Init();
     nRF24L01_vInit();
 
-    /* Set test data */
-    memset(txData, 0xAA, SPI_QUEUE_SIZE);
-
     while (1)
     {
-        nRF24L01_vSendPayload((const char *)txData, SPI_QUEUE_SIZE);
-        
-        /* Wait until TX buffer full */
-        vTaskDelay(pdMS_TO_TICKS(100));
+        /* Dequeue new item from the job queue */
+        (void)xQueueReceive(xJobQueue, &pxJob, portMAX_DELAY);
+        /* TODO: Set unlimited timeout so next assert won't fail */
+
+        /* Job should always have a subscriber so we can notify when job done */
+        assert(pxJob->xSubscriber != NULL, __FILE__, __LINE__);
+
+        switch (pxJob->ulType)
+        {
+            case RF_SEND:
+                nRF24L01_vSendPayload((const char *)pxJob->pucData, pxJob->ulLen);
+                break;
+            case RF_READ:
+                pxJob->ulLen = nRF24L01_ulReadPayload((const char *)pxJob->pucData);
+                break;
+            case RF_STATUS:
+                ucStatus = nRF24L01_ucGetStatus();
+                if ((ucStatus & STATUS_TX_DS(1)) != 0)
+                {
+                    /* Payload sent - no action needed */
+                    __BKPT();
+                }
+                if ((ucStatus & STATUS_RX_DR(1)) != 0)
+                {
+                    pxJob->ulLen = nRF24L01_ulReadPayload((const char *)pxJob->pucData);
+                    /* Give event group a notification we have a new payload
+                     * so they can order a new job.
+                     */
+                }
+                if ((ucStatus & STATUS_MAX_RT(1)) != 0)
+                {
+                    /* Max retransmits - payload not sent */
+                    xTaskNotify(xJournalTask, RF_ERROR, eSetBits);
+                }
+                break;
+            default:
+                /* Something went wrong real bad */
+                xTaskNotify(xJournalTask, RF_BAD_JOB, eSetBits);
+                break;
+        }
+
+        xTaskNotifyGive(pxJob->xSubscriber);
     }
 }
 

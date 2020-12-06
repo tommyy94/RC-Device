@@ -59,7 +59,6 @@ void PIT_vTimerLoad(const uint32_t ulChannel, const uint32_t ulTimerVal)
 }
 
 
-#include "spi.h"
 /**
  * @brief   Periodical Interrupt Timer Interrupt Request Handler.
  * 

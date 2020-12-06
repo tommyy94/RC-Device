@@ -25,21 +25,23 @@
 /* Global defines */
 enum
 {
-    COMM_EVT_SEND_PAYLOAD = (1u << 0),
-    COMM_EVT_READ_PAYLOAD = (1u << 1),
-    COMM_EVT_GET_STATUS   = (1u << 2),
-    COMM_EVT_SET_CHANNEL  = (1u << 3),
-    COMM_EVT_RESET        = (1u << 4),
-    COMM_EVT_MASK         = 0xF
+    RF_SEND = 0,
+    RF_READ,
+    RF_STATUS
 };
 
-#define MAX_QUEUE_SIZE          (32UL)
+
+#define JOB_QUEUE_SIZE    (32u)
 
 typedef struct
 {
-    uint8_t   pucTxData[MAX_QUEUE_SIZE];
-    uint32_t  ulTxLen;
-} MessageQueue;
+    uint8_t        pucData[JOB_QUEUE_SIZE];
+    uint32_t       ulLen;
+    uint32_t       ulType;
+    TaskHandle_t   xSubscriber;
+} xJobStruct;
+
+#define MAX_QUEUE_SIZE          (32UL)
 
 
 /* Global variables */

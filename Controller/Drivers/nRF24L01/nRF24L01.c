@@ -5,6 +5,7 @@
 
 
 /* Device vendor headers */
+#include "MKL25Z4.h"
 #include "fsl_bitaccess.h"
 
 /* RTOS headers */
@@ -13,96 +14,29 @@
 
 /* User headers */
 #include "nRF24L01.h"
+#include "defines.h"
+#include "system.h"
+#include "spi.h"
+#include "tpm.h"
+#include "comm.h"
 
-extern TaskHandle_t xCommTaskHandle;
+/* Global defines */
+
+/* Global variables */
+
+extern TaskHandle_t         xCommTaskHandle;
+extern QueueHandle_t        xJobQueue;
 
 
 /* Local defines */
+#define NRF24L01_PULSE_DURATION     (15UL)
 
 /* Signal edges */
-#define CE                          (1UL)       /* Chip Enable */
-#define IRQ                         (2UL)       /* Interrupt Request */
+#define CE                          (1UL) /* Chip Enable */
+#define IRQ                         (2UL) /* Interrupt Request - active LOW */
 
-#define RXTX_ADDR_LEN               (5UL)
 #define MAX_PAYLOAD_LEN             (32UL)
-#define ADDR_40BIT_LEN              (5UL)
-
-/* Commands */
-#define R_REGISTER                  (0x00UL)    /* Read command and status registers */
-#define W_REGISTER                  (0x20UL)    /* Write command and status registers - power down/standby modes only */
-#define R_RX_PAYLOAD                (0x61UL)    /* Read RX-payload */
-#define W_TX_PAYLOAD                (0xA0UL)    /* Write TX-payload */
-#define FLUSH_TX                    (0xE1UL)    /* Flush TX FIFO */
-#define FLUSH_RX                    (0xE2UL)    /* Flush RX FIFO */
-#define REUSE_TX_PL                 (0xE3UL)    /* Reuse last transmitted payload */
-#define R_RX_PL_WID                 (0x63UL)    /* Read RX payload width */
-#define W_ACK_PAYLOAD               (0xA8UL)    /* Write Payload to be transmitted together ACK packet */
-#define W_ACK_PAYLOAD_NOACK         (0xB0UL)    /* Disable AUTOACK in specific packet */
-#define NOP                         (0xFFUL)    /* No Operation to read STATUS register */
-
-/* Registers */
-#define CONFIG                      (0x00UL)    /* Configuration Register */
-#define EN_AA                       (0x01UL)    /* Enable Auto Acknowledgement */
-#define EN_RXADDR                   (0x02UL)    /* Enabled RX Addresses */
-#define SETUP_RETR                  (0x04UL)    /* Setup of Automatic Retransmission */
-#define RF_CH                       (0x05UL)    /* RF Channel */
-#define RF_SETUP                    (0x06UL)    /* RF Setup Register */
-#define STATUS                      (0x07UL)    /* Status Register */
-#define RX_ADDR_P0                  (0x0AUL)    /* Receive address data pipe 0 */
-#define RX_ADDR_P1                  (0x0BUL)    /* Receive address data pipe 1 */
-#define RX_ADDR_P2                  (0x0CUL)    /* Receive address data pipe 2 */
-#define RX_ADDR_P3                  (0x0DUL)    /* Receive address data pipe 3 */
-#define RX_ADDR_P4                  (0x0EUL)    /* Receive address data pipe 4 */
-#define RX_ADDR_P5                  (0x0FUL)    /* Receive address data pipe 5 */
-#define TX_ADDR                     (0x10UL)    /* Transmit address */
-#define RX_PW_P0                    (0x11UL)    /* RX Payload Width Pipe 0 */
-#define RX_PW_P1                    (0x12UL)    /* RX Payload Width Pipe 1 */
-#define RX_PW_P2                    (0x13UL)    /* RX Payload Width Pipe 2 */
-#define RX_PW_P3                    (0x14UL)    /* RX Payload Width Pipe 3 */
-#define RX_PW_P4                    (0x15UL)    /* RX Payload Width Pipe 4 */
-#define RX_PW_P5                    (0x16UL)    /* RX Payload Width Pipe 5 */
-
-/* Register bits */
-#define CONFIG_MASK_RX_DR(x)        (((uint8_t)(((uint8_t)(x)) << 6)) & 0x40UL)
-#define CONFIG_MASK_TX_DS(x)        (((uint8_t)(((uint8_t)(x)) << 5)) & 0x20UL)
-#define CONFIG_MASK_MAX_RT(x)       (((uint8_t)(((uint8_t)(x)) << 4)) & 0x10UL)
-#define CONFIG_EN_CRC(x)            (((uint8_t)(((uint8_t)(x)) << 3)) & 0x08UL)
-#define CONFIG_CRCO(x)              (((uint8_t)(((uint8_t)(x)) << 2)) & 0x04UL)
-#define CONFIG_PWR_UP(x)            (((uint8_t)(((uint8_t)(x)) << 1)) & 0x02UL)
-#define CONFIG_PRIM_RX(x)           (((uint8_t)(((uint8_t)(x)) << 0)) & 0x01UL)
-
-#define EN_AA_ENAA_P5(x)            (((uint8_t)(((uint8_t)(x)) << 5)) & 0x20UL)
-#define EN_AA_ENAA_P4(x)            (((uint8_t)(((uint8_t)(x)) << 4)) & 0x10UL)
-#define EN_AA_ENAA_P3(x)            (((uint8_t)(((uint8_t)(x)) << 3)) & 0x08UL)
-#define EN_AA_ENAA_P2(x)            (((uint8_t)(((uint8_t)(x)) << 2)) & 0x04UL)
-#define EN_AA_ENAA_P1(x)            (((uint8_t)(((uint8_t)(x)) << 1)) & 0x02UL)
-#define EN_AA_ENAA_P0(x)            (((uint8_t)(((uint8_t)(x)) << 0)) & 0x01UL)
-
-#define EN_RXADDR_ERX_P5(x)         (((uint8_t)(((uint8_t)(x)) << 5)) & 0x20UL)
-#define EN_RXADDR_ERX_P4(x)         (((uint8_t)(((uint8_t)(x)) << 4)) & 0x10UL)
-#define EN_RXADDR_ERX_P3(x)         (((uint8_t)(((uint8_t)(x)) << 3)) & 0x08UL)
-#define EN_RXADDR_ERX_P2(x)         (((uint8_t)(((uint8_t)(x)) << 2)) & 0x04UL)
-#define EN_RXADDR_ERX_P1(x)         (((uint8_t)(((uint8_t)(x)) << 1)) & 0x02UL)
-#define EN_RXADDR_ERX_P0(x)         (((uint8_t)(((uint8_t)(x)) << 0)) & 0x01UL)
-
-#define SETUP_RETR_ARD(x)           (((uint8_t)(((uint8_t)(x)) << 4)) & 0xF0UL)
-#define SETUP_RETR_ARC(x)           (((uint8_t)(((uint8_t)(x)) << 0)) & 0x0FUL)
-
-#define STATUS_RX_DR(x)             (((uint8_t)(((uint8_t)(x)) << 6)) & 0x40UL)
-#define STATUS_TX_DS(x)             (((uint8_t)(((uint8_t)(x)) << 5)) & 0x20UL)
-#define STATUS_MAX_RT(x)            (((uint8_t)(((uint8_t)(x)) << 4)) & 0x10UL)
-#define STATUS_RX_P_NO(x)           (((uint8_t)(((uint8_t)(x)) << 1)) & 0x0EUL)
-#define STATUS_TX_FULL(x)           (((uint8_t)(((uint8_t)(x)) << 0)) & 0x01UL)
-
-#define RF_CH_MHZ(x)                (((uint8_t)(((uint8_t)(x)) << 0)) & 0x7FUL)
-
-#define RF_SETUP_CONT_WAVE(x)       (((uint8_t)(((uint8_t)(x)) << 7)) & 0x80UL)
-#define RF_SETUP_RF_DR_LOW(x)       (((uint8_t)(((uint8_t)(x)) << 5)) & 0x30UL)
-#define RF_SETUP_PLL_LOCK(x)        (((uint8_t)(((uint8_t)(x)) << 4)) & 0x10UL)
-#define RF_SETUP_RF_DR_HIGH(x)      (((uint8_t)(((uint8_t)(x)) << 3)) & 0x08UL)
-#define RF_SETUP_RF_PWR(x)          (((uint8_t)(((uint8_t)(x)) << 1)) & 0x06UL)
-
-#define RX_PW_PX(x)                 (((uint8_t)(((uint8_t)(x)) << 0)) & 0x3FUL)
+#define ADDR_LEN_BYTES              (4UL)
 
 
 /* Local function prototypes */
@@ -110,9 +44,9 @@ __STATIC_INLINE void    nRF24L01_vConfigureIRQ(void);
 __STATIC_INLINE void    nRF24L01_vConfigureChipEnable(void);
 __STATIC_INLINE void    nRF24L01_vSetChipEnable(const uint32_t ulState);
 __STATIC_INLINE void    nRF24L01_vStartTransmission(void);
-__STATIC_INLINE uint8_t nRF24L01_ucGetStatus(void);
-
-static void nRF24L01_vSetReceiveMode(void);
+__STATIC_INLINE void    nRF24L01_vSetTransmitMode(void);
+__STATIC_INLINE void    nRF24L01_vSetReceiveMode(void);
+__STATIC_INLINE uint8_t nRF24L01_ucGetRxFifoDepth(void);
 
 
 /* Function descriptions */
@@ -130,18 +64,25 @@ void nRF24L01_vInit(void)
     nRF24L01_vConfigureChipEnable();
     nRF24L01_vSetChipEnable(LOW);
 
-    /* RF Channel 2450 MHz */
-    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(50));
+    (void)nRF24L01_ucResetStatusFlags();
 
-    /* Set RX & TX address matching */
-    const uint8_t ucTxAddr[ADDR_40BIT_LEN] = { 0x11, 0x22, 0x33, 0x44, 0x55 }; /* LSB written first */
-    nRF24L01_vWriteAddressRegister(RX_ADDR_P0, ucTxAddr, ADDR_40BIT_LEN);
-    nRF24L01_vWriteAddressRegister(TX_ADDR, ucTxAddr, ADDR_40BIT_LEN);
+    /* RF Channel 2450 MHz */
+    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(2));
+
+    /* Set address width to 4 bytes */
+    nRF24L01_vWriteRegister(SETUP_AW, SETUP_AW_AW(2));
+
+    /* Set RX & TX address matching
+     * LSB written first
+     */
+    const uint8_t ucTxAddr[ADDR_LEN_BYTES] = { 0x11, 0x22, 0x33, 0x44 };
+    nRF24L01_vWriteAddressRegister(RX_ADDR_P0, ucTxAddr, ADDR_LEN_BYTES);
+    nRF24L01_vWriteAddressRegister(TX_ADDR, ucTxAddr, ADDR_LEN_BYTES);
     
     /* Enable data pipe 0 */
     nRF24L01_vWriteRegister(EN_RXADDR, EN_RXADDR_ERX_P0(1));
 
-    /* Auto ACK data pipe 0 */
+    /* Enable Auto ACK data pipe 0 */
     nRF24L01_vWriteRegister(EN_AA, EN_AA_ENAA_P0(1));
 
     /**
@@ -150,14 +91,27 @@ void nRF24L01_vInit(void)
      */
     nRF24L01_vWriteRegister(SETUP_RETR, SETUP_RETR_ARD(1) | SETUP_RETR_ARC(3));
 
-    /**
-     * Enable CRC
-     * 2 byte CRC
-     * Power Up
-     * RX mode
-     * IRQ on RX
-     */
+    /* Transfer 4 bytes */
+    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(4));
+
     nRF24L01_vSetReceiveMode();
+}
+
+
+/**
+ * @brief   Set TX mode.
+ * 
+ * @param   None
+ *             
+ * @return  None
+ */
+__STATIC_INLINE void nRF24L01_vSetTransmitMode(void)
+{
+    nRF24L01_vSetChipEnable(LOW);
+    nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
+                                  | CONFIG_CRCO(1)
+                                  | CONFIG_PWR_UP(1)
+                                  | CONFIG_PRIM_RX(0));
 }
 
 
@@ -168,10 +122,9 @@ void nRF24L01_vInit(void)
  *             
  * @return  None
  */
-static void nRF24L01_vSetReceiveMode(void)
+__STATIC_INLINE void nRF24L01_vSetReceiveMode(void)
 {
-    nRF24L01_vWriteRegister(CONFIG, CONFIG_MASK_RX_DR(1)
-                                  | CONFIG_EN_CRC(1)
+    nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
                                   | CONFIG_CRCO(1)
                                   | CONFIG_PWR_UP(1)
                                   | CONFIG_PRIM_RX(1));
@@ -193,10 +146,11 @@ __STATIC_INLINE void nRF24L01_vConfigureIRQ(void)
      * Interrupt on falling edge
      * Enable internal pullup resistor
      */
-    PORTA->PCR[IRQ] = PORT_PCR_MUX(ALT1) | PORT_PCR_IRQC(10) | PORT_PCR_PE(1) | PORT_PCR_PS(1);
+    PORTA->PCR[IRQ] = PORT_PCR_MUX(ALT1) | PORT_PCR_IRQC(10)
+                    | PORT_PCR_PE(1) | PORT_PCR_PS(1);
     
     /* Configure NVIC */
-    NVIC_SetPriority(PORTA_IRQn, 2);
+    NVIC_SetPriority(PORTA_IRQn, 4);
     NVIC_ClearPendingIRQ(PORTA_IRQn);
     NVIC_EnableIRQ(PORTA_IRQn);
 }
@@ -215,7 +169,10 @@ __STATIC_INLINE void nRF24L01_vConfigureChipEnable(void)
     PORTA->PCR[CE] = PORT_PCR_MUX(ALT1);
     
     /* Set output */
-    FGPIOA->PDDR |= MASK(CE);    
+    FGPIOA->PDDR |= MASK(CE);
+
+    /* Set LOW */
+    FGPIOA->PCOR |= MASK(CE);
 }
 
 
@@ -230,8 +187,11 @@ __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
 {
     configASSERT(ulState == LOW || (ulState == HIGH));
 
-    /* Figure out whether to set or clear bit */
-    const uint32_t *pulReg = (uint32_t *)&FGPIOA->PCOR - ulState; /* Subtract 0 - 1 words from PCOR address => pulReg = FGPIOA->PSOR/PCOR */
+    /* Figure out whether to set or clear bit:
+     * Subtract 0 - 1 words from PCOR address
+     * => pulReg = FGPIOA->PSOR/PCOR
+     */
+    const uint32_t *pulReg = (uint32_t *)&FGPIOA->PCOR - ulState;
 
     /* Perform bitwise operation */
     BME_OR32(&(*pulReg), MASK(CE));
@@ -247,22 +207,16 @@ __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
  */
 __STATIC_INLINE void nRF24L01_vStartTransmission(void)
 {
-    /* Disable TPM2 interrupts just to be sure */
-    BME_AND8(&TPM2->SC, ~(uint8_t)TPM_SC_TOIE(1));
-
     /* Send minimum 10 us pulse */
     TPM2->CNT = 0;
-    nRF24L01_vSetChipEnable(HIGH);
     TPM2_vStart();
-    while (TPM2->CNT < TEN_MICROSECONDS)
+    nRF24L01_vSetChipEnable(HIGH);
+    while (TPM2->CNT < (TEN_MICROSECONDS * 2))
     {
         ; /* Wait until 10 us passed */
     }
-    TPM2_vStop();
     nRF24L01_vSetChipEnable(LOW);
-
-    /* Turn TPM2 interrupts on again */
-    BME_OR8(&TPM2->SC, TPM_SC_TOIE(1));
+    TPM2_vStop();
 
     /* Reset TPM2 counter */
     TPM2->CNT = 0;
@@ -276,7 +230,7 @@ __STATIC_INLINE void nRF24L01_vStartTransmission(void)
  *             
  * @return  nRF24L01 status bits
  */
-__STATIC_INLINE uint8_t nRF24L01_ucGetStatus(void)
+uint8_t nRF24L01_ucGetStatus(void)
 {
     return SPI1_ucTransmitByte(NOP);
 }
@@ -289,14 +243,25 @@ __STATIC_INLINE uint8_t nRF24L01_ucGetStatus(void)
  *             
  * @return  None
  */
-void nRF24L01_vResetStatusFlags(void)
+uint8_t nRF24L01_ucResetStatusFlags(void)
 {
+    char ucBuffer[2];
+
     /**
      * Reset data received flag
      * Reset transmission succeeded flag
      * Reset transmission failed flag
      */
-    nRF24L01_vWriteRegister(STATUS, STATUS_RX_DR(1) | STATUS_TX_DS(1) | STATUS_MAX_RT(1));
+    const uint8_t ucStatusMask = STATUS_RX_DR(1)
+                               | STATUS_TX_DS(1)
+                               | STATUS_MAX_RT(1);
+
+    char ucData[] = { W_REGISTER | STATUS, ucStatusMask };
+
+    /* First transfer register, then value */
+    SPI1_vTransmitISR(ucData, ucBuffer, 2);
+
+    return ucBuffer[0];
 }
 
 
@@ -313,18 +278,20 @@ void nRF24L01_vResetStatusFlags(void)
  */
 void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
 {
-    ulLength++; /* Allocate byte for W_TX_PAYLOD */
+    BaseType_t xEvent;
+
+    ulLength++; /* Allocate byte for W_TX_PAYLOAD */
     
     configASSERT((ulLength) < MAX_PAYLOAD_LEN);
     char ucRxData[ulLength];
     char ucTxData[ulLength];
 
     /* Transfer 1...32 bytes */
-    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(ulLength));
+    //nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(ulLength));
+    
+    nRF24L01_ucResetStatusFlags();
 
     nRF24L01_vSendCommand(FLUSH_TX);
-    
-    nRF24L01_vResetStatusFlags();
 
     /* Build message */
     ucTxData[0] = W_TX_PAYLOAD;
@@ -334,9 +301,73 @@ void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
     }
 
     /* Transfer bytes to nRF24L01 */
-    SPI1_vTransmitPolling(ucTxData, ucRxData, ulLength);
+    SPI1_vTransmitISR(ucTxData, ucRxData, ulLength);
     
+    nRF24L01_vSetTransmitMode();
+    
+    /* Send bytes over the air */
     nRF24L01_vStartTransmission();
+}
+
+
+/**
+ * @brief   Read nRF24L01 register.
+ * 
+ * @param   ucRegister      Register to read.
+ * 
+ * @return  ucRegister      Register value.
+ */
+uint8_t nRF24L01_ucReadRegister(uint8_t const ucRegister)
+{
+    /* First transfer register, then value */
+    uint8_t ucBuf[2];
+    uint8_t ucData[2] = { R_REGISTER | ucRegister, NOP };
+
+    SPI1_vTransmitISR(ucData, ucBuf, 2);
+
+    /* First element holds status, second the register value */
+    return ucBuf[1];
+}
+
+
+/**
+ * @brief   Simple wrapper to get RX FIFO depth.
+ * 
+ * @param   None
+ * 
+ * @return  RX FIFO length.
+ */
+__STATIC_INLINE  uint8_t nRF24L01_ucGetRxFifoDepth(void)
+{
+    return nRF24L01_ucReadRegister(R_RX_PL_WID);
+}
+
+
+/**
+ * @brief   Read nRF24L01 payload.
+ * 
+ * @param   pucPayload  Pointer to payload.
+ * 
+ * @return  ulLength    Payload length.
+ */
+uint32_t nRF24L01_ulReadPayload(const char *pucPayload)
+{
+    /* First need to tell RF which register to read,
+     * add to array length.
+     */
+    uint8_t  ucDummy[MAX_PAYLOAD_LEN + 1];
+    uint32_t ulLength;
+
+    nRF24L01_vSetReceiveMode();
+
+    /* First figure out transaction length */
+    ulLength = (uint32_t)nRF24L01_ucGetRxFifoDepth();
+    configASSERT(ulLength <= MAX_PAYLOAD_LEN);
+
+    ucDummy[0] = R_REGISTER | R_RX_PAYLOAD;
+    SPI1_vTransmitISR(ucDummy, (uint8_t *)pucPayload, ulLength + 1);
+
+    return ulLength;
 }
 
 
@@ -351,12 +382,12 @@ void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
  */
 void nRF24L01_vWriteRegister(const uint8_t ucRegister, const uint8_t ucValue)
 {
-    char ucBuffer[MAX_PAYLOAD_LEN] = { '\0' };
+    char ucBuffer[2];
 
     char ucData[] = { W_REGISTER | ucRegister, ucValue};
 
     /* First transfer register, then value */
-    SPI1_vTransmitPolling(ucData, ucBuffer, 2);
+    SPI1_vTransmitISR(ucData, ucBuffer, 2);
 }
 
 
@@ -386,9 +417,11 @@ void nRF24L01_vSendCommand(const uint8_t ucCommand)
  * 
  * @return  None
  */
-void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *pucValue, uint32_t ulLength)
+void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister,
+                                    const uint8_t *pucValue,
+                                    uint32_t ulLength)
 {
-    configASSERT((ulLength) <= ADDR_40BIT_LEN);
+    configASSERT((ulLength) <= ADDR_LEN_BYTES);
 
     ulLength++; /* Allocate byte for W_REGISTER */
     char ucRxData[ulLength];
@@ -402,7 +435,7 @@ void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *puc
     }
 
     /* Transfer bytes to nRF24L01 */
-    SPI1_vTransmitPolling(ucTxData, ucRxData, ulLength);
+    SPI1_vTransmitISR(ucTxData, ucRxData, ulLength);
 }
 
 
@@ -415,19 +448,31 @@ void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *puc
  */
 void PORTA_IRQHandler(void)
 {
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    BaseType_t  xRet;
+    BaseType_t  xHigherPrioTaskAwoken = pdFALSE;
 
-    if (PORTA_ISFR & MASK(IRQ))
+    static xJobStruct  xJob;
+    static xJobStruct *pxJob = &xJob;
+
+    if (PORTA->ISFR & MASK(IRQ))
     {
         /* Clear status flag */
         PORTA->ISFR = MASK(IRQ);
 
-        /* Signal message available */
-        vTaskNotifyGiveFromISR(xCommTaskHandle, &xHigherPriorityTaskWoken);
+        /* Each job needs to have a subscriber, but ISR can't
+         * really have one, so just set subscriber xCommTask.
+         * Also not processing any data when reading status.
+         */
+        xJob.xSubscriber = xCommTaskHandle;
+        xJob.ulType      = RF_STATUS;
 
-        __BKPT();
+        xRet = xQueueSendToFrontFromISR(xJobQueue, &pxJob, &xHigherPrioTaskAwoken);
+        if (xRet != pdTRUE)
+        {
+            __BKPT();
+        }        
     }
 
     /* Force context switch if xHigherPriorityTaskWoken is set pdTRUE */
-    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+    portEND_SWITCHING_ISR(xHigherPrioTaskAwoken);
 }

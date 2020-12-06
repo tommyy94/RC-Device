@@ -54,11 +54,11 @@ void SPI0_Init(void)
     
     /* SPI0.CS1 Baud rate = Main clock / 2
      * Serial Clock Bit Rate = f_perclock / SPCK Bit Rate
-     *                       = 75 MHz / 6 = 12.5 MHz
+     *                       = 75 MHz / 16 = ~4.7 MHz (measured 4.5 MHz)
      * NOTE: SCBR should not be 0!
-     * 16 bits per transfer
+     * 8 bits per transfer
      */
-    spi->SPI_CSR[SLAVE_1] = SPI_CSR_SCBR(6) | SPI_CSR_BITS_16_BIT;
+    spi->SPI_CSR[SLAVE_1] = SPI_CSR_SCBR(16) | SPI_CSR_BITS_8_BIT; /* 2.6 MHz */
     assert((spi->SPI_CSR[SLAVE_1] & SPI_CSR_SCBR_Msk) != 0, __FILE__, __LINE__);
     
     /* CPOL = 0, CPHA = 1, SPCK inactive LOW */
@@ -85,7 +85,7 @@ __STATIC_INLINE void SPI0_IO_Init(void)
     Pio *piod = PIOD;
     const uint32_t spiMask = PIO_ABCDSR_P25_Msk | PIO_ABCDSR_P22_Msk
                            | PIO_ABCDSR_P21_Msk | PIO_ABCDSR_P20_Msk;
-                   
+
     /* Select peripheral function B */
     piod->PIO_ABCDSR[0] |= spiMask;
     piod->PIO_ABCDSR[1] &= ~(spiMask);
@@ -95,8 +95,15 @@ __STATIC_INLINE void SPI0_IO_Init(void)
     piob->PIO_ABCDSR[1] |= PIO_ABCDSR_P2_Msk;
     
     /* Set peripheral function */
-    piod->PIO_PDR  |= spiMask;
-    piob->PIO_PDR  |= PIO_PDR_P2_Msk;
+    piod->PIO_PDR = spiMask;
+    piob->PIO_PDR = PIO_PDR_P2_Msk;
+
+    /* Enable internal pulldown for MISO */
+    piod->PIO_MDER    = PIO_MDER_P20_Msk;
+    piod->PIO_PUDR    = PIO_PUDR_P20_Msk;
+    piod->PIO_PPDER   = PIO_PPDER_P20_Msk;
+    piod->PIO_DRIVER |= PIO_DRIVER_LINE20_HIGH_DRIVE;
+    
 }
 
 
@@ -194,25 +201,26 @@ uint16_t SPI0_vTransmitHalfword(uint16_t const halfword)
     return spi->SPI_RDR & 0xFFFF;
 }
 
-
-void SPI0_vTransmitByte(uint8_t const byte)
+uint8_t SPI0_vTransmitByte(uint8_t const byte)
 {
     Spi *spi = SPI0;
 
-    /* Temporarily set Bit Per Transfer = 8 */
-    spi->SPI_CSR[SLAVE_1] &= ~SPI_CSR_BITS_Msk;
-
     spi->SPI_CR  |= SPI_CR_SPIEN_Msk;
-    spi->SPI_TDR  = SPI_TDR_TD(byte & 0xFF);
+
+    /* Clear RX register */
     (void)spi->SPI_RDR;
-    __DMB();
+
+    /* Transmit character */
+    spi->SPI_TDR  = SPI_TDR_TD(byte);
+    while ((spi->SPI_SR & SPI_SR_RDRF_Msk) == 0)
+    {
+        ; /* Wait until character received */
+    }
+
     spi->SPI_CR  |= SPI_CR_SPIDIS_Msk;
 
-    /* Restore Bit Per Transfer = 16 */
-    spi->SPI_CSR[SLAVE_1] |= SPI_CSR_BITS_16_BIT;
-
+    return spi->SPI_RDR & 0xFF;
 }
-
 
 __STATIC_INLINE void SPI_Reset(Spi *spi)
 {

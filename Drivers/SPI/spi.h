@@ -9,10 +9,10 @@
 void	 SPI0_Init(void);
 bool     SPI_SelfTest(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len);
 uint16_t SPI0_vTransmitHalfword(uint16_t const halfword);
-void     SPI0_vTransmitByte(uint8_t const byte);
+uint8_t  SPI0_vTransmitByte(uint8_t const byte);
 
 void     SPI0_DMA_Init(void);
-void     SPI0_DMA_TransmitMessage(uint16_t *msg, uint16_t *recv, uint32_t len);
+void     SPI0_DMA_TransmitMessage(uint8_t *msg, uint8_t *recv, uint32_t len);
 
 
 #endif /* SPI_H_ */

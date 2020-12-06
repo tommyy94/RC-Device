@@ -1,6 +1,6 @@
 <!DOCTYPE CrossStudio_Project_File>
 <solution Name="Executable_1" target="8" version="2">
-  <project Name="Executable_1">
+  <project Name="Device">
     <configuration
       CMSIS_CORE="Yes"
       Name="Common"

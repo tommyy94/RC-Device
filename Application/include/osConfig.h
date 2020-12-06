@@ -26,7 +26,7 @@
 #define RTC_IRQ_PRIO        (6u)
 #define SPI0_IRQ_PRIO       (7u)
 #define XDMAC_IRQ_PRIO      (4u)
-
+#define PIOD_IRQ_PRIO       (5u)
 
 
 extern TaskHandle_t         xStartupTask;

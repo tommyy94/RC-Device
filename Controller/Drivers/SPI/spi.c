@@ -66,9 +66,11 @@ __STATIC_INLINE void SPI1_IO_vInit(void)
     PORTE->PCR[MOSI] &= ~PORT_PCR_MUX_MASK;
     PORTE->PCR[MOSI] |=  PORT_PCR_MUX(ALT5);
     
-    /* Set PTE1 as SPI1_MISO */
+    /* Set PTE1 as SPI1_MISO
+     * Enable internal pulldown
+     */
     PORTE->PCR[MISO] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[MISO] |=  PORT_PCR_MUX(ALT5);
+    PORTE->PCR[MISO] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
     
     /* Set PTE4 as GPIO for manual SS */
     PORTE->PCR[SS]   &= ~PORT_PCR_MUX_MASK;
@@ -106,12 +108,15 @@ __STATIC_INLINE void SPI1_vSetSlave(const uint32_t ulState)
  */
 __STATIC_INLINE void SPI_vSetMode(SPI_Type *pxSpi, SPI_Mode eMode)
 {
+    configASSERT((pxSpi == SPI0) || (pxSpi == SPI1));
+    configASSERT(eMode < MODE_COUNT);
+
     const uint32_t modeTable[MODE_COUNT] =
     {
-        SPI_C1_CPOL(0) | SPI_C1_CPHA(1),  /* Mode 0 */
-        SPI_C1_CPOL(0) | SPI_C1_CPHA(0),  /* Mode 1 */
-        SPI_C1_CPOL(1) | SPI_C1_CPHA(1),  /* Mode 2 */
-        SPI_C1_CPOL(1) | SPI_C1_CPHA(0)   /* Mode 3 */
+        SPI_C1_CPOL(0) | SPI_C1_CPHA(0),  /* Mode 0 */
+        SPI_C1_CPOL(0) | SPI_C1_CPHA(1),  /* Mode 1 */
+        SPI_C1_CPOL(1) | SPI_C1_CPHA(0),  /* Mode 2 */
+        SPI_C1_CPOL(1) | SPI_C1_CPHA(1)   /* Mode 3 */
     };
 
     pxSpi->C1 &= ~(SPI_C1_CPHA_MASK | SPI_C1_CPOL_MASK);
@@ -141,9 +146,9 @@ void SPI1_vInit(void)
     SPI1->C2 &= ~SPI_C2_MODFEN_MASK;
     
     /* Baudrate = Bus clock / ((SPPR + 1) * 2^^(SPR+1)) */
-    SPI1->BR = SPI_BR_SPPR(0) | SPI_BR_SPR(1);
+    SPI1->BR = SPI_BR_SPPR(2) | SPI_BR_SPR(1);
     
-    SPI_vSetMode(SPI1, MODE_3);
+    SPI_vSetMode(SPI1, MODE_0);
     
     /* Enable module & interrupts */
     SPI1->C1 |= SPI_C1_SPIE_MASK | SPI_C1_SPE_MASK;
@@ -179,8 +184,6 @@ void SPI1_vTransmitISR(uint8_t *const pucTx, uint8_t *const pucRx, uint32_t ulLe
     /* Fill RX message buffer */
     xRet = xMessageBufferReceive(xSpiRxBuf, pucRx, ulLength, pdMS_TO_TICKS(SPI1_TIMEOUT_MS));
     configASSERT(xRet == (BaseType_t)ulLength);
-    
-    SPI1_vSetSlave(HIGH);
 }
 
 
@@ -266,7 +269,7 @@ void SPI1_IRQHandler(void)
         pucRxBuf[ulBytesRecv++] = SPI1->D;
 
         /* Check if this was the last byte */
-        if (ulBytesSent >= (uint32_t)xTxLen)
+        if (ulBytesRecv >= (uint32_t)xTxLen)
         {
             SPI1_vSetSlave(HIGH);
             xRxLen = xMessageBufferSendFromISR(xSpiRxBuf, pucRxBuf, ulBytesRecv, &xHigherPriorityTaskWoken);

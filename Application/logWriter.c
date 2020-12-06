@@ -112,5 +112,6 @@ void journalTask(void *arg)
     {
         event = ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
         logError(event);
+        __BKPT();
     }
 }

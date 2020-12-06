@@ -32,7 +32,7 @@ void SPI0_DMA_Init(void)
    */
   dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CC
     |= XDMAC_CC_CSIZE_CHK_1
-    |  XDMAC_CC_DWIDTH_HALFWORD
+    |  XDMAC_CC_DWIDTH_BYTE
     |  XDMAC_CC_DSYNC_MEM2PER
     |  XDMAC_CC_TYPE_PER_TRAN
     |  XDMAC_CC_SIF_AHB_IF0
@@ -51,7 +51,7 @@ void SPI0_DMA_Init(void)
    */
   dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CC
     |= XDMAC_CC_CSIZE_CHK_1
-    |  XDMAC_CC_DWIDTH_HALFWORD
+    |  XDMAC_CC_DWIDTH_BYTE
     |  XDMAC_CC_DSYNC_PER2MEM
     |  XDMAC_CC_TYPE_PER_TRAN
     |  XDMAC_CC_SIF_AHB_IF1
@@ -81,7 +81,7 @@ void SPI0_DMA_Init(void)
 }
 
 
-static void SPI0_DMA_InitTransaction(uint16_t *msg, uint16_t *recv, uint32_t len)
+static void SPI0_DMA_InitTransaction(uint8_t *msg, uint8_t *recv, uint32_t len)
 {
   uint32_t bsize = 0;
   Xdmac *dma = XDMAC;
@@ -138,7 +138,7 @@ static void SPI0_DMA_InitTransaction(uint16_t *msg, uint16_t *recv, uint32_t len
 }
 
 
-void SPI0_DMA_TransmitMessage(uint16_t *msg, uint16_t *recv, uint32_t len)
+void SPI0_DMA_TransmitMessage(uint8_t *msg, uint8_t *recv, uint32_t len)
 {
   EventBits_t evtBits;
   Xdmac *dma = XDMAC;
@@ -184,7 +184,6 @@ void SPI0_DMA_TransmitMessage(uint16_t *msg, uint16_t *recv, uint32_t len)
   if (((evtBits & DMA_EVENT_SPI0_TX) == 0)
    || ((evtBits & DMA_EVENT_SPI0_RX) == 0))
   {
-    __BKPT();
     xTaskNotify(xJournalTask, DMA_ERROR, eSetBits);
   }
 
