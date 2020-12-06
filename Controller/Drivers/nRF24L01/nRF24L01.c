@@ -64,6 +64,8 @@ void nRF24L01_vInit(void)
     nRF24L01_vConfigureChipEnable();
     nRF24L01_vSetChipEnable(LOW);
 
+    (void)nRF24L01_ucResetStatusFlags();
+
     /* RF Channel 2450 MHz */
     nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(2));
 
@@ -81,16 +83,16 @@ void nRF24L01_vInit(void)
     nRF24L01_vWriteRegister(EN_RXADDR, EN_RXADDR_ERX_P0(1));
 
     /* Enable Auto ACK data pipe 0 */
-    //nRF24L01_vWriteRegister(EN_AA, EN_AA_ENAA_P0(1));
+    nRF24L01_vWriteRegister(EN_AA, EN_AA_ENAA_P0(1));
 
     /**
      * 500 us delay between retries
      * 10 retries
      */
-    //nRF24L01_vWriteRegister(SETUP_RETR, SETUP_RETR_ARD(1) | SETUP_RETR_ARC(3));
+    nRF24L01_vWriteRegister(SETUP_RETR, SETUP_RETR_ARD(1) | SETUP_RETR_ARC(3));
 
     /* Transfer 4 bytes */
-    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(5));
+    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(4));
 
     nRF24L01_vSetReceiveMode();
 }
@@ -109,8 +111,7 @@ __STATIC_INLINE void nRF24L01_vSetTransmitMode(void)
     nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
                                   | CONFIG_CRCO(1)
                                   | CONFIG_PWR_UP(1)
-                                  | CONFIG_PRIM_RX(0)
-                                  | CONFIG_MASK_TX_DS(1));
+                                  | CONFIG_PRIM_RX(0));
 }
 
 
@@ -126,8 +127,7 @@ __STATIC_INLINE void nRF24L01_vSetReceiveMode(void)
     nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
                                   | CONFIG_CRCO(1)
                                   | CONFIG_PWR_UP(1)
-                                  | CONFIG_PRIM_RX(1)
-                                  | CONFIG_MASK_TX_DS(1));
+                                  | CONFIG_PRIM_RX(1));
     nRF24L01_vSetChipEnable(HIGH);
 }
 
@@ -286,12 +286,10 @@ void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
     char ucRxData[ulLength];
     char ucTxData[ulLength];
 
-    nRF24L01_vSetTransmitMode();
-
     /* Transfer 1...32 bytes */
     //nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(ulLength));
     
-    //nRF24L01_ucResetStatusFlags();
+    nRF24L01_ucResetStatusFlags();
 
     nRF24L01_vSendCommand(FLUSH_TX);
 
@@ -305,10 +303,10 @@ void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
     /* Transfer bytes to nRF24L01 */
     SPI1_vTransmitISR(ucTxData, ucRxData, ulLength);
     
+    nRF24L01_vSetTransmitMode();
+    
     /* Send bytes over the air */
     nRF24L01_vStartTransmission();
-
-    nRF24L01_ucResetStatusFlags();
 }
 
 
@@ -360,16 +358,14 @@ uint32_t nRF24L01_ulReadPayload(const char *pucPayload)
     uint8_t  ucDummy[MAX_PAYLOAD_LEN + 1];
     uint32_t ulLength;
 
+    nRF24L01_vSetReceiveMode();
+
     /* First figure out transaction length */
     ulLength = (uint32_t)nRF24L01_ucGetRxFifoDepth();
     configASSERT(ulLength <= MAX_PAYLOAD_LEN);
 
-    nRF24L01_vSetChipEnable(LOW);
-
     ucDummy[0] = R_REGISTER | R_RX_PAYLOAD;
     SPI1_vTransmitISR(ucDummy, (uint8_t *)pucPayload, ulLength + 1);
-
-    nRF24L01_vSetChipEnable(HIGH);
 
     return ulLength;
 }

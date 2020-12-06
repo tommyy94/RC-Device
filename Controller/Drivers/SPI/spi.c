@@ -66,9 +66,11 @@ __STATIC_INLINE void SPI1_IO_vInit(void)
     PORTE->PCR[MOSI] &= ~PORT_PCR_MUX_MASK;
     PORTE->PCR[MOSI] |=  PORT_PCR_MUX(ALT5);
     
-    /* Set PTE1 as SPI1_MISO */
+    /* Set PTE1 as SPI1_MISO
+     * Enable internal pulldown
+     */
     PORTE->PCR[MISO] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[MISO] |=  PORT_PCR_MUX(ALT5);
+    PORTE->PCR[MISO] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
     
     /* Set PTE4 as GPIO for manual SS */
     PORTE->PCR[SS]   &= ~PORT_PCR_MUX_MASK;

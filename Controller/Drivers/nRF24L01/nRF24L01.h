@@ -97,15 +97,15 @@
 
 
 /* Function prototypes */
-void    nRF24L01_vInit(void);
-uint8_t nRF24L01_ucResetStatusFlags(void);
-void    nRF24L01_vWriteRegister(const uint8_t ucRegister,
-                                const uint8_t ucValue);
-void    nRF24L01_vSendCommand(const uint8_t ucCommand);
-void    nRF24L01_vWriteAddressRegister(const uint8_t ucRegister,
-                                       const uint8_t *pucValue,
-                                       uint32_t ulLength);
-void    nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength);
-void    nRF24L01_vReadPayload(const char *pucPayload, uint32_t ulLength);
-uint8_t nRF24L01_ucGetStatus(void);
-uint8_t nRF24L01_ucReadRegister(uint8_t const ucRegister);
+void      nRF24L01_vInit(void);
+uint8_t   nRF24L01_ucResetStatusFlags(void);
+void      nRF24L01_vWriteRegister(const uint8_t ucRegister,
+                                  const uint8_t ucValue);
+void      nRF24L01_vSendCommand(const uint8_t ucCommand);
+void      nRF24L01_vWriteAddressRegister(const uint8_t ucRegister,
+                                        const uint8_t *pucValue,
+                                        uint32_t ulLength);
+void      nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength);
+uint32_t  nRF24L01_ulReadPayload(const char *pucPayload);
+uint8_t   nRF24L01_ucGetStatus(void);
+uint8_t   nRF24L01_ucReadRegister(uint8_t const ucRegister);

@@ -53,7 +53,7 @@
 
 /* Register bits */
 #define CONFIG_MASK_RX_DR(x)        (((uint8_t)(((uint8_t)(x)) << 6)) & 0x40U)
-#define CONFIG_MASK_TS_DS(x)        (((uint8_t)(((uint8_t)(x)) << 5)) & 0x20U)
+#define CONFIG_MASK_TX_DS(x)        (((uint8_t)(((uint8_t)(x)) << 5)) & 0x20U)
 #define CONFIG_MASK_MAX_RT(x)       (((uint8_t)(((uint8_t)(x)) << 4)) & 0x10U)
 #define CONFIG_EN_CRC(x)            (((uint8_t)(((uint8_t)(x)) << 3)) & 0x08U)
 #define CONFIG_CRCO(x)              (((uint8_t)(((uint8_t)(x)) << 2)) & 0x04U)

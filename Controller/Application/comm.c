@@ -28,8 +28,7 @@ void vCommTask(void *const pvParam)
 {
     (void)pvParam;
     uint8_t       ucStatus;
-    xJobStruct    xJob;
-    xJobStruct   *pxJob = &xJob;
+    xJobStruct   *pxJob = NULL;
     
     while (1)
     {
@@ -39,7 +38,7 @@ void vCommTask(void *const pvParam)
         /* Job should always have a subscriber so we can notify when job done */
        configASSERT(pxJob->xSubscriber != NULL);
 
-        switch (xJob.ulType)
+        switch (pxJob->ulType)
         {
             case RF_SEND:
                 nRF24L01_vSendPayload((const char *)pxJob->pucData, pxJob->ulLen);
@@ -56,6 +55,7 @@ void vCommTask(void *const pvParam)
                 if ((ucStatus & STATUS_RX_DR(1)) != 0)
                 {
                     /* Payload received - order a read operation */
+                    __BKPT();
                 }
                 if ((ucStatus & STATUS_MAX_RT(1)) != 0)
                 {

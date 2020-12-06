@@ -80,8 +80,11 @@ void commTask(void *arg)
 {
     (void)arg;
     uint8_t ucStatus;
-    xJobStruct  xJob;
-    xJobStruct *pxJob = &xJob;
+    BaseType_t xRet;
+    xJobStruct *pxJob = NULL;
+
+    xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(xJobStruct *));
+    configASSERT(xJobQueue != NULL);
 
     SPI0_Init();
     nRF24L01_vInit();
@@ -90,11 +93,12 @@ void commTask(void *arg)
     {
         /* Dequeue new item from the job queue */
         (void)xQueueReceive(xJobQueue, &pxJob, portMAX_DELAY);
+        /* TODO: Set unlimited timeout so next assert won't fail */
 
         /* Job should always have a subscriber so we can notify when job done */
         assert(pxJob->xSubscriber != NULL, __FILE__, __LINE__);
 
-        switch (xJob.ulType)
+        switch (pxJob->ulType)
         {
             case RF_SEND:
                 nRF24L01_vSendPayload((const char *)pxJob->pucData, pxJob->ulLen);
@@ -107,10 +111,14 @@ void commTask(void *arg)
                 if ((ucStatus & STATUS_TX_DS(1)) != 0)
                 {
                     /* Payload sent - no action needed */
+                    __BKPT();
                 }
                 if ((ucStatus & STATUS_RX_DR(1)) != 0)
                 {
-                    /* Payload received - order a read operation */
+                    pxJob->ulLen = nRF24L01_ulReadPayload((const char *)pxJob->pucData);
+                    /* Give event group a notification we have a new payload
+                     * so they can order a new job.
+                     */
                 }
                 if ((ucStatus & STATUS_MAX_RT(1)) != 0)
                 {

@@ -52,10 +52,16 @@ void vJoystickTask(void *const pvParam)
 
         /* Partition the message as we send bytes over SPI */
         xJob.ulLen                 = 0;
+        xJob.pucData[xJob.ulLen++] = 0xAA;
+        xJob.pucData[xJob.ulLen++] = 0xBB;
+        xJob.pucData[xJob.ulLen++] = 0xCC;
+        xJob.pucData[xJob.ulLen++] = 0xDD;
+        /*
         xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0x00FF);
         xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0xFF00);
         xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0x00FF);
         xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0xFF00);
+        */
         xJob.xSubscriber           = xJoystickTaskHandle;
         xJob.ulType                = RF_SEND;
       

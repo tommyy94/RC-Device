@@ -39,6 +39,8 @@ __STATIC_INLINE void    nRF24L01_vConfigureChipEnable(void);
 __STATIC_INLINE void    nRF24L01_vSetChipEnable(const uint32_t ulState);
 __STATIC_INLINE void    nRF24L01_vStartTransmission(void);
 __STATIC_INLINE uint8_t nRF24L01_ucGetRxFifoDepth(void);
+__STATIC_INLINE void    nRF24L01_vSetTransmitMode(void);
+__STATIC_INLINE void    nRF24L01_vSetReceiveMode(void);
 
 /* Function descriptions */
 
@@ -55,12 +57,8 @@ void nRF24L01_vInit(void)
     nRF24L01_vConfigureChipEnable();
     nRF24L01_vSetChipEnable(LOW);
 
-    nRF24L01_vResetStatusFlags();
-
     /* RF Channel 2450 MHz */
     nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(2));
-
-    nRF24L01_ucReadRegister(RF_CH);
 
     /* Set address width to 4 bytes */
     nRF24L01_vWriteRegister(SETUP_AW, SETUP_AW_AW(2));
@@ -82,18 +80,54 @@ void nRF24L01_vInit(void)
      */
     nRF24L01_vWriteRegister(SETUP_RETR, SETUP_RETR_ARD(1) | SETUP_RETR_ARC(3));
 
-    /**
-     * Enable CRC
-     * 2 byte CRC
-     * Power Up
-     * TX mode
-     */
-    nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1) | CONFIG_CRCO(1) | CONFIG_PWR_UP(1) | CONFIG_PRIM_RX(0));
-
     /* Transfer 4 bytes */
-    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(5));
+    nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(4));
 
     nRF24L01_vResetStatusFlags();
+
+    nRF24L01_vSetReceiveMode();
+}
+
+
+/**
+ * @brief   Set TX mode.
+ * 
+ * @param   None
+ *             
+ * @return  None
+ */
+__STATIC_INLINE void nRF24L01_vSetTransmitMode(void)
+{
+    Pio *piod = PIOD;
+
+    nRF24L01_vSetChipEnable(LOW);
+    nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
+                                  | CONFIG_CRCO(1)
+                                  | CONFIG_PWR_UP(1)
+                                  | CONFIG_PRIM_RX(0));
+
+    PIO_EnableIRQ(piod, IRQ);
+}
+
+
+/**
+ * @brief   Set RX mode.
+ * 
+ * @param   None
+ *             
+ * @return  None
+ */
+__STATIC_INLINE void nRF24L01_vSetReceiveMode(void)
+{
+    Pio *piod = PIOD;
+
+    nRF24L01_vSetChipEnable(HIGH);
+    nRF24L01_vWriteRegister(CONFIG, CONFIG_EN_CRC(1)
+                                  | CONFIG_CRCO(1)
+                                  | CONFIG_PWR_UP(1)
+                                  | CONFIG_PRIM_RX(1));
+
+    PIO_EnableIRQ(piod, IRQ);
 }
 
 /**
@@ -126,7 +160,8 @@ uint8_t nRF24L01_ucGetStatus(void)
  * @return  None
  */
 __STATIC_INLINE void nRF24L01_vConfigureIRQ(void)
-{    
+{
+    uint32_t ulPendingIrq;
     Pio *piod = PIOD;
 
     /* Disable peripheral control on IO pin */
@@ -135,13 +170,12 @@ __STATIC_INLINE void nRF24L01_vConfigureIRQ(void)
     /* Enable internal pullup as the signal is active LOW */
     PIO_ConfigurePull(piod, IRQ, PIO_PULLUP);
 
-    /* IRQ is an edge selection event */
-    piod->PIO_ESR |=  PIO_ESR_P28_Msk;
-    piod->PIO_LSR &= ~PIO_LSR_P28_Msk;
-
     /* IRQ on falling edge */
-    piod->PIO_FELLSR |=  PIO_FELLSR_P28_Msk;
-    piod->PIO_REHLSR &= ~PIO_REHLSR_P28_Msk;
+    PIO_ConfigureIRQ(piod, PIO_EDGE_IRQ, PIO_LEVEL_NEGATIVE, IRQ);
+
+    /* Clear pending PIOD IRQs */
+    ulPendingIrq = piod->PIO_ISR;
+    //assert(ulPendingIrq == IRQ, __FILE__, __LINE__);
 
     /* Configure NVIC */
     NVIC_SetPriority(PIOD_IRQn, PIOD_IRQ_PRIO);
@@ -255,11 +289,8 @@ void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
 
     /* Transfer 1...32 bytes */
     //nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(ulLength));
-    
-    //nRF24L01_vResetStatusFlags();
 
     nRF24L01_vSendCommand(FLUSH_TX);
-    //nRF24L01_vSendCommand(FLUSH_RX);
 
     /* Build message */
     uTxData[0] = W_TX_PAYLOAD; /* Lower byte empty */
@@ -395,7 +426,7 @@ void PIOD_ISR(void)
     xJob.xSubscriber = xCommTask;
     xJob.ulType      = RF_STATUS;
 
-    xRet = xQueueSendToFrontFromISR(xJobQueue, &pxJob, NULL, &xHigherPrioTaskAwoken);
+    xRet = xQueueSendToFrontFromISR(xJobQueue, &pxJob, &xHigherPrioTaskAwoken);
     if (xRet != pdTRUE)
     {
         xTaskNotifyFromISR(xJournalTask, JOB_QUEUE_FULL, eSetBits, &xHigherPrioTaskAwoken);
@@ -418,11 +449,11 @@ uint32_t nRF24L01_ulReadPayload(const char *pucPayload)
      * add to array length.
      */
     uint8_t  ucDummy[MAX_PAYLOAD_LEN + 1];
-    uint32_t ulLength;
+    uint32_t ulLength = 4;
 
     /* First figure out transaction length */
-    ulLength = (uint32_t)nRF24L01_ucGetRxFifoDepth();
-    assert(ulLength <= MAX_PAYLOAD_LEN, __FILE__, __LINE__);
+    //ulLength = (uint32_t)nRF24L01_ucGetRxFifoDepth();
+    //assert(ulLength <= MAX_PAYLOAD_LEN, __FILE__, __LINE__);
 
     nRF24L01_vSetChipEnable(LOW);
 
