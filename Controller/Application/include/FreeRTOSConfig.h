@@ -212,6 +212,8 @@
 See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY      (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY<<(8-configPRIO_BITS))
 
+#define configTASK_NOTIFICATION_ARRAY_ENTRIES 2
+
 /* Normal assert() semantics without relying on the provision of an assert.h header file. */
 #ifdef DEBUG
 #include <stdint.h>

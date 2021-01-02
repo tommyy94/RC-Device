@@ -7,6 +7,7 @@
 #include "sdcard.h"
 #include "rtc.h"
 #include "pwm.h"
+#include "throttle.h"
 
 #include "dma.h"
 
@@ -23,6 +24,7 @@ TaskHandle_t		    xStartupTask;
 TaskHandle_t		    xCommTask;
 TaskHandle_t		    xJournalTask;
 TaskHandle_t		    xCalendarTask;
+TaskHandle_t		    xThrottleTask;
 
 QueueHandle_t		    xTsQ;
 QueueHandle_t               xJobQueue;
@@ -45,8 +47,6 @@ void startupTask(void *arg)
 
     DMA_Init();
     //DMA_memcpy(&dst, &src, 1);
-
-    //PWM_Init();
 
     xRet = xTaskCreate(commTask,
                        "Comm",
@@ -72,6 +72,14 @@ void startupTask(void *arg)
                        &xCalendarTask);
     assert(xRet == pdPASS, __FILE__, __LINE__);
     
+    xRet = xTaskCreate(throttleTask,
+                       "Throttle",
+                       TASK_THROTTLE_STACK_SIZE,
+                       NULL,
+                       TASK_THROTTLE_STACK_PRIORITY,
+                       &xThrottleTask);
+    assert(xRet == pdPASS, __FILE__, __LINE__);
+    
     vTaskDelete(NULL);
 }
 
@@ -80,11 +88,7 @@ void commTask(void *arg)
 {
     (void)arg;
     uint8_t ucStatus;
-    BaseType_t xRet;
     xJobStruct *pxJob = NULL;
-
-    xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(xJobStruct *));
-    configASSERT(xJobQueue != NULL);
 
     SPI0_Init();
     nRF24L01_vInit();
@@ -93,7 +97,6 @@ void commTask(void *arg)
     {
         /* Dequeue new item from the job queue */
         (void)xQueueReceive(xJobQueue, &pxJob, portMAX_DELAY);
-        /* TODO: Set unlimited timeout so next assert won't fail */
 
         /* Job should always have a subscriber so we can notify when job done */
         assert(pxJob->xSubscriber != NULL, __FILE__, __LINE__);
@@ -115,10 +118,10 @@ void commTask(void *arg)
                 }
                 if ((ucStatus & STATUS_RX_DR(1)) != 0)
                 {
-                    pxJob->ulLen = nRF24L01_ulReadPayload((const char *)pxJob->pucData);
                     /* Give event group a notification we have a new payload
                      * so they can order a new job.
                      */
+                    (void)xTaskNotifyGiveIndexed(xThrottleTask, 2);
                 }
                 if ((ucStatus & STATUS_MAX_RT(1)) != 0)
                 {
@@ -132,7 +135,7 @@ void commTask(void *arg)
                 break;
         }
 
-        xTaskNotifyGive(pxJob->xSubscriber);
+        //xTaskNotifyGiveIndexed(pxJob->xSubscriber, 1);
     }
 }
 
@@ -143,6 +146,9 @@ void RTOS_Init(void)
 
     xTsQ = xQueueCreate(TS_QUEUE_SIZE, sizeof(struct Calendar));
     assert(xTsQ != NULL, __FILE__, __LINE__);
+
+    xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(xJobStruct *));
+    configASSERT(xJobQueue != NULL);
 
     xRet = xTaskCreate(startupTask,
                        "Startup",

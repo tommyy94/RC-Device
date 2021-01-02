@@ -33,10 +33,10 @@ void vCommTask(void *const pvParam)
     while (1)
     {
         /* Dequeue new item from the job queue */
-        (void)xQueueReceive(xJobQueue, &pxJob, portMAX_DELAY);
+        (void)xQueueReceive(xJobQueue, (void *)&pxJob, portMAX_DELAY);
 
         /* Job should always have a subscriber so we can notify when job done */
-       configASSERT(pxJob->xSubscriber != NULL);
+        configASSERT(pxJob->xSubscriber != NULL);
 
         switch (pxJob->ulType)
         {
@@ -55,7 +55,7 @@ void vCommTask(void *const pvParam)
                 if ((ucStatus & STATUS_RX_DR(1)) != 0)
                 {
                     /* Payload received - order a read operation */
-                    __BKPT();
+                    //__BKPT();
                 }
                 if ((ucStatus & STATUS_MAX_RT(1)) != 0)
                 {

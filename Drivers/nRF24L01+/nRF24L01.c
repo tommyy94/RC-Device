@@ -58,7 +58,7 @@ void nRF24L01_vInit(void)
     nRF24L01_vSetChipEnable(LOW);
 
     /* RF Channel 2450 MHz */
-    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(2));
+    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(35));
 
     /* Set address width to 4 bytes */
     nRF24L01_vWriteRegister(SETUP_AW, SETUP_AW_AW(2));
@@ -79,6 +79,9 @@ void nRF24L01_vInit(void)
      * 10 retries
      */
     nRF24L01_vWriteRegister(SETUP_RETR, SETUP_RETR_ARD(1) | SETUP_RETR_ARC(3));
+
+    /* 0dBm output power */
+    nRF24L01_vWriteRegister(RF_SETUP, RF_SETUP_RF_PWR(3));
 
     /* Transfer 4 bytes */
     nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(4));

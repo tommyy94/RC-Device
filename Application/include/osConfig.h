@@ -20,6 +20,9 @@
 #define TASK_CALENDAR_STACK_SIZE		(2048 / sizeof(portSTACK_TYPE))
 #define TASK_CALENDAR_STACK_PRIORITY            (tskIDLE_PRIORITY + 4)
 
+#define TASK_THROTTLE_STACK_SIZE		(2048 / sizeof(portSTACK_TYPE))
+#define TASK_THROTTLE_STACK_PRIORITY            (tskIDLE_PRIORITY + 5)
+
 /* Interrupt priorities
  * Remark: Lower equals higher priority 
  */

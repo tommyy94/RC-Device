@@ -129,7 +129,7 @@ static uint16_t PWM_GetChannelDutyCycle(float dutyPer)
 
   /* Calculate positive duty cycle */
   dutyPer = 100.0 - dutyPer;
-  return dutyPer * step;
+  return (uint16_t)(dutyPer * step);
 }
 
 

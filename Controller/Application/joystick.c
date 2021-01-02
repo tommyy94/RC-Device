@@ -44,7 +44,7 @@ void vJoystickTask(void *const pvParam)
         /* Measure and store raw analog values to RAM */
         ADC0_DMA_vMeasureChannels();
 
-        ulNotified = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(JOYSTICK_TIMEOUT));
+        ulNotified = ulTaskNotifyTakeIndexed(1, pdTRUE, pdMS_TO_TICKS(JOYSTICK_TIMEOUT));
         configASSERT(ulNotified != pdFALSE);
         
         /* Calculate soft average */
