@@ -55,7 +55,7 @@ void vCommTask(void *const pvParam)
                 if ((ucStatus & STATUS_RX_DR(1)) != 0)
                 {
                     /* Payload received - order a read operation */
-                    __BKPT();
+                    //__BKPT();
                 }
                 if ((ucStatus & STATUS_MAX_RT(1)) != 0)
                 {
