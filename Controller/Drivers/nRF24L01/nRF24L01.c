@@ -235,7 +235,15 @@ __STATIC_INLINE void nRF24L01_vStartTransmission(void)
  */
 uint8_t nRF24L01_ucGetStatus(void)
 {
-    return SPI1_ucTransmitByte(NOP);
+    char ucData[2] = { W_REGISTER | STATUS, NOP };
+
+    /* nRF24L01 always responds with STATUS register
+     * and STATUS register flags are clear to write.
+     *
+     * STATUS register is copied to SPI TX buffer
+     * as it is received.
+     */
+    SPI1_vTransmitISR(ucData, &ucData[1], 2);
 }
 
 
