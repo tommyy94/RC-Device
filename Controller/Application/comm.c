@@ -33,10 +33,10 @@ void vCommTask(void *const pvParam)
     while (1)
     {
         /* Dequeue new item from the job queue */
-        (void)xQueueReceive(xJobQueue, &pxJob, portMAX_DELAY);
+        (void)xQueueReceive(xJobQueue, (void *)&pxJob, portMAX_DELAY);
 
         /* Job should always have a subscriber so we can notify when job done */
-       configASSERT(pxJob->xSubscriber != NULL);
+        configASSERT(pxJob->xSubscriber != NULL);
 
         switch (pxJob->ulType)
         {

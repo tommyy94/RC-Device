@@ -73,7 +73,7 @@ void PIT_IRQHandler(void)
     if ((PIT->CHANNEL[PIT_CH_0].TFLG & PIT_TFLG_TIF(1)) != 0)
     {
         /* Give signal to read user input */
-        vTaskNotifyGiveFromISR(xJoystickTaskHandle, &xHigherPriorityTaskWoken);
+        vTaskNotifyGiveIndexedFromISR(xJoystickTaskHandle, 1, &xHigherPriorityTaskWoken);
 
         /* Clear IRQ flag & restart timer */
         PIT_vTimerLoad(PIT_CH_0, PIT_CH0_TIMEOUT);
