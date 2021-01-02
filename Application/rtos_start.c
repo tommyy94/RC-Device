@@ -7,6 +7,7 @@
 #include "sdcard.h"
 #include "rtc.h"
 #include "pwm.h"
+#include "throttle.h"
 
 #include "dma.h"
 
@@ -23,6 +24,7 @@ TaskHandle_t		    xStartupTask;
 TaskHandle_t		    xCommTask;
 TaskHandle_t		    xJournalTask;
 TaskHandle_t		    xCalendarTask;
+TaskHandle_t		    xThrottleTask;
 
 QueueHandle_t		    xTsQ;
 QueueHandle_t               xJobQueue;
@@ -46,8 +48,6 @@ void startupTask(void *arg)
     DMA_Init();
     //DMA_memcpy(&dst, &src, 1);
 
-    //PWM_Init();
-
     xRet = xTaskCreate(commTask,
                        "Comm",
                        TASK_COMM_STACK_SIZE,
@@ -70,6 +70,14 @@ void startupTask(void *arg)
                        NULL,
                        TASK_CALENDAR_STACK_PRIORITY,
                        &xCalendarTask);
+    assert(xRet == pdPASS, __FILE__, __LINE__);
+    
+    xRet = xTaskCreate(throttleTask,
+                       "Throttle",
+                       TASK_THROTTLE_STACK_SIZE,
+                       NULL,
+                       TASK_THROTTLE_STACK_PRIORITY,
+                       &xThrottleTask);
     assert(xRet == pdPASS, __FILE__, __LINE__);
     
     vTaskDelete(NULL);

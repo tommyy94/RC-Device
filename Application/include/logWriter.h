@@ -15,7 +15,8 @@ enum
 	RTOS_ERROR              = (1u << 4),
 	RF_ERROR                = (1u << 5),
 	RF_BAD_JOB              = (1u << 6),
-	JOB_QUEUE_FULL          = (1u << 7) 
+	JOB_QUEUE_FULL          = (1u << 7),
+	THROTTLE_TIMEOUT        = (1u << 8) 
 };
 
 
