@@ -11,9 +11,9 @@
 /* Global defines */
 
 /* Task priorities */
-#define COMMTASKPRIORITY        (7UL)
+#define COMMTASKPRIORITY        (8UL)
 #define HMITASKPRIORITY         (6UL)
-#define JOYSTICKTASKPRIORITY    (8UL)
+#define JOYSTICKTASKPRIORITY    (7UL)
 #define STARTUPTASKPRIORITY     (10UL)
 
 /* Task sizes */
