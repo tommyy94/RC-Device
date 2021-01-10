@@ -244,6 +244,8 @@ uint8_t nRF24L01_ucGetStatus(void)
      * as it is received.
      */
     SPI1_vTransmitISR(ucData, &ucData[1], 2);
+
+    return ucData[1];
 }
 
 
