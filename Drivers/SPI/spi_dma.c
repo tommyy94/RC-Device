@@ -163,7 +163,7 @@ void SPI0_DMA_TransmitMessage(uint8_t *msg, uint8_t *recv, uint32_t len)
   evtBits = xEventGroupWaitBits(
     dmaEvent,
     DMA_EVENT_SPI0_TX | DMA_EVENT_SPI0_RX,
-    pdFALSE,
+    pdTRUE,
     pdTRUE,
     pdMS_TO_TICKS(SPI_DMA_TIMEOUT));
 
