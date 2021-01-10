@@ -29,6 +29,18 @@ typedef enum
 } Frequency;
 
 
+typedef enum
+{
+    PWM_CHANNEL0 = 0,
+    PWM_CHANNEL1,
+    PWM_CHANNEL2,
+    PWM_CHANNEL3,
+    PWM_CHANNEL_COUNT
+} PWM_Channel;
+
+#define PWM_FREQUENCY (FREQ_2KHZ)
+
+
 #define DUTY_CYCLE_COUNT  (100u)
 
 const extern uint16_t dutyCycle[DUTY_CYCLE_COUNT];
