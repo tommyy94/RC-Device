@@ -1,10 +1,10 @@
 #include <same70q21b.h>
 #include <utils_assert.h>
 #include "pwm.h"
+#include "pio.h"
 
 
 static void     PWM_IO_Init(void);
-static void PWM_IO_Init(void);
 static uint16_t PWM_GetChannelDutyCycle(float dutyPer);
 
 
@@ -103,22 +103,23 @@ static void PWM_IO_Init(void)
     /* Set peripheral function */
     PIOA->PIO_PDR |= PIO_ABCDSR_P17_Msk | PIO_ABCDSR_P12_Msk
                   |  PIO_ABCDSR_P2_Msk  | PIO_ABCDSR_P0_Msk;
+
+    /* Enabling the pullup distorts the signal */
+    //PIO_ConfigurePull(PIOA, pioaMask, PIO_PULLUP);
 }
 
 
-void PWM_UpdateDutyCycle(Pwm *pwm, uint32_t ch, float dutyPer)
+void PWM_UpdateDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t ulDutyCycle)
 {
-  uint16_t chDuty;
-  assert(ch < PWM_CH_COUNT, __FILE__, __LINE__);
+  assert(ch < PWM_CHANNEL_COUNT, __FILE__, __LINE__);
 
-  chDuty = PWM_GetChannelDutyCycle(dutyPer);
-  pwm->PwmChNum[ch].PWM_CDTYUPD = PWM_CDTYUPD_CDTYUPD(chDuty);
+  pwm->PwmChNum[ch].PWM_CDTYUPD = PWM_CDTYUPD_CDTYUPD(ulDutyCycle);
 }
 
 
-void PWM_UpdateFrequency(Pwm *pwm, uint32_t ch, Frequency freq)
+void PWM_UpdateFrequency(Pwm *pwm, PWM_Channel ch, Frequency freq)
 {
-  assert(ch < PWM_CH_COUNT, __FILE__, __LINE__);
+  assert(ch < PWM_CHANNEL_COUNT, __FILE__, __LINE__);
   pwm->PwmChNum[ch].PWM_CPRDUPD = PWM_CPRDUPD_CPRDUPD(freq_tbl[freq]);
 }
 
@@ -143,9 +144,9 @@ static uint16_t PWM_GetChannelDutyCycle(float dutyPer)
  * NOTE: Might have to use a lookup table for the values,
  * to avoid DMA interrupt between each update.
  */
-void PWM_IncrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps)
+void PWM_IncrementDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t steps)
 {
-  assert(ch < PWM_CH_COUNT, __FILE__, __LINE__);
+  assert(ch < PWM_CHANNEL_COUNT, __FILE__, __LINE__);
   uint16_t curDuty;
   const float step = 11.7;
 
@@ -159,9 +160,9 @@ void PWM_IncrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps)
  * updating the registers. The register value should be swapped to
  * the beginning/end of the lookup table.
  */
-void PWM_DecrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps)
+void PWM_DecrementDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t steps)
 {
-  assert(ch < PWM_CH_COUNT, __FILE__, __LINE__);
+  assert(ch < PWM_CHANNEL_COUNT, __FILE__, __LINE__);
   uint16_t curDuty;
   const float step = 11.7;
 
@@ -171,14 +172,14 @@ void PWM_DecrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps)
 }
 
 
-void PWM_Enable(Pwm *pwm, uint32_t ch)
+void PWM_Enable(Pwm *pwm, PWM_Channel ch)
 {
     assert(ch <= PWM_DIS_CHID3_Pos, __FILE__, __LINE__);
     pwm->PWM_ENA = (0x1U << ch) & PWM_ENA_Msk;
 }
 
 
-void PWM_Disable(Pwm *pwm, uint32_t ch)
+void PWM_Disable(Pwm *pwm, PWM_Channel ch)
 {
     assert(ch <= PWM_DIS_CHID3_Pos, __FILE__, __LINE__);
     pwm->PWM_DIS = (0x1U << ch) & PWM_DIS_Msk;

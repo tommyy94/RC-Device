@@ -43,17 +43,17 @@ typedef enum
 
 #define DUTY_CYCLE_COUNT  (100u)
 
-const extern uint16_t dutyCycle[DUTY_CYCLE_COUNT];
-const extern uint16_t freq_tbl[FREQ_COUNT];
+extern const uint16_t dutyCycle[DUTY_CYCLE_COUNT];
+extern const uint16_t freq_tbl[FREQ_COUNT];
 
 
 void PWM_Init(void);
-void PWM_UpdateDutyCycle(Pwm *pwm, uint32_t ch, float dutyPer);
-void PWM_UpdateFrequency(Pwm *pwm, uint32_t ch, Frequency freq);
-void PWM_IncrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps);
-void PWM_DecrementDutyCycle(Pwm *pwm, uint32_t ch, uint32_t steps);
-void PWM_Enable(Pwm *pwm, uint32_t ch);
-void PWM_Disable(Pwm *pwm, uint32_t ch);
+void PWM_UpdateDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t ulDutyCycle);
+void PWM_UpdateFrequency(Pwm *pwm, PWM_Channel ch, Frequency freq);
+void PWM_IncrementDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t steps);
+void PWM_DecrementDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t steps);
+void PWM_Enable(Pwm *pwm, PWM_Channel ch);
+void PWM_Disable(Pwm *pwm, PWM_Channel ch);
 
 
 #endif /* PWM_H_ */
