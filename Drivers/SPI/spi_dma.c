@@ -205,6 +205,7 @@ void SPI0_DMA_TransmitMessage(uint8_t *msg, uint8_t *recv, uint32_t len)
   if (((evtBits & DMA_EVENT_SPI0_TX) == 0)
    || ((evtBits & DMA_EVENT_SPI0_RX) == 0))
   {
+    __BKPT();
     xTaskNotify(xJournalTask, DMA_ERROR, eSetBits);
   }
 
