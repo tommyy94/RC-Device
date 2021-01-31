@@ -70,10 +70,6 @@ void throttleTask(void *pvArg)
 
     PWM_Init();
 
-    xAxis.usX = UINT16_MAX;
-    xAxis.usY = UINT16_MAX * 0.5;
-    vThrottle(xAxis);
-
     while (1)
     {
         /* Wait for payload */
