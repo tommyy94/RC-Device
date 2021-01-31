@@ -245,7 +245,7 @@ __STATIC_INLINE void nRF24L01_vStartTransmission(void)
  */
 uint8_t nRF24L01_ucGetStatus(void)
 {
-    char ucData[2] = { W_REGISTER | STATUS, NOP };
+    char ucData[3] = { W_REGISTER | STATUS, NOP, NOP };
 
     /* nRF24L01 always responds with STATUS register
      * and STATUS register flags are clear to write.
