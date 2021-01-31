@@ -1,46 +1,39 @@
+/* System includes */
 #include <stdlib.h>
 #include <stdbool.h>
 
+/* User includes */
 #include "throttle.h"
 #include "pwm.h"
 #include "logWriter.h"
 #include "rtos_start.h"
+#include "utils_assert.h"
 
+/* RTOS includes */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-
-#include "utils_assert.h"
 
 
 #define THROTTLE_TIMEOUT_MS   (20ul)
 #define THROTTLE_RESOLUTION   (UINT16_MAX / 2)
 
 #define DUTY_CYCLE_MAX        (0x494)
+#define DUTY_SCALE            ((float)(DUTY_CYCLE_MAX / (float)UINT16_MAX))
 
 #define DEADZONE_MIN          (THROTTLE_RESOLUTION - (THROTTLE_RESOLUTION / 10))
 #define DEADZONE_MAX          (THROTTLE_RESOLUTION + (THROTTLE_RESOLUTION / 10))
 
-extern QueueHandle_t    xJobQueue;
-extern TaskHandle_t     xJournalTask;
-extern TaskHandle_t     xThrottleTask;
-
-
-
-typedef struct
-{
-    uint16_t usX;
-    uint16_t usY;
-} xAxisStruct;
 
 typedef enum
 {
-    THROTTLE_CHANNEL0 = 0,
-    THROTTLE_CHANNEL1,
-    THROTTLE_CHANNEL2,
-    THROTTLE_CHANNEL3,
-    THROTTLE_CHANNEL_COUNT
+    THROTTLE_CH_0 = 0,
+    THROTTLE_CH_1,
+    THROTTLE_CH_2,
+    THROTTLE_CH_3,
+    THROTTLE_CH_CNT
 } eThrottleChannel;
+
 
 typedef struct
 {
@@ -48,21 +41,43 @@ typedef struct
     eThrottleChannel eCh[PWM_CHANNEL_COUNT];
 } xChannelMap;
 
+typedef struct
+{
+    uint16_t usX;
+    uint16_t usY;
+} xAxisStruct;
+
 static xChannelMap xChMap =
 {
     { PWM0,         PWM0,         PWM0,         PWM1         },
     { PWM_CHANNEL0, PWM_CHANNEL1, PWM_CHANNEL3, PWM_CHANNEL0 }
 };
 
+extern QueueHandle_t          xJobQueue;
+extern TaskHandle_t           xJournalTask;
+extern TaskHandle_t           xThrottleTask;
 
-static void vThrottle(xAxisStruct xAxis);
+
+static void     vThrottle(xAxisStruct xAxis);
 static uint32_t ulScale(uint16_t usAxis);
-static void vUpdateThrottle(const eThrottleChannel eCh, const uint32_t ulThrottle);
-static void vEnableThrottle(const eThrottleChannel eCh);
-static void vDisableThrottle(const eThrottleChannel eChe);
-static bool bCheckDeadZone(uint16_t usAxis);
+static void     vEnableThrottle(const eThrottleChannel eCh);
+static void     vDisableThrottle(const eThrottleChannel eChe);
+static bool     bCheckDeadZone(const uint16_t usAxis);
+static uint32_t ulSetSteer(const uint32_t ulThrottle,
+                           const uint16_t usSteer);
+static void     vSetThrottle(const eThrottleChannel eCh,
+                             const uint32_t ulThrottle);
+static void     vUpdateThrottle(const uint16_t usJoyPos,
+                                const uint16_t usRightThrottle,
+                                const uint16_t usLeftThrottle);
 
-
+/**
+ * @brief   Task responsible for controlling the DC motors.
+ *
+ * @param   pvArg   Pointer to the task parameter.
+ *
+ * @return  None.
+ */
 void throttleTask(void *pvArg)
 {
     (void)pvArg;
@@ -203,29 +218,97 @@ static uint32_t ulScale(uint16_t usAxis)
 }
 
 
-static void vUpdateThrottle(const eThrottleChannel eCh, const uint32_t ulThrottle)
+/**
+ * @brief   Set the channel throttle value.
+ *
+ * @param   eCh         Target channel.
+ *
+ * @param   ulThrottle  Throttle value to set.
+ *
+ * @return  None.
+ */
+static void vSetThrottle(const eThrottleChannel eCh, const uint32_t ulThrottle)
 {
-    assert(eCh < THROTTLE_CHANNEL_COUNT, __FILE__, __LINE__);
+    assert(eCh < THROTTLE_CH_CNT, __FILE__, __LINE__);
     assert(ulThrottle  <= DUTY_CYCLE_MAX, __FILE__, __LINE__);
     PWM_UpdateDutyCycle(xChMap.pxPwm[eCh], xChMap.eCh[eCh], ulThrottle);
 }
 
 
+/**
+ * @brief   Enable channel throttle.
+ *
+ * @param   eCh Channel to enable.
+ *
+ * @return None.
+ */
 static void vEnableThrottle(const eThrottleChannel eCh)
 {
-    assert(eCh < THROTTLE_CHANNEL_COUNT, __FILE__, __LINE__);
+    assert(eCh < THROTTLE_CH_CNT, __FILE__, __LINE__);
     PWM_Enable(xChMap.pxPwm[eCh], xChMap.eCh[eCh]);
 }
 
 
+/**
+ * @brief   Disable channel throttle.
+ *
+ * @param   eCh Channel to disable.
+ *
+ * @return  None.
+ */
 static void vDisableThrottle(const eThrottleChannel eCh)
 {
-    assert(eCh < THROTTLE_CHANNEL_COUNT, __FILE__, __LINE__);
+    assert(eCh < THROTTLE_CH_CNT, __FILE__, __LINE__);
     PWM_Disable(xChMap.pxPwm[eCh], xChMap.eCh[eCh]);
 }
 
 
-static bool bCheckDeadZone(uint16_t usAxis)
+/**
+ * @brief   Update 
+ *
+ * @param   usJoyPos        Joystick position.
+ *
+ * @param   usRightThrottle Right side channel throttle value.
+ *
+ * @param   usLeftThrottle  Left side channel throttle value.
+ *
+ * @return  None.
+ */
+static void vUpdateThrottle(const uint16_t usJoyPos,
+                            const uint16_t usRightThrottle,
+                            const uint16_t usLeftThrottle)
+{
+    /* Go forward if MSB set (joystick over center) else backward. */
+    if (usJoyPos > THROTTLE_RESOLUTION)
+    {
+        vDisableThrottle(THROTTLE_CH_2);
+        vDisableThrottle(THROTTLE_CH_3);
+        vSetThrottle(THROTTLE_CH_0, usRightThrottle);
+        vSetThrottle(THROTTLE_CH_1, usLeftThrottle);
+        vEnableThrottle(THROTTLE_CH_0);
+        vEnableThrottle(THROTTLE_CH_1);
+    }
+    else
+    {
+        vDisableThrottle(THROTTLE_CH_0);
+        vDisableThrottle(THROTTLE_CH_1);
+        vSetThrottle(THROTTLE_CH_2, usRightThrottle);
+        vSetThrottle(THROTTLE_CH_3, usLeftThrottle);
+        vEnableThrottle(THROTTLE_CH_2);
+        vEnableThrottle(THROTTLE_CH_3);
+    }
+}
+
+
+/**
+ * @brief   Check if joystick in the dead zone aka
+ *          it is not actively controlled.
+ *
+ * @param   usAxis    Axis to check.
+ *
+ * @return  bDeadZone Is axis in the dead zone?
+ */
+static bool bCheckDeadZone(const uint16_t usAxis)
 {
     bool bDeadZone = false;
     if ((usAxis < DEADZONE_MAX) && (usAxis > DEADZONE_MIN))
