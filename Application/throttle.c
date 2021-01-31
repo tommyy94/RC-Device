@@ -19,7 +19,7 @@
 #define THROTTLE_RESOLUTION   (UINT16_MAX / 2)
 
 #define DUTY_CYCLE_MAX        (0x494)
-#define DUTY_SCALE            ((float)(DUTY_CYCLE_MAX / (float)UINT16_MAX))
+#define DUTY_SCALE            ((DUTY_CYCLE_MAX << 14) / UINT16_MAX)
 
 #define DEADZONE_MIN          (THROTTLE_RESOLUTION - (THROTTLE_RESOLUTION / 10))
 #define DEADZONE_MAX          (THROTTLE_RESOLUTION + (THROTTLE_RESOLUTION / 10))
@@ -131,7 +131,7 @@ static void vThrottle(xAxisStruct xAxis)
     if (bCheckDeadZone(xAxis.usX) == false)
     {
         /* Need to scale duty cycle value (Datasheet Chapter 51.7.41) */
-        usLeftThrottle  = ulScale(xAxis.usX) * DUTY_SCALE;
+        usLeftThrottle  = (ulScale(xAxis.usX) * DUTY_SCALE) >> 14;
         usRightThrottle = usLeftThrottle;
 
         /* Calculate steering if joystick moved */
@@ -174,9 +174,9 @@ static void vThrottle(xAxisStruct xAxis)
  */
 static uint32_t ulSetSteer(const uint32_t ulThrottle, const uint16_t usSteer)
 {
-    float fSteerPer = ulScale(usSteer) / (float)UINT16_MAX;
+    uint32_t fSteerPer = (ulScale(usSteer) << 14) / UINT16_MAX;
     
-    return (uint32_t)(ulThrottle * fSteerPer);
+    return (uint32_t)(ulThrottle * fSteerPer) >> 14;
 }
 
 /**
