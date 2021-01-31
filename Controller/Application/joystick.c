@@ -51,17 +51,17 @@ void vJoystickTask(void *const pvParam)
         ADC0_vReadChannels(pusAdVals);
 
         /* Partition the message as we send bytes over SPI */
-        xJob.ulLen                 = 0;
-        xJob.pucData[xJob.ulLen++] = 0xAA;
-        xJob.pucData[xJob.ulLen++] = 0xBB;
-        xJob.pucData[xJob.ulLen++] = 0xCC;
-        xJob.pucData[xJob.ulLen++] = 0xDD;
         /*
-        xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0x00FF);
-        xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0xFF00);
-        xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0x00FF);
-        xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0xFF00);
+        xJob.pucData[xJob.ulLen++] = 0xFF;
+        xJob.pucData[xJob.ulLen++] = 0xFF;
+        xJob.pucData[xJob.ulLen++] = 0xFF;
+        xJob.pucData[xJob.ulLen++] = 0xFF;
         */
+        xJob.ulLen                 = 0;
+        xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_X] & 0xFF);
+        xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_X] >> 8);
+        xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_Y] & 0xFF);
+        xJob.pucData[xJob.ulLen++] = (uint8_t)(pusAdVals[AXIS_Y] >> 8);
         xJob.xSubscriber           = xJoystickTaskHandle;
         xJob.ulType                = RF_SEND;
       
