@@ -108,6 +108,7 @@ void commTask(void *arg)
                 break;
             case RF_READ:
                 pxJob->ulLen = nRF24L01_ulReadPayload((const char *)pxJob->pucData);
+                xTaskNotifyGiveIndexed(pxJob->xSubscriber, 3);
                 break;
             case RF_STATUS:
                 ucStatus = nRF24L01_ucGetStatus();

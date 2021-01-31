@@ -53,6 +53,8 @@ static void logError(uint32_t id)
     char msg[MAX_LOG_LINE_LEN];
     struct Calendar *calendar = NULL;
 
+    __BKPT();
+
     /* Get timestamp - format 2012-09-26 00:16:47 */
     xTaskNotify(xCalendarTask, RTC_RETURN_TIME, eSetBits);
     if (xQueueReceive(xTsQ, calendar, pdMS_TO_TICKS(TS_QUEUE_TIMEOUT)) == pdPASS)

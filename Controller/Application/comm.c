@@ -60,7 +60,7 @@ void vCommTask(void *const pvParam)
                 if ((ucStatus & STATUS_MAX_RT(1)) != 0)
                 {
                     /* Max retransmits - payload not sent */
-                    __BKPT();
+                    //__BKPT();
                 }
                 break;
             default:

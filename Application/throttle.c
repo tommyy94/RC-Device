@@ -18,6 +18,9 @@
 
 #define DUTY_CYCLE_MAX        (0x494)
 
+#define DEADZONE_MIN          (THROTTLE_RESOLUTION - (THROTTLE_RESOLUTION / 10))
+#define DEADZONE_MAX          (THROTTLE_RESOLUTION + (THROTTLE_RESOLUTION / 10))
+
 extern QueueHandle_t    xJobQueue;
 extern TaskHandle_t     xJournalTask;
 extern TaskHandle_t     xThrottleTask;
@@ -57,6 +60,7 @@ static uint32_t ulScale(uint16_t usAxis);
 static void vUpdateThrottle(const eThrottleChannel eCh, const uint32_t ulThrottle);
 static void vEnableThrottle(const eThrottleChannel eCh);
 static void vDisableThrottle(const eThrottleChannel eChe);
+static bool bCheckDeadZone(uint16_t usAxis);
 
 
 void throttleTask(void *pvArg)
@@ -69,10 +73,6 @@ void throttleTask(void *pvArg)
     xAxisStruct xAxis;
 
     PWM_Init();
-
-    xAxis.usX = UINT16_MAX;
-    xAxis.usY = UINT16_MAX * 0.5;
-    vThrottle(xAxis);
 
     while (1)
     {
@@ -88,6 +88,8 @@ void throttleTask(void *pvArg)
         {
             xTaskNotify(xJournalTask, JOB_QUEUE_FULL, eSetBits);
         }
+
+        (void)ulTaskNotifyTakeIndexed(3, pdTRUE, portMAX_DELAY);
 
         /* First element is nRF24L01 status byte, ignore it */
         xAxis.usX = (pxJob->pucData[2] << 8) | pxJob->pucData[1];
@@ -114,7 +116,7 @@ static void vThrottle(xAxisStruct xAxis)
     float    fSteerPer  = 1.0;
     
     /* Calculate steering if joystick moved */
-    if (xAxis.usY != THROTTLE_RESOLUTION)
+    if (bCheckDeadZone(xAxis.usY) == false)
     {
         fSteerPer = ulScale(xAxis.usY) / (float)UINT16_MAX;
     }
@@ -136,11 +138,8 @@ static void vThrottle(xAxisStruct xAxis)
 
     /* Go forward if MSB set (joystick over center)
      * else go backward.
-     *
-     * Should generate a "dead zone" here for the controller.
      */
-    
-    if (xAxis.usX == THROTTLE_RESOLUTION)
+    if (bCheckDeadZone(xAxis.usX) == true)
     {
         for (uint32_t ulCh; ulCh < THROTTLE_CHANNEL_COUNT; ulCh++)
         {
@@ -202,4 +201,15 @@ static void vDisableThrottle(const eThrottleChannel eCh)
 {
     assert(eCh < THROTTLE_CHANNEL_COUNT, __FILE__, __LINE__);
     PWM_Disable(xChMap.pxPwm[eCh], xChMap.eCh[eCh]);
+}
+
+
+static bool bCheckDeadZone(uint16_t usAxis)
+{
+    bool bDeadZone = false;
+    if ((usAxis < DEADZONE_MAX) && (usAxis > DEADZONE_MIN))
+    {
+        bDeadZone = true;
+    }
+    return bDeadZone;
 }

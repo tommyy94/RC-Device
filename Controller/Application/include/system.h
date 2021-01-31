@@ -17,8 +17,8 @@
 #define STARTUPTASKPRIORITY     (10UL)
 
 /* Task sizes */
-#define COMMTASKSIZE            (256UL)
-#define HMITASKSIZE             (64UL)
+#define COMMTASKSIZE            (512UL)
+#define HMITASKSIZE             (256UL)
 #define JOYSTICKTASKSIZE        (512UL)
 #define STARTUPTASKSIZE         (512UL)
 
