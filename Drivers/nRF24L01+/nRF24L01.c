@@ -78,10 +78,14 @@ void nRF24L01_vInit(void)
      * 500 us delay between retries
      * 10 retries
      */
-    nRF24L01_vWriteRegister(SETUP_RETR, SETUP_RETR_ARD(1) | SETUP_RETR_ARC(3));
+    nRF24L01_vWriteRegister(SETUP_RETR, SETUP_RETR_ARD(1) | SETUP_RETR_ARC(15));
+
+    /* Set data rate 250 kbps */
+    //nRF24L01_vWriteRegister(RF_SETUP, RF_SETUP_RF_DR_LOW(1));
+    //nRF24L01_vWriteRegister(RF_SETUP, RF_SETUP_RF_DR_HIGH(2));
 
     /* 0dBm output power */
-    nRF24L01_vWriteRegister(RF_SETUP, RF_SETUP_RF_PWR(3));
+    nRF24L01_vWriteRegister(RF_SETUP, RF_SETUP_RF_PWR(0));
 
     /* Transfer 4 bytes */
     nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(4));
