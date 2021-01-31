@@ -85,6 +85,8 @@ void throttleTask(void *pvArg)
             xTaskNotify(xJournalTask, JOB_QUEUE_FULL, eSetBits);
         }
 
+        (void)ulTaskNotifyTakeIndexed(3, pdTRUE, portMAX_DELAY);
+
         /* First element is nRF24L01 status byte, ignore it */
         xAxis.usX = (pxJob->pucData[2] << 8) | pxJob->pucData[1];
         xAxis.usY = (pxJob->pucData[4] << 8) | pxJob->pucData[3];
