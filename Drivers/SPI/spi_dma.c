@@ -156,8 +156,9 @@ void SPI0_DMA_TransmitMessage(uint8_t *msg, uint8_t *recv, uint32_t len)
   dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIE = XDMAC_CIE_BIE_Msk;
 
   /* Enable SPI & DMA */
-  dma->XDMAC_GE  = XDMAC_GE_EN2_Msk | XDMAC_GE_EN1_Msk;
   spi->SPI_CR   |= SPI_CR_SPIEN_Msk;
+  __DMB();
+  dma->XDMAC_GE  = XDMAC_GE_EN2_Msk | XDMAC_GE_EN1_Msk;
 
   /* Wait for signal from DMA handler */
   evtBits = xEventGroupWaitBits(
@@ -168,8 +169,9 @@ void SPI0_DMA_TransmitMessage(uint8_t *msg, uint8_t *recv, uint32_t len)
     pdMS_TO_TICKS(SPI_DMA_TIMEOUT));
 
   /* Disable SPI & DMA */
-  spi->SPI_CR   |= SPI_CR_SPIDIS_Msk;
   dma->XDMAC_GD  = XDMAC_GD_DI2_Msk | XDMAC_GD_DI1_Msk;
+  __DMB();
+  spi->SPI_CR   |= SPI_CR_SPIDIS_Msk;
     
   /* Disable DMA IRQ */
   dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CID = XDMAC_CID_BID_Msk;
