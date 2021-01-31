@@ -97,7 +97,13 @@ void nRF24L01_vInit(void)
     /* Transfer 4 bytes */
     nRF24L01_vWriteRegister(RX_PW_P0, RX_PW_PX(4));
 
+    (void)nRF24L01_ucResetStatusFlags();
+
+    nRF24L01_vSetTransmitMode();
+    nRF24L01_vSendCommand(FLUSH_TX);
+
     nRF24L01_vSetReceiveMode();
+    nRF24L01_vSendCommand(FLUSH_RX);
 }
 
 

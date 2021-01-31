@@ -88,7 +88,11 @@ void nRF24L01_vInit(void)
 
     nRF24L01_vResetStatusFlags();
 
+    nRF24L01_vSetTransmitMode();
+    nRF24L01_vSendCommand(FLUSH_TX);
+
     nRF24L01_vSetReceiveMode();
+    nRF24L01_vSendCommand(FLUSH_RX);
 }
 
 
