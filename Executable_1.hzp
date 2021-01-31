@@ -66,7 +66,6 @@
           default_code_section=".init"
           default_const_section=".init_rodata" />
       </file>
-      <configuration Name="GCC Debug" build_exclude_from_build="Yes" />
     </folder>
     <folder Name="Script Files">
       <file file_name="targets/SAM_E/Scripts/SAM_E_Target.js">
@@ -325,8 +324,14 @@
       Name="Clang Debug"
       arm_assembler_variant="clang"
       arm_compiler_variant="clang"
-      gcc_enable_all_warnings="Yes" />
-    <configuration Name="GCC Debug" arm_compiler_variant="gcc" />
+      gcc_debugging_level="Level 3"
+      gcc_enable_all_warnings="Yes"
+      gcc_optimization_level="Level 0" />
+    <configuration
+      Name="GCC Debug"
+      arm_compiler_variant="gcc"
+      build_remove_unused_symbols="Yes"
+      gcc_optimization_level="Level 0" />
   </project>
   <configuration
     Name="GCC Debug"
