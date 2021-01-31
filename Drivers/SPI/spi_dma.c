@@ -155,6 +155,20 @@ void SPI0_DMA_TransmitMessage(uint8_t *msg, uint8_t *recv, uint32_t len)
 
   SPI0_DMA_InitTransaction(msg, recv, len);
 
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CNDC    = 0;
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CBC     = 0;
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CDS_MSP = 0;
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CSUS    = 0;
+  dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CDUS    = 0;
+
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CNDC    = 0;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CBC     = 0;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CDS_MSP = 0;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CSUS    = 0;
+  dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CDUS    = 0;
+
+  __DMB();
+
   /* Enable DMA IRQ */
   dma->XDMAC_GIE = XDMAC_GIE_IE2_Msk | XDMAC_GIE_IE1_Msk;
   dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIE = XDMAC_CIE_BIE_Msk;
