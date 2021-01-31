@@ -67,7 +67,7 @@ void nRF24L01_vInit(void)
     (void)nRF24L01_ucResetStatusFlags();
 
     /* RF Channel 2450 MHz */
-    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(35));
+    nRF24L01_vWriteRegister(RF_CH, RF_CH_MHZ(42));
 
     /* Set address width to 4 bytes */
     nRF24L01_vWriteRegister(SETUP_AW, SETUP_AW_AW(2));
