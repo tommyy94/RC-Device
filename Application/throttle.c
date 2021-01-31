@@ -100,77 +100,98 @@ void throttleTask(void *pvArg)
 }
 
 
+/**
+ * @brief   Writer analog axis values to digital PWM
+ *          channels to control the DC motors.
+ *
+ * @param   xAxis   Axis values.
+ *
+ * @return  None.
+ */
 static void vThrottle(xAxisStruct xAxis)
 {
     uint32_t usLeftThrottle;
     uint32_t usRightThrottle;
 
-    /* Need to scale duty cycle value (Datasheet Chapter 51.7.41)
-     *
-     * scaledDutyCycle = DUTY_CYCLE_MAX / UINT32_MAX
-     *                 = 0.01788
-     */
-    uint32_t usThrottle = ulScale(xAxis.usX) * 0.01788;
+    if (bCheckDeadZone(xAxis.usX) == false)
+    {
+        /* Need to scale duty cycle value (Datasheet Chapter 51.7.41) */
+        usLeftThrottle  = ulScale(xAxis.usX) * DUTY_SCALE;
+        usRightThrottle = usLeftThrottle;
 
-    /* Assume joystick in middle position - no steering */
-    float    fSteerPer  = 1.0;
-    
-    /* Calculate steering if joystick moved */
-    if (bCheckDeadZone(xAxis.usY) == false)
-    {
-        fSteerPer = ulScale(xAxis.usY) / (float)UINT16_MAX;
-    }
-    
-    /* Positive Y axis means the joystick is turned left.
-     * We have to reduce the left motor throttle to steer left.
-     * and reduce the right side motor throttle to steer right.
-     */
-    if (xAxis.usY > THROTTLE_RESOLUTION)
-    {
-        usLeftThrottle  = usThrottle * fSteerPer;
-        usRightThrottle = usThrottle;
-    }
-    else
-    {
-        usRightThrottle = usThrottle * fSteerPer;
-        usLeftThrottle  = usThrottle;
-    }
-
-    /* Go forward if MSB set (joystick over center)
-     * else go backward.
-     */
-    if (bCheckDeadZone(xAxis.usX) == true)
-    {
-        for (uint32_t ulCh; ulCh < THROTTLE_CHANNEL_COUNT; ulCh++)
+        /* Calculate steering if joystick moved */
+        if (bCheckDeadZone(xAxis.usY) == false)
         {
-            vDisableThrottle(ulCh);
+            /* Positive Y axis means the joystick is turned left.
+             * We have to reduce the left motor throttle to steer left.
+             * and reduce the right side motor throttle to steer right.
+             */
+            if (xAxis.usY > THROTTLE_RESOLUTION)
+            {
+                usLeftThrottle = ulSetSteer(usLeftThrottle, xAxis.usY);
+            }
+            else
+            {
+                usRightThrottle = ulSetSteer(usRightThrottle, xAxis.usY);
+            }
         }
-    }
-    else if (xAxis.usX > THROTTLE_RESOLUTION)
-    {
-        vDisableThrottle(THROTTLE_CHANNEL2);
-        vDisableThrottle(THROTTLE_CHANNEL3);
 
-        vUpdateThrottle(THROTTLE_CHANNEL0, usRightThrottle);
-        vUpdateThrottle(THROTTLE_CHANNEL1, usLeftThrottle);
-
-        vEnableThrottle(THROTTLE_CHANNEL0);
-        vEnableThrottle(THROTTLE_CHANNEL1);
+        vUpdateThrottle(xAxis.usX, usRightThrottle, usLeftThrottle);
     }
     else
     {
-        vDisableThrottle(THROTTLE_CHANNEL0);
-        vDisableThrottle(THROTTLE_CHANNEL1);
-
-        vUpdateThrottle(THROTTLE_CHANNEL2, usRightThrottle);
-        vUpdateThrottle(THROTTLE_CHANNEL3, usLeftThrottle);
-  
-        vEnableThrottle(THROTTLE_CHANNEL2);
-        vEnableThrottle(THROTTLE_CHANNEL3);
+        for (eThrottleChannel eCh = THROTTLE_CH_0; eCh < THROTTLE_CH_CNT; eCh++)
+        {
+            vDisableThrottle(eCh);
+        }
     }
 }
 
 
+/**
+ * @brief   Calculate steer modifier for a axis.
+ *
+ * @param   ulThrottle  Throttle value to modify.
+ *
+ * @param   usSteer     Steer modifier.
+ *
+ * @param   Steer modified throttle value.
+ */
+static uint32_t ulSetSteer(const uint32_t ulThrottle, const uint16_t usSteer)
+{
+    float fSteerPer = ulScale(usSteer) / (float)UINT16_MAX;
+    
+    return (uint32_t)(ulThrottle * fSteerPer);
+}
+
+/**
+ * @brief   Downsample axis
+ *
+ *          Axis value is halved to separate the direction
+ *          effectively downsampling the signal. The lower
+ *          half is then mirrored so the results correspond
+ *          to the joystick value. Finally the signal needs
+ *          to be oversampled so we can fit it to a digital
+ *          channel later. See below:
+ *
+ *                          |
+ *      What we get:        |   What we want:
+ *                          |
+ *            y=2^16        |               y=2^16
+ *          A               |             A
+ *          |               |             |
+ *  x=0     |      x=2^16   |   x=2^16    |      x=2^16
+ *     <----+---->          |        <----+---->
+ *          |               |             |x,y=0
+ *          |               |             |
+ *          v               |             v
+ *            y=0           |               y=2^16
+ *                          |
+ *
+ * @param   usAxis  Axis to scale.
+ *
+ * @return  Scaled axis value.
+ */
 static uint32_t ulScale(uint16_t usAxis)
 {    
     if (usAxis < THROTTLE_RESOLUTION)
