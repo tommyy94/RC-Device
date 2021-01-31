@@ -20,7 +20,7 @@ enum
 };
 
 
-#define JOYSTICK_TIMEOUT  (15UL)
+#define JOYSTICK_TIMEOUT  (150UL)
 
 
 extern QueueHandle_t       xJobQueue;
@@ -37,7 +37,7 @@ void vJoystickTask(void *const pvParam)
     uint16_t      pusAdVals[AXIS_CNT];
 
     /* Load timer */
-    PIT_vTimerLoad(PIT_CH_0, PIT_CH0_TIMEOUT);
+    PIT_vTimerLoad(PIT_CH_0, PIT_CH0_TIMEOUT * 10);
 
     while (1)
     {

@@ -12,7 +12,7 @@
 #include "logWriter.h"
 
 
-#define SPI_DMA_TIMEOUT   (10u) /* ms */
+#define SPI_DMA_TIMEOUT   (100u) /* ms */
 
 extern EventGroupHandle_t dmaEvent;
 
