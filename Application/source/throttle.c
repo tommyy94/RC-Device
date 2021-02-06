@@ -38,7 +38,7 @@ typedef enum
 typedef struct
 {
     Pwm             *pxPwm[PWM_CHANNEL_COUNT];
-    eThrottleChannel eCh[PWM_CHANNEL_COUNT];
+    PWM_Channel      eCh[PWM_CHANNEL_COUNT];
 } xChannelMap;
 
 typedef struct
