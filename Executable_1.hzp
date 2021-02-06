@@ -294,10 +294,9 @@
     </folder>
     <folder Name="Application">
       <folder Name="include">
-        <file file_name="Application/include/logWriter.h" />
-        <file file_name="Application/include/osConfig.h" />
-        <file file_name="Application/include/throttle.h" />
-        <file file_name="Application/include/system.h" />
+        <file file_name="Device/Application/include/logWriter.h" />
+        <file file_name="Device/Application/include/throttle.h" />
+        <file file_name="Device/Application/include/system.h" />
       </folder>
       <folder Name="source">
         <file file_name="Device/Application/source/logWriter.c" />
