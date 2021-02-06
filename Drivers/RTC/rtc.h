@@ -36,6 +36,7 @@ typedef struct Calendar
 
 
 void CalendarTask(void *arg);
+void RTC_Init(void);
 
 
 #endif /* RTC_H_ */

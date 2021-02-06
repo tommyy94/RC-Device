@@ -14,7 +14,7 @@
 #include "osConfig.h"
 #include "pio.h"
 #include "logWriter.h"
-#include "rtos_start.h"
+#include "system.h"
 
 /* Local variables */
 

@@ -267,7 +267,6 @@ void CalendarTask(void *arg)
     uint32_t event;
     Calendar calendar;
 
-    RTC_Init();
 
     /* Set time for testing purposes */
     calendar.date.year    = 2020;

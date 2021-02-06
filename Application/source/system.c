@@ -1,23 +1,27 @@
-#include "atmel_start.h"
-#include "rtos_start.h"
+/* System includes */
+#include <string.h>
 
-#include "spi.h"
+/* Application includes */
+#include "atmel_start.h"
+#include "system.h"
 #include "osConfig.h"
 #include "logWriter.h"
+#include "throttle.h"
+
+/* Driver includes */
+#include "spi.h"
 #include "sdcard.h"
 #include "rtc.h"
 #include "pwm.h"
-#include "throttle.h"
-
+#include "twi.h"
 #include "dma.h"
-
 #include "nRF24L01.h"
+#include "twi.h"
 
+/* RTOS includes */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-
-#include <string.h>
 
 
 TaskHandle_t		    xStartupTask;
@@ -36,17 +40,21 @@ void journalTask(void *arg);
 void CalendarTask(void *arg);
 
 
+void Sys_vInit(void);
+static void Sys_vCreateEvents(void);
 
-uint16_t src = 0xABCD;
-uint16_t dst = 0x0000;
 
+/**
+ * @brief   Startup task.
+ *
+ * @param   None
+ *
+ * @retval  None
+ */
 void startupTask(void *arg)
 {
     (void)arg;
     BaseType_t xRet;
-
-    DMA_Init();
-    //DMA_memcpy(&dst, &src, 1);
 
     xRet = xTaskCreate(commTask,
                        "Comm",
@@ -80,6 +88,7 @@ void startupTask(void *arg)
                        &xThrottleTask);
     assert(xRet == pdPASS, __FILE__, __LINE__);
     
+    /* startupTask can safely be deleted */
     vTaskDelete(NULL);
 }
 
@@ -87,11 +96,8 @@ void startupTask(void *arg)
 void commTask(void *arg)
 {
     (void)arg;
-    uint8_t ucStatus;
+    uint8_t     ucStatus;
     xJobStruct *pxJob = NULL;
-
-    SPI0_Init();
-    nRF24L01_vInit();
 
     while (1)
     {
@@ -115,7 +121,6 @@ void commTask(void *arg)
                 if ((ucStatus & STATUS_TX_DS(1)) != 0)
                 {
                     /* Payload sent - no action needed */
-                    __BKPT();
                 }
                 if ((ucStatus & STATUS_RX_DR(1)) != 0)
                 {
@@ -135,21 +140,60 @@ void commTask(void *arg)
                 xTaskNotify(xJournalTask, RF_BAD_JOB, eSetBits);
                 break;
         }
-
-        //xTaskNotifyGiveIndexed(pxJob->xSubscriber, 1);
     }
 }
 
 
-void RTOS_Init(void)
+/**
+ * @brief   Initialize drivers and middleware.
+ *
+ * @param   None
+ *
+ * @retval  None
+ */
+void Sys_vInit(void)
 {
-    BaseType_t xRet;
+    RTC_Init();
 
+    DMA_Init();
+    SPI0_Init();
+    nRF24L01_vInit();
+
+    TWI0_vInit();
+
+    PWM_Init();
+}
+
+/**
+ * @brief   Create RTOS events, queues, mutexes, sempahores, etc.
+ *
+ * @param   None
+ *
+ * @retval  None
+ */
+static void Sys_vCreateEvents(void)
+{
     xTsQ = xQueueCreate(TS_QUEUE_SIZE, sizeof(struct Calendar));
     assert(xTsQ != NULL, __FILE__, __LINE__);
 
     xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(xJobStruct *));
     configASSERT(xJobQueue != NULL);
+}
+
+
+/**
+ * @brief   Initialize RTOS and start the scheduler.
+ *
+ * @param   None
+ *
+ * @retval  None
+ */
+void RTOS_Init(void)
+{
+    BaseType_t xRet;
+
+    Sys_vCreateEvents();
+    Sys_vInit();
 
     xRet = xTaskCreate(startupTask,
                        "Startup",
@@ -162,4 +206,9 @@ void RTOS_Init(void)
     //SDCard_Test();
 
     vTaskStartScheduler();
+
+    while (1)
+    {
+        ; /* Should not get here */
+    }
 }

@@ -12,10 +12,6 @@ int main(void)
     SCB_EnableDCache();
     
     RTOS_Init();
-    while (1)
-    {
-        ; /* Should not get here */
-    }
 }
 
 

@@ -6,7 +6,7 @@
 #include "throttle.h"
 #include "pwm.h"
 #include "logWriter.h"
-#include "rtos_start.h"
+#include "system.h"
 #include "utils_assert.h"
 
 /* RTOS includes */
@@ -81,13 +81,10 @@ static void     vUpdateThrottle(const uint16_t usJoyPos,
 void throttleTask(void *pvArg)
 {
     (void)pvArg;
-    BaseType_t  xRet;
+    BaseType_t  xRet;    
+    xAxisStruct xAxis;
     xJobStruct  xJob;
     xJobStruct *pxJob = &xJob;
-    
-    xAxisStruct xAxis;
-
-    PWM_Init();
 
     while (1)
     {
