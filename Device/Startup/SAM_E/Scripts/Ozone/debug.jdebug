@@ -42,15 +42,15 @@ void OnProjectLoad (void) {
   Project.AddSvdFile ("Cortex-M7F.svd");
   Project.AddSvdFile ("$(InstallDir)/Config/Peripherals/ARMv7M.svd");
   Project.AddSvdFile ("$(InstallDir)/Config/Peripherals/ATSAME70Q21.svd");
-  Project.AddPathSubstitute ("/home/tommy/Documents/CrossWorks Projects/Executable_1/SEGGER/Ozone", "$(ProjectDir)");
-  Project.AddPathSubstitute ("/home/tommy/documents/crossworks projects/executable_1/segger/ozone", "$(ProjectDir)");
+  Project.AddPathSubstitute ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Device/Startup/SAM_E/Scripts/Segger Ozone", "$(ProjectDir)");
+  Project.AddPathSubstitute ("/home/tommy/documents/crossworks projects/executable_1/device/startup/sam_e/scripts/segger ozone", "$(ProjectDir)");
   //
   // User settings
   //
   Edit.SysVar (VAR_TRACE_MAX_INST_CNT, 100000000);
   Edit.SysVar (VAR_TRACE_CORE_CLOCK, 300000000);
-  File.Open ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Device Clang Debug/Device.elf");
-  //File.Open ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Device GCC Debug/Device.elf");
+  //File.Open ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Device/bin/Clang Debug/Device.elf");
+  File.Open ("/home/tommy/Documents/CrossWorks Projects/Executable_1/Device/bin/GCC Debug/Device.elf");
   Project.SetOSPlugin("FreeRTOSPlugin_CM7");
 }
 
