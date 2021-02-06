@@ -2,10 +2,12 @@
 .orig
 .rej
 .atmelstart
+*.hzs
 *.user
 Debug/
-Device Clang Debug/
-Device GCC Debug/
+Device/bin/
+GCC Debug/
+Clang Debug/
 
 
 FreeRTOS/FreeRTOS.a
@@ -17,3 +19,5 @@ FreeRTOS/FreeRTOS.a
 
 Controller/Kinetis
 
+
+*.ods#
