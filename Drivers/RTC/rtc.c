@@ -1,10 +1,17 @@
+/* Device vendor includes */
 #include <same70q21b.h>
-#include <FreeRTOS.h>
-#include <task.h>
 #include <utils_assert.h>
 
-#include "osConfig.h"
+/* System includes */
+#include <stdbool.h>
+
+/* RTOS includes */
+#include <FreeRTOS.h>
+#include <task.h>
+
+/* Application includes */
 #include "rtc.h"
+#include "osConfig.h"
 #include "ff.h"
 
 
@@ -44,11 +51,10 @@ enum
 extern QueueHandle_t xTsQ;
 
 
-void RTC_Init(void);
 static uint32_t dec2Bcd(uint32_t value, uint32_t mask);
 static uint32_t bcd2Dec(uint32_t value, uint32_t mask);
-static bool RTC_SetTime(Calendar *calendar);
-static bool RTC_GetTime(Calendar *calendar);
+static bool     RTC_SetTime(Calendar *calendar);
+static bool     RTC_GetTime(Calendar *calendar);
 
 
 /* PPM and clock correction should be done here.
@@ -208,8 +214,8 @@ static bool RTC_SetTime(Calendar *calendar)
 {
     uint32_t bcdTime;
     uint32_t bcdDate;
-    Rtc *rtc = RTC;
-    bool status = true;
+    Rtc     *rtc      = RTC;
+    bool     status   = true;
     
     /* Prepare time/calendar values */
     bcdDate = dec2Bcd(calendar->date.year,    CAL_YEAR)
@@ -258,15 +264,20 @@ static bool RTC_SetTime(Calendar *calendar)
 }
 
 
-/* Supervision and control for RTC. */
+/**
+ * @brief   Supervision and control for RTC.
+ *
+ * @param   arg   Unused.
+ *
+ * @retval  None.
+ */
 void CalendarTask(void *arg)
 {
     (void)arg;
-    Rtc *rtc = RTC;
+    Rtc       *rtc = RTC;
     BaseType_t ret;
-    uint32_t event;
-    Calendar calendar;
-
+    uint32_t   event;
+    Calendar   calendar;
 
     /* Set time for testing purposes */
     calendar.date.year    = 2020;
@@ -303,10 +314,17 @@ void CalendarTask(void *arg)
 }
 
 
+/**
+ * @brief   Get RTC time in human readable format.
+ *
+ * @param   calendar  Pointer to input calendar.
+ *
+ * @retval  status    Time ok/not ok.
+ */
 static bool RTC_GetTime(Calendar *calendar)
 {
-    Rtc *rtc = RTC;
-    bool status = false;
+    Rtc     *rtc                        = RTC;
+    bool     status                     = false;
     uint32_t bcdDate[STABLE_READ_COUNT] = { 0 };
     uint32_t bcdTime[STABLE_READ_COUNT] = { 0 };
 
