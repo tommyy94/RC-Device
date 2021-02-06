@@ -49,6 +49,7 @@ enum
 
 
 extern QueueHandle_t xTsQ;
+extern TaskHandle_t  xCalendarTask;
 
 
 static uint32_t dec2Bcd(uint32_t value, uint32_t mask);
@@ -63,20 +64,21 @@ static bool     RTC_GetTime(Calendar *calendar);
  */
 void RTC_Init(void)
 {
-    Rtc *rtc = RTC;
-    rtc->RTC_MR = 0;
+    /* Stop RTC */
+    RTC->RTC_CR |= RTC_CR_UPDCAL_Msk | RTC_CR_UPDTIM_Msk;
+
+    RTC->RTC_SCCR = RTC_SCCR_TDERRCLR_Msk | RTC_SCCR_CALCLR_Msk
+                  | RTC_SCCR_TIMCLR_Msk   | RTC_SCCR_SECCLR_Msk
+                  | RTC_SCCR_ALRCLR_Msk   |  RTC_SCCR_ACKCLR_Msk;
 
     /* Enable second periodic interrupt */
-    rtc->RTC_IDR = RTC_IDR_TDERRDIS_Msk | RTC_IDR_CALDIS_Msk
+    RTC->RTC_IDR = RTC_IDR_TDERRDIS_Msk | RTC_IDR_CALDIS_Msk
                  | RTC_IDR_TIMDIS_Msk | RTC_IDR_ALRDIS_Msk | RTC_IDR_ACKDIS_Msk;
-    rtc->RTC_IER = RTC_IER_SECEN_Msk;
+    RTC->RTC_IER = RTC_IER_SECEN_Msk;
 
     NVIC_ClearPendingIRQ(RTC_IRQn);
     NVIC_SetPriority(RTC_IRQn, RTC_IRQ_PRIO);
     NVIC_EnableIRQ(RTC_IRQn);
-
-    /* Start RTC */
-    rtc->RTC_CR &= ~(RTC_CR_UPDCAL_Msk | RTC_CR_UPDTIM_Msk);
 }
 
 
@@ -278,6 +280,9 @@ void CalendarTask(void *arg)
     BaseType_t ret;
     uint32_t   event;
     Calendar   calendar;
+    
+    /* Start RTC */
+    rtc->RTC_CR &= ~(RTC_CR_UPDCAL_Msk | RTC_CR_UPDTIM_Msk);
 
     /* Set time for testing purposes */
     calendar.date.year    = 2020;
