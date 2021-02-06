@@ -95,8 +95,9 @@ static void SPI0_DMA_InitTransaction(uint8_t *msg, uint8_t *recv, uint32_t len)
 
   /* Flush channels */
   dma->XDMAC_GSWF = XDMAC_GSWF_SWF2_Msk | XDMAC_GSWF_SWF1_Msk;
-  while (((dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIS && XDMAC_CIS_FIS_Msk) &&
-          (dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIS && XDMAC_CIS_FIS_Msk)) != 0)
+  while ((dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIS &
+          dma->XdmacChid[DMA_SPI0_RX_CH].XDMAC_CIS &
+          XDMAC_CIS_FIS_Msk) != 0)
   {
       ; /* Wwait until FIFO written to memory */
   }

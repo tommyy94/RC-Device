@@ -172,7 +172,6 @@ uint8_t nRF24L01_ucGetStatus(void)
  */
 __STATIC_INLINE void nRF24L01_vConfigureIRQ(void)
 {
-    uint32_t ulPendingIrq;
     Pio *piod = PIOD;
 
     /* Disable peripheral control on IO pin */
@@ -185,8 +184,7 @@ __STATIC_INLINE void nRF24L01_vConfigureIRQ(void)
     PIO_ConfigureIRQ(piod, PIO_EDGE_IRQ, PIO_LEVEL_NEGATIVE, IRQ);
 
     /* Clear pending PIOD IRQs */
-    ulPendingIrq = piod->PIO_ISR;
-    //assert(ulPendingIrq == IRQ, __FILE__, __LINE__);
+    (void)piod->PIO_ISR;
 
     /* Configure NVIC */
     NVIC_SetPriority(PIOD_IRQn, PIOD_IRQ_PRIO);

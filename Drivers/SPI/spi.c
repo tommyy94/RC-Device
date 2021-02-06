@@ -137,26 +137,9 @@ static void SPI_SetMode(Spi *spi, SPI_SlaveSelect slave, SPI_Mode mode)
 
 
 /* Loop Back Mode connected to SS0 (undocumented) */
-bool SPI_SelfTest(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
+bool SPI_SelfTest(Spi *spi, uint8_t *msg, uint8_t *recv, uint32_t len)
 {
-    uint32_t tmp_csr;
-    uint32_t tmp_mr;
     bool ret = true;
-
-    /* Backup SS0 */
-    tmp_csr = spi->SPI_CSR[SLAVE_0];
-    tmp_mr  = spi->SPI_MR & SPI_MR_PCS_Msk;
-    
-    /* SPI0.CS0 Baud rate = Main clock / 2
-     * Serial Clock Bit Rate = f_perclock / SPCK Bit Rate
-     * NOTE: SCBR should not be 0!
-     * 16 bits per transfer
-     */
-    spi->SPI_CSR[SLAVE_0] = SPI_CSR_SCBR(6) | SPI_CSR_BITS_16_BIT;
-    assert((spi->SPI_CSR[SLAVE_0] & SPI_CSR_SCBR_Msk) != 0, __FILE__, __LINE__);
-    
-    /* CPOL = 0, CPHA = 1, SPCK inactive LOW */
-    SPI_SetMode(spi, SLAVE_0, MODE_0);
 
     /* Enable Local Loopback */
     spi->SPI_MR |= SPI_MR_LLB_Msk;
@@ -172,9 +155,8 @@ bool SPI_SelfTest(Spi *spi, uint16_t *msg, uint16_t *recv, uint32_t len)
         }
     }
 
-    /* Restore SS0 and disable Local Loopback */
-    spi->SPI_CSR[SLAVE_0] = tmp_csr;
-    spi->SPI_MR |= tmp_mr;
+    /* Disable Local Loopback */
+    spi->SPI_MR &= ~SPI_MR_LLB_Msk;
     
     return ret;
 }

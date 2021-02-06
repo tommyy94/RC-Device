@@ -68,14 +68,14 @@ static void logError(uint32_t id)
                  calendar->time.hour,
                  calendar->time.minutes,
                  calendar->time.seconds,
-                 id);
+                 (unsigned long)id);
     }
     else
     {    
         snprintf(msg,
                  strlen((const char *)msg),
                  "No timestamp | Error: %lu\r\n",
-                 id);
+                 (unsigned long)id);
     }
     
     /* Append to log file */

@@ -85,7 +85,7 @@ void TWI_vXfer(TWI_Adapter *pxAdap, const uint32_t ulCount)
 
     for (uint32_t ulK = 0; ulK < ulCount; ulK++)
     {
-        if ((pxAdap->pxMsg[ulK].ulFlags == TWI_READ))
+        if (pxAdap->pxMsg[ulK].ulFlags == TWI_READ)
         {
             TWI_vRead(pxAdap->pxInst, pxAdap->ulAddr, &(pxAdap->pxMsg[ulK]));
         }
