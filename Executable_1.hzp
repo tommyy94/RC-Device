@@ -28,7 +28,7 @@
       arm_target_trace_interface_type="TracePort"
       batch_build_configurations="Clang Debug;GCC Debug"
       c_preprocessor_definitions="__SAME70Q21B__;__SAM_E_FAMILY;ARM_MATH_CM7;FLASH_PLACEMENT=1;__USE_CRYSTAL_OSCILLATOR__;__TCM_CONFIG__=0;STARTUP_FROM_RESET"
-      c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Config;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/RTC;$(ProjectDir)/Drivers/PWM;$(ProjectDir)/Drivers/sd_mmc;$(ProjectDir)/Drivers/DMA;$(ProjectDir)/Drivers/nRF24L01+;$(ProjectDir)/Drivers/PIO;$(ProjectDir)/Source Files;$(ProjectDir)/Middleware;$(ProjectDir)/Middleware/diskio;$(ProjectDir)/Middleware/fatfs/src;$(ProjectDir)/Middleware/ASF;$(ProjectDir)/Middleware/ASF/hal/include;$(ProjectDir)/Middleware/ASF/hal/src;$(ProjectDir)/Middleware/ASF/hal/utils/include;$(ProjectDir)/Middleware/ASF/hpl/core;$(ProjectDir)/Middleware/ASF/hpl/pio;$(ProjectDir)/Middleware/ASF/hpl/pmc;$(ProjectDir)/Middleware/ASF/hri;$(ProjectDir)/Application/include;$(ProjectDir)/SEGGER;$(ProjectDir)/SEGGER/RTT;$(SolutionDir)/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
+      c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Config;$(ProjectDir)/Drivers/SPI;$(ProjectDir)/Drivers/TWI;$(ProjectDir)/Drivers/RTC;$(ProjectDir)/Drivers/PWM;$(ProjectDir)/Drivers/sd_mmc;$(ProjectDir)/Drivers/DMA;$(ProjectDir)/Drivers/nRF24L01+;$(ProjectDir)/Drivers/PIO;$(ProjectDir)/Source Files;$(ProjectDir)/Middleware;$(ProjectDir)/Middleware/diskio;$(ProjectDir)/Middleware/fatfs/src;$(ProjectDir)/Middleware/ASF;$(ProjectDir)/Middleware/ASF/hal/include;$(ProjectDir)/Middleware/ASF/hal/src;$(ProjectDir)/Middleware/ASF/hal/utils/include;$(ProjectDir)/Middleware/ASF/hpl/core;$(ProjectDir)/Middleware/ASF/hpl/pio;$(ProjectDir)/Middleware/ASF/hpl/pmc;$(ProjectDir)/Middleware/ASF/hri;$(ProjectDir)/Application/include;$(ProjectDir)/SEGGER;$(ProjectDir)/SEGGER/RTT;$(SolutionDir)/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
       debug_register_definition_file="$(DeviceRegisterDefinitionFile)"
       debug_threads_script=""
       gcc_c_language_standard="gnu11"
@@ -122,6 +122,10 @@
       <folder Name="PIO">
         <file file_name="Drivers/PIO/pio.h" />
         <file file_name="Drivers/PIO/pio.c" />
+      </folder>
+      <folder Name="TWI">
+        <file file_name="Drivers/TWI/twi.c" />
+        <file file_name="Drivers/TWI/twi.h" />
       </folder>
     </folder>
     <folder Name="Config">
