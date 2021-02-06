@@ -11,7 +11,7 @@
 
 /* Application includes */
 #include "rtc.h"
-#include "osConfig.h"
+#include "system.h"
 #include "ff.h"
 
 

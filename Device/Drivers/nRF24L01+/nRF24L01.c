@@ -11,7 +11,7 @@
 
 #include "nRF24L01.h"
 #include "spi.h"
-#include "osConfig.h"
+#include "system.h"
 #include "pio.h"
 #include "logWriter.h"
 #include "system.h"

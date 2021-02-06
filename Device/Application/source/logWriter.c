@@ -1,6 +1,6 @@
 #include "logWriter.h"
 #include "sdcard.h"
-#include "osConfig.h"
+#include "system.h"
 #include "rtc.h"
 
 #include "string.h"

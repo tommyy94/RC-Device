@@ -2,7 +2,7 @@
 #include <utils_assert.h>
 
 #include "spi.h"
-#include "osConfig.h"
+#include "system.h"
 #include "logWriter.h"
 
 

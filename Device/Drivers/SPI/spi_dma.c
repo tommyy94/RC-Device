@@ -8,7 +8,7 @@
 
 #include "spi.h"
 #include "dma.h"
-#include "osConfig.h"
+#include "system.h"
 #include "logWriter.h"
 
 

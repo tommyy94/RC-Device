@@ -4,7 +4,6 @@
 /* Application includes */
 #include "atmel_start.h"
 #include "system.h"
-#include "osConfig.h"
 #include "logWriter.h"
 #include "throttle.h"
 

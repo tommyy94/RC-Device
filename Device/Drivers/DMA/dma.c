@@ -5,7 +5,7 @@
 
 #include "dma.h"
 #include "logWriter.h"
-#include "osConfig.h"
+#include "system.h"
 
 
 EventGroupHandle_t dmaEvent;
