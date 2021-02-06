@@ -39,7 +39,7 @@ void journalTask(void *arg);
 void CalendarTask(void *arg);
 
 
-void Sys_vInit(void);
+static void Sys_vInit(void);
 static void Sys_vCreateEvents(void);
 
 
@@ -54,6 +54,12 @@ void startupTask(void *arg)
 {
     (void)arg;
     BaseType_t xRet;
+
+    /* Must first create events so they can be called in Sys_vInit() */
+    Sys_vCreateEvents();
+
+    /* Must call Sys_vInit() as some drivers call the OS API */
+    Sys_vInit();
 
     xRet = xTaskCreate(commTask,
                        "Comm",
@@ -87,7 +93,7 @@ void startupTask(void *arg)
                        &xThrottleTask);
     assert(xRet == pdPASS, __FILE__, __LINE__);
     
-    /* startupTask can safely be deleted */
+    /* startupTask can now be deleted */
     vTaskDelete(NULL);
 }
 
@@ -150,7 +156,7 @@ void commTask(void *arg)
  *
  * @retval  None
  */
-void Sys_vInit(void)
+static void Sys_vInit(void)
 {
     RTC_Init();
 
@@ -189,20 +195,13 @@ static void Sys_vCreateEvents(void)
  */
 void RTOS_Init(void)
 {
-    BaseType_t xRet;
-
-    Sys_vCreateEvents();
-    Sys_vInit();
-
-    xRet = xTaskCreate(startupTask,
-                       "Startup",
-                       TASK_STARTUP_STACK_SIZE,
-                       NULL,
-                       TASK_STARTUP_STACK_PRIORITY,
-                       &xStartupTask);
+    BaseType_t xRet = xTaskCreate(startupTask,
+                                  "Startup",
+                                  TASK_STARTUP_STACK_SIZE,
+                                  NULL,
+                                  TASK_STARTUP_STACK_PRIORITY,
+                                  &xStartupTask);
     assert(xRet == pdPASS, __FILE__, __LINE__);
-
-    //SDCard_Test();
 
     vTaskStartScheduler();
 
