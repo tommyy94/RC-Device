@@ -137,5 +137,30 @@ void PIO_vSetPeripheralFunction(Pio *pxPio, const uint32_t ulMask, const PIO_Per
             break;
     }
     
-    pxPio->PIO_PDR = ulMask;
+    pxPio->PIO_PDR = PIO_PDR_P(ulMask);
 }
+
+
+void PIO_vSetIoFunction(Pio *pxPio, const uint32_t ulMask, const PIO_Dir xDir)
+{
+    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE), __FILE__, __LINE__);
+
+    pxPio->PIO_PER = PIO_PER_P(ulMask);
+    pxPio->PIO_OER = PIO_OER_P(xDir);
+}
+
+
+void PIO_vSetOutput(Pio *pxPio, const uint32_t ulMask)
+{
+    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE), __FILE__, __LINE__);
+    pxPio->PIO_SODR = PIO_SODR_P(ulMask);
+}
+
+
+void PIO_vClearOutput(Pio *pxPio, const uint32_t ulMask)
+{
+    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE), __FILE__, __LINE__);
+    pxPio->PIO_CODR = PIO_CODR_P(ulMask);
+}
+
+
