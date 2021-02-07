@@ -33,6 +33,7 @@ extern "C" {
 #define SPI0_IRQ_PRIO       (7u)
 #define XDMAC_IRQ_PRIO      (4u)
 #define PIOD_IRQ_PRIO       (5u)
+#define TWIHS0_IRQ_PRIO     (7u)
 
 #define JOB_QUEUE_SIZE      (32u)
 
