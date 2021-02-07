@@ -1,6 +1,7 @@
 #pragma once
 
 
+#define TWI_QUEUE_SIZE  (32UL)
 #define TWI_MSG_LIMIT   (2u)
 
 

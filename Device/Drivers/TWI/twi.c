@@ -15,6 +15,8 @@
 #define TWI_READ        (0x01u)
 
 
+extern QueueHandle_t      xTwiQueue;
+extern SemaphoreHandle_t  xTwiSema;
 static void    TWI0_IO_vInit(void);
 static void    TWI_vReleaseSlave(Twihs *pxTwi);
 static void    TWI_vSetMasterMode(Twihs *pxTwi);
