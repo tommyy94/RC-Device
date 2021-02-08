@@ -31,6 +31,8 @@ TaskHandle_t		    xThrottleTask;
 
 QueueHandle_t		    xTsQ;
 QueueHandle_t               xJobQueue;
+QueueHandle_t               xTwiQueue;
+SemaphoreHandle_t           xTwiSema;
 
 
 void commTask(void *arg);
@@ -183,6 +185,12 @@ static void Sys_vCreateEvents(void)
 
     xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(xJobStruct *));
     configASSERT(xJobQueue != NULL);
+    
+    xTwiQueue = xQueueCreate(TWI_QUEUE_SIZE, sizeof(TWI_Msg *));
+    configASSERT(xTwiQueue != NULL);
+
+    xTwiSema = xSemaphoreCreateBinary();
+    configASSERT(xTwiSema != NULL);
 }
 
 

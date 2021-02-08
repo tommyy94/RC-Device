@@ -1,6 +1,7 @@
 #pragma once
 
 
+#define TWI_QUEUE_SIZE  (1UL)
 #define TWI_MSG_LIMIT   (2u)
 
 
@@ -13,9 +14,9 @@ typedef struct
 
 typedef struct
 {
-    Twihs           *pxInst;
-    uint32_t         ulAddr;
-    TWI_Msg          pxMsg[TWI_MSG_LIMIT];
+    Twihs       *pxInst;
+    uint32_t     ulAddr;
+    TWI_Msg      pxMsg[TWI_MSG_LIMIT];
 } TWI_Adapter;
 
 
