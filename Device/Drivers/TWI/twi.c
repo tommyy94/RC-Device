@@ -35,6 +35,7 @@ static bool    TWI_bWrite(Twihs *pxTwi, const uint32_t ulTarget, TWI_Msg *pxMsg,
 static bool    TWI_bRead(Twihs *pxTwi, const uint32_t ulTarget, TWI_Msg *pxMsg);
 static void    TWI_vWriteTHR(Twihs *pxTwi, const uint8_t ucByte);
 static uint8_t TWI_ucReadRHR(Twihs *pxTwi);
+static void    TWIHS0_Handler_vEndXfer(TWI_Msg *pxMsg, uint32_t *pulCnt, BaseType_t *pxTaskWoken);
 
 
 /**
@@ -78,6 +79,25 @@ void TWI0_vInit(void)
     TWIHS0->TWIHS_IER = TWIHS_IER_ARBLST_Msk | TWIHS_IER_UNRE_Msk | TWIHS_IER_OVRE_Msk;
 
     TWI_vSetMasterMode(TWIHS0);
+
+    NVIC_ClearPendingIRQ(TWIHS0_IRQn);
+    NVIC_SetPriority(TWIHS0_IRQn, TWIHS0_IRQ_PRIO);
+    NVIC_EnableIRQ(TWIHS0_IRQn);
+    
+    #define ADDR_MPU6050    (0x68)
+    TWI_Adapter xTwiAdap;
+    uint8_t     buf1            = { 0x75 };
+    uint8_t     buf2            = { 0x00 };
+
+    xTwiAdap.pxInst             = TWIHS0;
+    xTwiAdap.ulAddr             = ADDR_MPU6050;
+    xTwiAdap.pxMsg[0].pucBuf    = &buf1;
+    xTwiAdap.pxMsg[0].ulLen     = 1;
+    xTwiAdap.pxMsg[0].ulFlags   = TWI_WRITE;
+    xTwiAdap.pxMsg[1].pucBuf    = &buf2;
+    xTwiAdap.pxMsg[1].ulLen     = 1;
+    xTwiAdap.pxMsg[1].ulFlags   = TWI_READ;
+    TWI_vXfer(&xTwiAdap, 2);
 }
 
 
@@ -311,15 +331,14 @@ void TWIHS0_Handler(void)
 {
     BaseType_t      xRet;
     uint32_t        ulStatus;
+    const uint32_t  ulErrMask  = TWIHS_SR_ARBLST_Msk | TWIHS_SR_UNRE_Msk | TWIHS_SR_OVRE_Msk;
     BaseType_t      xTaskWoken = pdFALSE;
     static uint32_t ulCnt      = 0;
     static TWI_Msg *pxMsg      = NULL;
 
     ulStatus = TWIHS0->TWIHS_SR;
 
-    if ((ulStatus & TWIHS_SR_ARBLST_Msk) ||
-        (ulStatus & TWIHS_SR_UNRE_Msk)   ||
-        (ulStatus & TWIHS_SR_OVRE_Msk))
+    if ((ulStatus & ulErrMask) != 0)
     {
         __BKPT();
     }
@@ -347,15 +366,7 @@ void TWIHS0_Handler(void)
                 {
                     TWI_vWriteCR(TWIHS0, TWIHS_CR_STOP_Msk);
                 }
-
-                /* Do cleanup, must disable TX IRQ here */
-                TWIHS0->TWIHS_IDR = TWIHS_IDR_TXRDY_Msk;
-                pxMsg = NULL;
-                ulCnt = 0;
-
-                /* Signal subscriber */
-                xRet = xSemaphoreGiveFromISR(xTwiSema, &xTaskWoken);
-                configASSERT(xRet == pdTRUE);
+                TWIHS0_Handler_vEndXfer(pxMsg, &ulCnt, &xTaskWoken);
             }
         }
 
@@ -376,22 +387,33 @@ void TWIHS0_Handler(void)
                 TWI_vWriteCR(TWIHS0, TWIHS_CR_STOP_Msk);
                 pxMsg->pucBuf[ulCnt] = TWI_ucReadRHR(TWIHS0);
 
-                /* Obligatory cleanup, disable RX IRQ */
-                TWIHS0->TWIHS_IDR = TWIHS_IDR_RXRDY_Msk;
-                pxMsg = NULL;
-                ulCnt = 0;
-
-                /* Signal subscriber */
-                xRet = xSemaphoreGiveFromISR(xTwiSema, &xTaskWoken);
-                configASSERT(xRet == pdTRUE);
+                TWIHS0_Handler_vEndXfer(pxMsg, &ulCnt, &xTaskWoken);
             }
         }
     }
 
-    /* Do context switch if higher prio task woke up */
-    portEND_SWITCHING_ISR(xTaskWoken);    
+    portEND_SWITCHING_ISR(xTaskWoken);
     if (xTaskWoken != pdFALSE)
     {
         portYIELD();
     }
+}
+
+
+static void TWIHS0_Handler_vEndXfer(TWI_Msg *pxMsg, uint32_t *pulCnt, BaseType_t *pxTaskWoken)
+{
+    BaseType_t xRet;
+
+    /* Sanity check */
+    configASSERT(pxMsg != NULL);
+
+    /* No penalty for disabling both IRQs */
+    TWIHS0->TWIHS_IDR = TWIHS_IDR_TXRDY_Msk | TWIHS_IDR_RXRDY_Msk;
+
+    /* Signal subscriber */
+    xRet = xSemaphoreGiveFromISR(xTwiSema, pxTaskWoken);
+    configASSERT(xRet == pdTRUE);
+
+    pxMsg   = NULL;
+    *pulCnt = 0;
 }
