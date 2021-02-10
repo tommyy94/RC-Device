@@ -38,8 +38,8 @@ typedef enum
 } SPI_Mode;
 
 
-extern MessageBufferHandle_t   xSpiTxBuf;
-extern MessageBufferHandle_t   xSpiRxBuf;
+extern MessageBufferHandle_t   xSpiTxBuf[SPI_COUNT];
+extern MessageBufferHandle_t   xSpiRxBuf[SPI_COUNT];
 
 
 __STATIC_INLINE void SPI1_IO_vInit(void);
@@ -170,70 +170,27 @@ void SPI1_vInit(void)
  * 
  * @return  None
  */
-void SPI1_vTransmitISR(uint8_t *const pucTx, uint8_t *const pucRx, uint32_t ulLength)
+void SPI_vXfer(SPI_Adapter *pxAdap)
 {
     BaseType_t xRet;
 
     /* Fill TX message buffer */
-    xRet = xMessageBufferSend(xSpiTxBuf, pucTx, ulLength, NULL);
-    configASSERT(xRet == (BaseType_t)ulLength);
+    xRet = xMessageBufferSend(xSpiTxBuf[pxAdap->eInstance],
+                              pxAdap->pucTx,
+                              pxAdap->ulLen,
+                              NULL);
+    configASSERT(xRet == (BaseType_t)pxAdap->ulLen);
 
     /* Start transmitting */
-    BME_OR8(&SPI1->C1, SPI_C1_SPTIE_MASK);
+    BME_OR8(&pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPTIE_MASK);
+    //BME_OR8(pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPTIE_MASK);
 
     /* Fill RX message buffer */
-    xRet = xMessageBufferReceive(xSpiRxBuf, pucRx, ulLength, pdMS_TO_TICKS(SPI1_TIMEOUT_MS));
-    configASSERT(xRet == (BaseType_t)ulLength);
-}
-
-
-/**
- * @brief   Read byte from SPI1 receive buffer.
- * 
- * @param   None
- * 
- * @return  SPI1->D     Received byte
- */
-uint8_t SPI1_ucReadPolling(void)
-{
-    while (BME_UBFX8(&SPI1->S, SPI_S_SPRF_SHIFT, SPI_S_SPRF_WIDTH) == 0)
-    {
-        ; /* Wait until buffer full */
-    }
-    
-    return SPI1->D;
-}
-
-
-/**
- * @brief   Transmit character over SPI by polling.
- * 
- * @param   ucByte      Byte to send.
- * 
- * @return  None
- */
-uint8_t SPI1_ucTransmitByte(const char ucByte)
-{
-    uint8_t ucRet;
-
-    BME_AND8(&SPI1->C1, (uint8_t)~SPI_C1_SPIE_MASK);
-
-    while (BME_UBFX8(&SPI1->S, SPI_S_SPTEF_SHIFT, SPI_S_SPTEF_WIDTH) == 0)
-    {
-        ; /* Wait until buffer empty */
-    }
-    
-    /* Transfer byte */
-    SPI1_vSetSlave(LOW);
-    
-    SPI1->D = ucByte;
-    ucRet = SPI1_ucReadPolling();
-    
-    SPI1_vSetSlave(HIGH);
-    
-    BME_OR8(&SPI1->C1, SPI_C1_SPIE_MASK);
-
-    return ucRet;
+    xRet = xMessageBufferReceive(xSpiRxBuf[pxAdap->eInstance],
+                                 pxAdap->pucRx,
+                                 pxAdap->ulLen,
+                                 pdMS_TO_TICKS(SPI1_TIMEOUT_MS));
+    configASSERT(xRet == (BaseType_t)pxAdap->ulLen);
 }
 
 
@@ -259,7 +216,7 @@ void SPI1_IRQHandler(void)
     /* Read message buffer if this is a new transfer */
     if (ulBytesSent == 0)
     {
-        xTxLen = (uint32_t)xMessageBufferReceiveFromISR(xSpiTxBuf, pucTxBuf, SPI_QUEUE_SIZE, &xHigherPriorityTaskWoken);
+        xTxLen = (uint32_t)xMessageBufferReceiveFromISR(xSpiTxBuf[SPI_RF], pucTxBuf, SPI_QUEUE_SIZE, &xHigherPriorityTaskWoken);
         SPI1_vSetSlave(LOW);
     }
 
@@ -272,7 +229,7 @@ void SPI1_IRQHandler(void)
         if (ulBytesRecv >= (uint32_t)xTxLen)
         {
             SPI1_vSetSlave(HIGH);
-            xRxLen = xMessageBufferSendFromISR(xSpiRxBuf, pucRxBuf, ulBytesRecv, &xHigherPriorityTaskWoken);
+            xRxLen = xMessageBufferSendFromISR(xSpiRxBuf[SPI_RF], pucRxBuf, ulBytesRecv, &xHigherPriorityTaskWoken);
             configASSERT(xRxLen == (BaseType_t)ulBytesRecv);
             ulBytesSent = 0;
             ulBytesRecv = 0;

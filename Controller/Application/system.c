@@ -28,8 +28,8 @@ TaskHandle_t            xCommTaskHandle;
 TaskHandle_t            xHmiTaskHandle;
 TaskHandle_t            xJoystickTaskHandle;
 QueueHandle_t           xJobQueue;
-MessageBufferHandle_t   xSpiTxBuf;
-MessageBufferHandle_t   xSpiRxBuf;
+MessageBufferHandle_t   xSpiTxBuf[SPI_COUNT];
+MessageBufferHandle_t   xSpiRxBuf[SPI_COUNT];
 
 
 /* Local defines */
@@ -98,11 +98,15 @@ static void vCreateQueues(void)
     xJobQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(xJobStruct *));
     configASSERT(xJobQueue != NULL);
 
-    xSpiTxBuf = xMessageBufferCreate(SPI_QUEUE_SIZE);
-    configASSERT(xSpiTxBuf != NULL);
+    xSpiTxBuf[SPI_TFT] = xMessageBufferCreate(SPI_QUEUE_SIZE);
+    configASSERT(xSpiTxBuf[SPI_TFT] != NULL);
+    xSpiTxBuf[SPI_RF] = xMessageBufferCreate(SPI_QUEUE_SIZE);
+    configASSERT(xSpiTxBuf[SPI_RF] != NULL);
 
-    xSpiRxBuf = xMessageBufferCreate(SPI_QUEUE_SIZE);
-    configASSERT(xSpiRxBuf != NULL);
+    xSpiRxBuf[SPI_TFT] = xMessageBufferCreate(SPI_QUEUE_SIZE);
+    configASSERT(xSpiRxBuf[SPI_TFT] != NULL);
+    xSpiRxBuf[SPI_RF] = xMessageBufferCreate(SPI_QUEUE_SIZE);
+    configASSERT(xSpiRxBuf[SPI_RF] != NULL);
 }
 
 
