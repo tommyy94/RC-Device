@@ -213,29 +213,26 @@ void SPI1_vInit(void)
 /**
  * @brief   Interrupt driven SPI transmit.
  * 
- * @param   pucTx       Pointer to data to send.
+ * @param   pxAdap  Pointer to SPI adapter.
  * 
- * @param   pucRx       Pointer to data to receive.
- * 
- * @param   ulLength    Data length
- * 
- * @return  None
+ * @return  xRet    Xfer ok/fail.
  */
-void SPI_vXfer(SPI_Adapter *pxAdap)
+bool SPI_bXfer(SPI_Adapter *pxAdap)
 {
     BaseType_t xRet;
 
-    /* Fill TX message buffer */
+    /* Share pointer with the IRQ handler */
     xRet = xQueueSend(xSpiQueue[pxAdap->eInstance], pxAdap, NULL);
     configASSERT(xRet == pdTRUE);
 
     /* Start transmitting */
     BME_OR8(&pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPTIE_MASK);
-    //BME_OR8(pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPTIE_MASK);
 
-    /* Fill RX message buffer */
+    /* Wait until xfer cplt */
     xSemaphoreTake(xSpiSema[pxAdap->eInstance], pdMS_TO_TICKS(SPI_TIMEOUT_MS));
     configASSERT(xRet == pdTRUE);
+
+    return (bool)xRet;
 }
 
 

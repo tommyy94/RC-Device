@@ -217,7 +217,7 @@ __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
 
 
 /**
- * @brief   Pulse CE line low for 10 us to start transmission.
+ * @brief   Pulse CE line HIGH for 10 us to start transmission.
  * 
  * @param   None
  * 
@@ -261,7 +261,7 @@ uint8_t nRF24L01_ucGetStatus(void)
     xSpiAdap.pucTx      = ucData;
     xSpiAdap.pucRx      = &ucData[1];
     xSpiAdap.ulLen      = 2;
-    SPI_vXfer(&xSpiAdap);
+    SPI_bXfer(&xSpiAdap);
 
     return ucData[1];
 }
@@ -293,7 +293,7 @@ uint8_t nRF24L01_ucResetStatusFlags(void)
     xSpiAdap.pucTx      = ucData;
     xSpiAdap.pucRx      = ucBuffer;
     xSpiAdap.ulLen      = 2;
-    SPI_vXfer(&xSpiAdap);
+    SPI_bXfer(&xSpiAdap);
 
     return ucBuffer[0];
 }
@@ -338,7 +338,7 @@ void nRF24L01_vSendPayload(const char *pucPayload, uint32_t ulLength)
     xSpiAdap.pucTx      = ucTxData;
     xSpiAdap.pucRx      = ucRxData;
     xSpiAdap.ulLen      = ulLength;
-    SPI_vXfer(&xSpiAdap);
+    SPI_bXfer(&xSpiAdap);
     
     nRF24L01_vSetTransmitMode();
     
@@ -363,7 +363,7 @@ uint8_t nRF24L01_ucReadRegister(uint8_t const ucRegister)
     xSpiAdap.pucTx      = ucData;
     xSpiAdap.pucRx      = ucBuf;
     xSpiAdap.ulLen      = 2;
-    SPI_vXfer(&xSpiAdap);
+    SPI_bXfer(&xSpiAdap);
 
     /* First element holds status, second the register value */
     return ucBuf[1];
@@ -409,7 +409,7 @@ uint32_t nRF24L01_ulReadPayload(const char *pucPayload)
     xSpiAdap.pucTx      = ucDummy;
     xSpiAdap.pucRx      = (uint8_t *)pucPayload;
     xSpiAdap.ulLen      = ulLength + 1;
-    SPI_vXfer(&xSpiAdap);
+    SPI_bXfer(&xSpiAdap);
 
     return ulLength;
 }
@@ -434,7 +434,7 @@ void nRF24L01_vWriteRegister(const uint8_t ucRegister, const uint8_t ucValue)
     xSpiAdap.pucTx      = ucData;
     xSpiAdap.pucRx      = ucBuffer;
     xSpiAdap.ulLen      = 2;
-    SPI_vXfer(&xSpiAdap);
+    SPI_bXfer(&xSpiAdap);
 }
 
 
@@ -451,7 +451,7 @@ void nRF24L01_vSendCommand(const uint8_t ucCommand)
     xSpiAdap.pucTx      = (uint8_t *)&ucCommand;
     xSpiAdap.pucRx      = (uint8_t *)&ucDummy;
     xSpiAdap.ulLen      = 1;
-    SPI_vXfer(&xSpiAdap);
+    SPI_bXfer(&xSpiAdap);
 }
 
 
@@ -489,7 +489,7 @@ void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister,
     xSpiAdap.pucTx      = ucTxData;
     xSpiAdap.pucRx      = ucRxData;
     xSpiAdap.ulLen      = ulLength;
-    SPI_vXfer(&xSpiAdap);
+    SPI_bXfer(&xSpiAdap);
 
 }
 
