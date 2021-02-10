@@ -23,6 +23,7 @@
 #define STARTUPTASKSIZE         (512UL)
 
 /* Interrupt priorities */
+#define SPI0_IRQ_PRIO           (5UL)
 #define SPI1_IRQ_PRIO           (5UL)
 
     

@@ -41,6 +41,7 @@ typedef enum
 extern MessageBufferHandle_t   xSpiTxBuf[SPI_COUNT];
 extern MessageBufferHandle_t   xSpiRxBuf[SPI_COUNT];
 
+SPI_Type *pxSpiTable[SPI_COUNT] = { SPI0, SPI1 };
 
 __STATIC_INLINE void SPI1_IO_vInit(void);
 __STATIC_INLINE void SPI_vSetMode(SPI_Type *const pxSpi, const SPI_Mode eMode);
@@ -55,6 +56,9 @@ __STATIC_INLINE void SPI1_vSetSlave(const uint32_t ulState);
  * @param   None
  * 
  * @return  None
+ *
+ * @note    SPI always mapped to ALT2 and ALT5. ALT5
+ *          swaps MOSI and MISO.
  */
 __STATIC_INLINE void SPI1_IO_vInit(void)
 {
@@ -125,10 +129,46 @@ __STATIC_INLINE void SPI_vSetMode(SPI_Type *pxSpi, SPI_Mode eMode)
 
 
 /**
+ * @brief   Initialize SPI0 peripheral.
+ * 
+ * @details Baud rate = 48 MHz/(3*2�) = 4 MHz = 250 ns/bit
+ *          Mode 0, MSB first, manual SS.
+ * 
+ * @param   None
+ * 
+ * @return  None
+ */
+void SPI0_vInit(void)
+{    
+    /* Disable SPI during configuration */
+    SPI0->C1 &= ~SPI_C1_SPE_MASK;
+    
+    //SPI0_IO_vInit();
+
+    /* Select master mode with manual SS output */
+    SPI0->C1  =  SPI_C1_MSTR_MASK;
+    SPI0->C2 &= ~SPI_C2_MODFEN_MASK;
+    
+    /* Baudrate = Bus clock / ((SPPR + 1) * 2^^(SPR+1)) */
+    SPI0->BR = SPI_BR_SPPR(2) | SPI_BR_SPR(1);
+    
+    SPI_vSetMode(SPI0, MODE_0);
+    
+    /* Enable module & interrupts */
+    SPI0->C1 |= SPI_C1_SPIE_MASK | SPI_C1_SPE_MASK;
+
+    NVIC_ClearPendingIRQ(SPI0_IRQn);
+    NVIC_SetPriority(SPI0_IRQn, SPI0_IRQ_PRIO);
+    NVIC_EnableIRQ(SPI0_IRQn);
+}
+
+
+
+/**
  * @brief   Initialize SPI1 peripheral.
  * 
  * @details Baud rate = 48 MHz/(3*2�) = 4 MHz = 250 ns/bit
- *           Mode 3, MSB first, automatic SS.
+ *          Mode 0, MSB first, manual SS.
  * 
  * @param   None
  * 

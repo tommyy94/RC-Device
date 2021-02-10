@@ -38,5 +38,6 @@ typedef struct
 
 
 /* Global function prototypes */
+void SPI0_vInit(void);
 void SPI1_vInit(void);
 void SPI_vXfer(SPI_Adapter *pxAdap);
