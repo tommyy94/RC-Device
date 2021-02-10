@@ -8,7 +8,7 @@
 #include "task.h"
 #include "timers.h"
 #include "event_groups.h"
-#include "message_buffer.h"
+#include "queue.h"
 
 /* User headers */
 #include "system.h"
@@ -28,8 +28,8 @@ TaskHandle_t            xCommTaskHandle;
 TaskHandle_t            xHmiTaskHandle;
 TaskHandle_t            xJoystickTaskHandle;
 QueueHandle_t           xJobQueue;
-MessageBufferHandle_t   xSpiTxBuf[SPI_COUNT];
-MessageBufferHandle_t   xSpiRxBuf[SPI_COUNT];
+QueueHandle_t           xSpiQueue[SPI_COUNT];
+SemaphoreHandle_t       xSpiSema[SPI_COUNT];
 
 
 /* Local defines */
@@ -98,15 +98,10 @@ static void vCreateQueues(void)
     xJobQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(xJobStruct *));
     configASSERT(xJobQueue != NULL);
 
-    xSpiTxBuf[SPI_TFT] = xMessageBufferCreate(SPI_QUEUE_SIZE);
-    configASSERT(xSpiTxBuf[SPI_TFT] != NULL);
-    xSpiTxBuf[SPI_RF] = xMessageBufferCreate(SPI_QUEUE_SIZE);
-    configASSERT(xSpiTxBuf[SPI_RF] != NULL);
-
-    xSpiRxBuf[SPI_TFT] = xMessageBufferCreate(SPI_QUEUE_SIZE);
-    configASSERT(xSpiRxBuf[SPI_TFT] != NULL);
-    xSpiRxBuf[SPI_RF] = xMessageBufferCreate(SPI_QUEUE_SIZE);
-    configASSERT(xSpiRxBuf[SPI_RF] != NULL);
+    xSpiQueue[SPI_TFT] = xQueueCreate(SPI_QUEUE_SIZE, sizeof(SPI_Adapter *));
+    configASSERT(xSpiQueue[SPI_TFT] != NULL);
+    xSpiQueue[SPI_RF] = xQueueCreate(SPI_QUEUE_SIZE, sizeof(SPI_Adapter *));
+    configASSERT(xSpiQueue[SPI_RF] != NULL);
 }
 
 
@@ -151,7 +146,10 @@ static void vCreateTasks(void)
  */
 static void vCreateSemaphores(void)
 {
-
+    xSpiSema[SPI_TFT] = xSemaphoreCreateBinary();
+    configASSERT(xSpiSema != NULL);
+    xSpiSema[SPI_RF] = xSemaphoreCreateBinary();
+    configASSERT(xSpiSema != NULL);
 }
 
 

@@ -19,7 +19,7 @@
 /* User headers */
 
 /* Global defines */
-#define SPI_QUEUE_SIZE          (32UL)
+#define SPI_QUEUE_SIZE          (1UL)
 
 typedef enum
 {
