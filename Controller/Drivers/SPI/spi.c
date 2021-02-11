@@ -48,8 +48,7 @@ __STATIC_INLINE void SPI1_IO_vInit(void);
 __STATIC_INLINE void SPI_vSetMode(SPI_Type *const pxSpi, const SPI_Mode eMode);
 __STATIC_INLINE void SPI_vSetSlave(SPI_Target eInst, const uint32_t ulState);
 
-static void SPI0_IRQHandler(void);
-static void SPI1_IRQHandler(void);
+static void SPI_IRQHandler(const SPI_Target eInst);
 
 
 /* Function descriptions */
@@ -222,14 +221,14 @@ bool SPI_bXfer(SPI_Adapter *pxAdap)
     BaseType_t xRet;
 
     /* Share pointer with the IRQ handler */
-    xRet = xQueueSend(xSpiQueue[pxAdap->eInstance], pxAdap, NULL);
+    xRet = xQueueSend(xSpiQueue[pxAdap->eInstance], (void *)&pxAdap, NULL);
     configASSERT(xRet == pdTRUE);
 
     /* Start transmitting */
     BME_OR8(&pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPTIE_MASK);
 
     /* Wait until xfer cplt */
-    xSemaphoreTake(xSpiSema[pxAdap->eInstance], pdMS_TO_TICKS(SPI_TIMEOUT_MS));
+    xRet = xSemaphoreTake(xSpiSema[pxAdap->eInstance], pdMS_TO_TICKS(SPI_TIMEOUT_MS));
     configASSERT(xRet == pdTRUE);
 
     return (bool)xRet;
@@ -246,10 +245,10 @@ bool SPI_bXfer(SPI_Adapter *pxAdap)
  * @note    SPI Receive buffer full IRQ cannot be disabled.
  *          This function is fully re-entrant.
  */
-void SPI_IRQHandler(const SPI_Target eInst)
+static void SPI_IRQHandler(const SPI_Target eInst)
 {
     static uint32_t        ulCnt[SPI_COUNT];
-    static SPI_Adapter    *pxAdap[SPI_COUNT];
+    static SPI_Adapter    *pxAdap[SPI_COUNT] = { NULL };
     BaseType_t             xRet;
     BaseType_t             xHigherPrioTaskWoken = pdFALSE;
 
@@ -312,7 +311,7 @@ void SPI_IRQHandler(const SPI_Target eInst)
  *             
  * @return  None.
  */
-static void SPI0_IRQHandler(void)
+void SPI0_IRQHandler(void)
 {
     SPI_IRQHandler(SPI_TFT);
 }
@@ -324,7 +323,7 @@ static void SPI0_IRQHandler(void)
  *             
  * @return  None.
  */
-static void SPI1_IRQHandler(void)
+void SPI1_IRQHandler(void)
 {
     SPI_IRQHandler(SPI_RF);
 }

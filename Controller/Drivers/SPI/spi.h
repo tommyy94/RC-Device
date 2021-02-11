@@ -22,8 +22,8 @@
 
 typedef enum
 {
-    SPI_RF = 0,
-    SPI_TFT,
+    SPI_TFT = 0,
+    SPI_RF,
     SPI_COUNT
 } SPI_Target;
 
