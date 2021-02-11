@@ -62,6 +62,9 @@ static void vSystemInit(void)
     /* Analog functionalities */
     DMA0_vInit();
     ADC0_vInit();
+
+    /* Display */
+    SPI0_vInit();
     
     /* Communications */
     TPM2_vInit();
@@ -71,7 +74,8 @@ static void vSystemInit(void)
 
 
 /**
- * @brief   Enable clock gating to modules. Accessing peripheral while disabled generates hard fault.
+ * @brief   Enable clock gating to modules. Accessing peripheral
+ *          while disabled generates a hard fault.
  * 
  * @param   None
  * 
@@ -79,9 +83,11 @@ static void vSystemInit(void)
  */
 static void vEnableClockGating(void)
 {
-    SIM->SCGC4 |= SIM_SCGC4_SPI1(1) | SIM_SCGC4_SPI0(1);
-    SIM->SCGC5 |= SIM_SCGC5_PORTA(1) | SIM_SCGC5_PORTB(1) | SIM_SCGC5_PORTD(1) | SIM_SCGC5_PORTE(1);
-    SIM->SCGC6 |= SIM_SCGC6_TPM2(1) | SIM_SCGC6_ADC0(1) | SIM_SCGC6_DMAMUX(1) | SIM_SCGC6_PIT(1);
+    SIM->SCGC4 |= SIM_SCGC4_SPI1(1)  | SIM_SCGC4_SPI0(1);
+    SIM->SCGC5 |= SIM_SCGC5_PORTA(1) | SIM_SCGC5_PORTB(1) | SIM_SCGC5_PORTC(1)
+               |  SIM_SCGC5_PORTD(1) | SIM_SCGC5_PORTE(1);
+    SIM->SCGC6 |= SIM_SCGC6_TPM2(1)  | SIM_SCGC6_ADC0(1)  | SIM_SCGC6_DMAMUX(1)
+               |  SIM_SCGC6_PIT(1);
     SIM->SCGC7 |= SIM_SCGC7_DMA(1);
 }
 

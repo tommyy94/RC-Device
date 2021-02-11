@@ -21,12 +21,24 @@
 
 
 /* Local defines */
+#define MISO0                   (7UL)
+#define SCK0                    (5UL)
+#define MOSI0                   (6UL)
+#define SS0                     (4UL)
 #define MISO1                   (1UL)
 #define SCK1                    (2UL)
 #define MOSI1                   (3UL)
 #define SS1                     (4UL)
 
 #define SPI_TIMEOUT_MS          (10UL)
+
+/* SPI is always mapped as a group in the
+ * multiplexing table. Should probably follow it.
+ */
+#define PORT_SPI0               (PORTC)
+#define GPIO_SPI0               (FGPIOC)
+#define PORT_SPI1               (PORTE)
+#define GPIO_SPI1               (FGPIOE)
 
 
 typedef enum
@@ -44,6 +56,7 @@ extern SemaphoreHandle_t  xSpiSema[SPI_COUNT];
 
 SPI_Type *pxSpiTable[SPI_COUNT] = { SPI0, SPI1 };
 
+__STATIC_INLINE void SPI0_IO_vInit(void);
 __STATIC_INLINE void SPI1_IO_vInit(void);
 __STATIC_INLINE void SPI_vSetMode(SPI_Type *const pxSpi, const SPI_Mode eMode);
 __STATIC_INLINE void SPI_vSetSlave(SPI_Target eInst, const uint32_t ulState);
@@ -62,28 +75,71 @@ static void SPI_IRQHandler(const SPI_Target eInst);
  *
  * @note    SPI always mapped to ALT2 and ALT5. ALT5
  *          swaps MOSI and MISO.
+ *
+ * @note    SS   = PTC4
+ *          SCK  = PTC5
+ *          MOSI = PTC6
+ *          MISO = PTC7
+ */
+__STATIC_INLINE void SPI0_IO_vInit(void)
+{
+    /* Set clock */
+    PORT_SPI0->PCR[SCK0] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI0->PCR[SCK0] |=  PORT_PCR_MUX(ALT2);
+    
+    /* Set Master Out Slave In */
+    PORT_SPI0->PCR[MOSI0] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI0->PCR[MOSI0] |=  PORT_PCR_MUX(ALT5);
+    
+    /* Set Master In Slave out
+     * Enable internal pulldown
+     */
+    PORT_SPI0->PCR[MISO0] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI0->PCR[MISO0] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
+    
+    /* Set manual SS */
+    PORT_SPI0->PCR[SS0]   &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI0->PCR[SS0]   |= PORT_PCR_MUX(ALT1);
+    GPIO_SPI0->PDDR       |= MASK(SS0);
+    GPIO_SPI0->PDOR       |= MASK(SS0);
+}
+
+/**
+ * @brief   Configure GPIO for SPI1.
+ * 
+ * @param   None
+ * 
+ * @return  None
+ *
+ * @note    SPI always mapped to ALT2 and ALT5. ALT5
+ *          swaps MOSI and MISO.
+ *
+ * @note    SS   = PTE4
+ *          SCK  = PTE2
+ *          MOSI = PTE3
+ *          MISO = PTE1
  */
 __STATIC_INLINE void SPI1_IO_vInit(void)
 {
-    /* Set PTE2 as SPI1_SCK */
-    PORTE->PCR[SCK1] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[SCK1] |=  PORT_PCR_MUX(ALT2);
+    /* Set clock */
+    PORT_SPI1->PCR[SCK1] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI1->PCR[SCK1] |=  PORT_PCR_MUX(ALT2);
     
-    /* Set PTE3 as SPI1_MOSI */
-    PORTE->PCR[MOSI1] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[MOSI1] |=  PORT_PCR_MUX(ALT5);
+    /* Set Master Out Slave In */
+    PORT_SPI1->PCR[MOSI1] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI1->PCR[MOSI1] |=  PORT_PCR_MUX(ALT5);
     
-    /* Set PTE1 as SPI1_MISO
+    /* Set Master In Slave out
      * Enable internal pulldown
      */
-    PORTE->PCR[MISO1] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[MISO1] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
+    PORT_SPI1->PCR[MISO1] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI1->PCR[MISO1] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
     
-    /* Set PTE4 as GPIO for manual SS */
-    PORTE->PCR[SS1]   &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[SS1]   |= PORT_PCR_MUX(ALT1);
-    FGPIOE->PDDR     |= MASK(SS1);
-    FGPIOE->PDOR     |= MASK(SS1);
+    /* Set manual SS */
+    PORT_SPI1->PCR[SS1]   &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI1->PCR[SS1]   |= PORT_PCR_MUX(ALT1);
+    GPIO_SPI1->PDDR       |= MASK(SS1);
+    GPIO_SPI1->PDOR       |= MASK(SS1);
 }
 
 
@@ -98,7 +154,7 @@ __STATIC_INLINE void SPI1_IO_vInit(void)
  */
 __STATIC_INLINE void SPI_vSetSlave(SPI_Target eInst, const uint32_t ulState)
 {
-    FGPIO_Type *pxPort[SPI_COUNT] = { FGPIOE, FGPIOE };
+    FGPIO_Type *pxPort[SPI_COUNT] = { FGPIOC, FGPIOE };
 
     configASSERT((eInst == SPI_TFT) || (eInst == SPI_RF));
     configASSERT(ulState == LOW || (ulState == HIGH));
@@ -153,7 +209,7 @@ void SPI0_vInit(void)
     /* Disable SPI during configuration */
     SPI0->C1 &= ~SPI_C1_SPE_MASK;
     
-    //SPI0_IO_vInit();
+    SPI0_IO_vInit();
 
     /* Select master mode with manual SS output */
     SPI0->C1  =  SPI_C1_MSTR_MASK;
