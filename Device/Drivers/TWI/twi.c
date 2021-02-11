@@ -351,7 +351,7 @@ void TWIHS0_Handler(void)
             configASSERT(xRet == pdTRUE);
         }
 
-        if ((ulStatus & TWIHS_SR_TXRDY_Msk) && (TWIHS0->TWIHS_IMR & TWIHS_IMR_TXRDY_Msk)) 
+        if ((ulStatus & TWIHS_SR_TXRDY_Msk) && (TWIHS0->TWIHS_IMR & TWIHS_IMR_TXRDY_Msk))
         {
             /* Should be in master write mode here */
             configASSERT((TWIHS0->TWIHS_MMR & TWIHS_MMR_MREAD) == 0);

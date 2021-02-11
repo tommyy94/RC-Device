@@ -8,7 +8,7 @@
 #include "task.h"
 #include "timers.h"
 #include "event_groups.h"
-#include "message_buffer.h"
+#include "queue.h"
 
 /* User headers */
 #include "system.h"
@@ -28,8 +28,8 @@ TaskHandle_t            xCommTaskHandle;
 TaskHandle_t            xHmiTaskHandle;
 TaskHandle_t            xJoystickTaskHandle;
 QueueHandle_t           xJobQueue;
-MessageBufferHandle_t   xSpiTxBuf;
-MessageBufferHandle_t   xSpiRxBuf;
+QueueHandle_t           xSpiQueue[SPI_COUNT];
+SemaphoreHandle_t       xSpiSema[SPI_COUNT];
 
 
 /* Local defines */
@@ -62,6 +62,9 @@ static void vSystemInit(void)
     /* Analog functionalities */
     DMA0_vInit();
     ADC0_vInit();
+
+    /* Display */
+    SPI0_vInit();
     
     /* Communications */
     TPM2_vInit();
@@ -71,7 +74,8 @@ static void vSystemInit(void)
 
 
 /**
- * @brief   Enable clock gating to modules. Accessing peripheral while disabled generates hard fault.
+ * @brief   Enable clock gating to modules. Accessing peripheral
+ *          while disabled generates a hard fault.
  * 
  * @param   None
  * 
@@ -79,9 +83,11 @@ static void vSystemInit(void)
  */
 static void vEnableClockGating(void)
 {
-    SIM->SCGC4 |= SIM_SCGC4_SPI1(1);
-    SIM->SCGC5 |= SIM_SCGC5_PORTA(1) | SIM_SCGC5_PORTB(1) | SIM_SCGC5_PORTD(1) | SIM_SCGC5_PORTE(1);
-    SIM->SCGC6 |= SIM_SCGC6_TPM2(1) | SIM_SCGC6_ADC0(1) | SIM_SCGC6_DMAMUX(1) | SIM_SCGC6_PIT(1);
+    SIM->SCGC4 |= SIM_SCGC4_SPI1(1)  | SIM_SCGC4_SPI0(1);
+    SIM->SCGC5 |= SIM_SCGC5_PORTA(1) | SIM_SCGC5_PORTB(1) | SIM_SCGC5_PORTC(1)
+               |  SIM_SCGC5_PORTD(1) | SIM_SCGC5_PORTE(1);
+    SIM->SCGC6 |= SIM_SCGC6_TPM2(1)  | SIM_SCGC6_ADC0(1)  | SIM_SCGC6_DMAMUX(1)
+               |  SIM_SCGC6_PIT(1);
     SIM->SCGC7 |= SIM_SCGC7_DMA(1);
 }
 
@@ -98,11 +104,10 @@ static void vCreateQueues(void)
     xJobQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(xJobStruct *));
     configASSERT(xJobQueue != NULL);
 
-    xSpiTxBuf = xMessageBufferCreate(SPI_QUEUE_SIZE);
-    configASSERT(xSpiTxBuf != NULL);
-
-    xSpiRxBuf = xMessageBufferCreate(SPI_QUEUE_SIZE);
-    configASSERT(xSpiRxBuf != NULL);
+    xSpiQueue[SPI_TFT] = xQueueCreate(SPI_QUEUE_SIZE, sizeof(SPI_Adapter *));
+    configASSERT(xSpiQueue[SPI_TFT] != NULL);
+    xSpiQueue[SPI_RF] = xQueueCreate(SPI_QUEUE_SIZE, sizeof(SPI_Adapter *));
+    configASSERT(xSpiQueue[SPI_RF] != NULL);
 }
 
 
@@ -147,7 +152,10 @@ static void vCreateTasks(void)
  */
 static void vCreateSemaphores(void)
 {
-
+    xSpiSema[SPI_TFT] = xSemaphoreCreateBinary();
+    configASSERT(xSpiSema != NULL);
+    xSpiSema[SPI_RF] = xSemaphoreCreateBinary();
+    configASSERT(xSpiSema != NULL);
 }
 
 

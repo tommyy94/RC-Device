@@ -11,7 +11,8 @@
 /* RTOS headers */
 #include "FreeRTOS.h"
 #include "task.h"
-#include "message_buffer.h"
+#include "queue.h"
+#include "semphr.h"
 
 /* User headers */
 #include "spi.h"
@@ -20,12 +21,24 @@
 
 
 /* Local defines */
-#define MISO                    (1UL)
-#define SCK                     (2UL)
-#define MOSI                    (3UL)
-#define SS                      (4UL)
+#define MISO0                   (7UL)
+#define SCK0                    (5UL)
+#define MOSI0                   (6UL)
+#define SS0                     (4UL)
+#define MISO1                   (1UL)
+#define SCK1                    (2UL)
+#define MOSI1                   (3UL)
+#define SS1                     (4UL)
 
-#define SPI1_TIMEOUT_MS         (10UL)
+#define SPI_TIMEOUT_MS          (10UL)
+
+/* SPI is always mapped as a group in the
+ * multiplexing table. Should probably follow it.
+ */
+#define PORT_SPI0               (PORTC)
+#define GPIO_SPI0               (FGPIOC)
+#define PORT_SPI1               (PORTE)
+#define GPIO_SPI1               (FGPIOE)
 
 
 typedef enum
@@ -38,13 +51,17 @@ typedef enum
 } SPI_Mode;
 
 
-extern MessageBufferHandle_t   xSpiTxBuf;
-extern MessageBufferHandle_t   xSpiRxBuf;
+extern QueueHandle_t      xSpiQueue[SPI_COUNT];
+extern SemaphoreHandle_t  xSpiSema[SPI_COUNT];
 
+SPI_Type *pxSpiTable[SPI_COUNT] = { SPI0, SPI1 };
 
+__STATIC_INLINE void SPI0_IO_vInit(void);
 __STATIC_INLINE void SPI1_IO_vInit(void);
 __STATIC_INLINE void SPI_vSetMode(SPI_Type *const pxSpi, const SPI_Mode eMode);
-__STATIC_INLINE void SPI1_vSetSlave(const uint32_t ulState);
+__STATIC_INLINE void SPI_vSetSlave(SPI_Target eInst, const uint32_t ulState);
+
+static void SPI_IRQHandler(const SPI_Target eInst);
 
 
 /* Function descriptions */
@@ -55,47 +72,100 @@ __STATIC_INLINE void SPI1_vSetSlave(const uint32_t ulState);
  * @param   None
  * 
  * @return  None
+ *
+ * @note    SPI always mapped to ALT2 and ALT5. ALT5
+ *          swaps MOSI and MISO.
+ *
+ * @note    SS   = PTC4
+ *          SCK  = PTC5
+ *          MOSI = PTC6
+ *          MISO = PTC7
+ */
+__STATIC_INLINE void SPI0_IO_vInit(void)
+{
+    /* Set clock */
+    PORT_SPI0->PCR[SCK0] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI0->PCR[SCK0] |=  PORT_PCR_MUX(ALT2);
+    
+    /* Set Master Out Slave In */
+    PORT_SPI0->PCR[MOSI0] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI0->PCR[MOSI0] |=  PORT_PCR_MUX(ALT5);
+    
+    /* Set Master In Slave out
+     * Enable internal pulldown
+     */
+    PORT_SPI0->PCR[MISO0] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI0->PCR[MISO0] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
+    
+    /* Set manual SS */
+    PORT_SPI0->PCR[SS0]   &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI0->PCR[SS0]   |= PORT_PCR_MUX(ALT1);
+    GPIO_SPI0->PDDR       |= MASK(SS0);
+    GPIO_SPI0->PDOR       |= MASK(SS0);
+}
+
+/**
+ * @brief   Configure GPIO for SPI1.
+ * 
+ * @param   None
+ * 
+ * @return  None
+ *
+ * @note    SPI always mapped to ALT2 and ALT5. ALT5
+ *          swaps MOSI and MISO.
+ *
+ * @note    SS   = PTE4
+ *          SCK  = PTE2
+ *          MOSI = PTE3
+ *          MISO = PTE1
  */
 __STATIC_INLINE void SPI1_IO_vInit(void)
 {
-    /* Set PTE2 as SPI1_SCK */
-    PORTE->PCR[SCK] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[SCK] |=  PORT_PCR_MUX(ALT2);
+    /* Set clock */
+    PORT_SPI1->PCR[SCK1] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI1->PCR[SCK1] |=  PORT_PCR_MUX(ALT2);
     
-    /* Set PTE3 as SPI1_MOSI */
-    PORTE->PCR[MOSI] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[MOSI] |=  PORT_PCR_MUX(ALT5);
+    /* Set Master Out Slave In */
+    PORT_SPI1->PCR[MOSI1] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI1->PCR[MOSI1] |=  PORT_PCR_MUX(ALT5);
     
-    /* Set PTE1 as SPI1_MISO
+    /* Set Master In Slave out
      * Enable internal pulldown
      */
-    PORTE->PCR[MISO] &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[MISO] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
+    PORT_SPI1->PCR[MISO1] &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI1->PCR[MISO1] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
     
-    /* Set PTE4 as GPIO for manual SS */
-    PORTE->PCR[SS]   &= ~PORT_PCR_MUX_MASK;
-    PORTE->PCR[SS]   |= PORT_PCR_MUX(ALT1);
-    FGPIOE->PDDR     |= MASK(SS);
-    FGPIOE->PDOR     |= MASK(SS);
+    /* Set manual SS */
+    PORT_SPI1->PCR[SS1]   &= ~PORT_PCR_MUX_MASK;
+    PORT_SPI1->PCR[SS1]   |= PORT_PCR_MUX(ALT1);
+    GPIO_SPI1->PDDR       |= MASK(SS1);
+    GPIO_SPI1->PDOR       |= MASK(SS1);
 }
 
 
 /**
  * @brief   Set SS line high/low.
- * 
+ *
+ * @param   eInst       SPI instance
+ *
  * @param   ulState     HIGH/LOW
  *             
  * @return  None
  */
-__STATIC_INLINE void SPI1_vSetSlave(const uint32_t ulState)
+__STATIC_INLINE void SPI_vSetSlave(SPI_Target eInst, const uint32_t ulState)
 {
+    FGPIO_Type *pxPort[SPI_COUNT] = { FGPIOC, FGPIOE };
+
+    configASSERT((eInst == SPI_TFT) || (eInst == SPI_RF));
     configASSERT(ulState == LOW || (ulState == HIGH));
     
-    /* Figure out whether to set or clear bit */
-    const uint32_t *pulReg = (uint32_t *)&FGPIOE->PCOR - ulState; /* Subtract 0 - 1 words from PCOR address => pulReg = FGPIOE->PSOR/PCOR */
+    /* Figure out whether to set or clear bit:
+     * Subtract 0 - 1 words from PCOR address => pulReg = FGPIOE->PSOR/PCOR
+     */
+    const uint32_t *pulReg = (uint32_t *)&pxPort[eInst]->PCOR - ulState;
     
     /* Perform bitwise operation */
-    BME_OR8(&(*pulReg), MASK(SS));
+    BME_OR8(&(*pulReg), MASK(SS1));
 }
 
 
@@ -125,10 +195,46 @@ __STATIC_INLINE void SPI_vSetMode(SPI_Type *pxSpi, SPI_Mode eMode)
 
 
 /**
+ * @brief   Initialize SPI0 peripheral.
+ * 
+ * @details Baud rate = 48 MHz/(3*2�) = 4 MHz = 250 ns/bit
+ *          Mode 0, MSB first, manual SS.
+ * 
+ * @param   None
+ * 
+ * @return  None
+ */
+void SPI0_vInit(void)
+{    
+    /* Disable SPI during configuration */
+    SPI0->C1 &= ~SPI_C1_SPE_MASK;
+    
+    SPI0_IO_vInit();
+
+    /* Select master mode with manual SS output */
+    SPI0->C1  =  SPI_C1_MSTR_MASK;
+    SPI0->C2 &= ~SPI_C2_MODFEN_MASK;
+    
+    /* Baudrate = Bus clock / ((SPPR + 1) * 2^^(SPR+1)) */
+    SPI0->BR = SPI_BR_SPPR(2) | SPI_BR_SPR(1);
+    
+    SPI_vSetMode(SPI0, MODE_0);
+    
+    /* Enable module & interrupts */
+    SPI0->C1 |= SPI_C1_SPIE_MASK | SPI_C1_SPE_MASK;
+
+    NVIC_ClearPendingIRQ(SPI0_IRQn);
+    NVIC_SetPriority(SPI0_IRQn, SPI0_IRQ_PRIO);
+    NVIC_EnableIRQ(SPI0_IRQn);
+}
+
+
+
+/**
  * @brief   Initialize SPI1 peripheral.
  * 
  * @details Baud rate = 48 MHz/(3*2�) = 4 MHz = 250 ns/bit
- *           Mode 3, MSB first, automatic SS.
+ *          Mode 0, MSB first, manual SS.
  * 
  * @param   None
  * 
@@ -162,145 +268,118 @@ void SPI1_vInit(void)
 /**
  * @brief   Interrupt driven SPI transmit.
  * 
- * @param   pucTx       Pointer to data to send.
+ * @param   pxAdap  Pointer to SPI adapter.
  * 
- * @param   pucRx       Pointer to data to receive.
- * 
- * @param   ulLength    Data length
- * 
- * @return  None
+ * @return  xRet    Xfer ok/fail.
  */
-void SPI1_vTransmitISR(uint8_t *const pucTx, uint8_t *const pucRx, uint32_t ulLength)
+bool SPI_bXfer(SPI_Adapter *pxAdap)
 {
     BaseType_t xRet;
 
-    /* Fill TX message buffer */
-    xRet = xMessageBufferSend(xSpiTxBuf, pucTx, ulLength, NULL);
-    configASSERT(xRet == (BaseType_t)ulLength);
+    /* Share pointer with the IRQ handler */
+    xRet = xQueueSend(xSpiQueue[pxAdap->eInstance], (void *)&pxAdap, NULL);
+    configASSERT(xRet == pdTRUE);
 
     /* Start transmitting */
-    BME_OR8(&SPI1->C1, SPI_C1_SPTIE_MASK);
+    BME_OR8(&pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPTIE_MASK);
 
-    /* Fill RX message buffer */
-    xRet = xMessageBufferReceive(xSpiRxBuf, pucRx, ulLength, pdMS_TO_TICKS(SPI1_TIMEOUT_MS));
-    configASSERT(xRet == (BaseType_t)ulLength);
+    /* Wait until xfer cplt */
+    xRet = xSemaphoreTake(xSpiSema[pxAdap->eInstance], pdMS_TO_TICKS(SPI_TIMEOUT_MS));
+    configASSERT(xRet == pdTRUE);
+
+    return (bool)xRet;
 }
 
 
 /**
- * @brief   Read byte from SPI1 receive buffer.
+ * @brief   SPI ISR.
  * 
- * @param   None
- * 
- * @return  SPI1->D     Received byte
- */
-uint8_t SPI1_ucReadPolling(void)
-{
-    while (BME_UBFX8(&SPI1->S, SPI_S_SPRF_SHIFT, SPI_S_SPRF_WIDTH) == 0)
-    {
-        ; /* Wait until buffer full */
-    }
-    
-    return SPI1->D;
-}
-
-
-/**
- * @brief   Transmit character over SPI by polling.
- * 
- * @param   ucByte      Byte to send.
- * 
- * @return  None
- */
-uint8_t SPI1_ucTransmitByte(const char ucByte)
-{
-    uint8_t ucRet;
-
-    BME_AND8(&SPI1->C1, (uint8_t)~SPI_C1_SPIE_MASK);
-
-    while (BME_UBFX8(&SPI1->S, SPI_S_SPTEF_SHIFT, SPI_S_SPTEF_WIDTH) == 0)
-    {
-        ; /* Wait until buffer empty */
-    }
-    
-    /* Transfer byte */
-    SPI1_vSetSlave(LOW);
-    
-    SPI1->D = ucByte;
-    ucRet = SPI1_ucReadPolling();
-    
-    SPI1_vSetSlave(HIGH);
-    
-    BME_OR8(&SPI1->C1, SPI_C1_SPIE_MASK);
-
-    return ucRet;
-}
-
-
-/**
- * @brief   SPI1 ISR.
- * 
- * @param   None
+ * @param   eInst   SPI instance.
  *             
  * @return  None
  *
  * @note    SPI Receive buffer full IRQ cannot be disabled.
+ *          This function is fully re-entrant.
  */
-void SPI1_IRQHandler(void)
+static void SPI_IRQHandler(const SPI_Target eInst)
 {
-    static uint8_t      pucTxBuf[SPI_QUEUE_SIZE];
-    static uint8_t      pucRxBuf[SPI_QUEUE_SIZE];
-    static BaseType_t   xRxLen;
-    static BaseType_t   xTxLen;
-    static uint32_t     ulBytesSent = 0;
-    static uint32_t     ulBytesRecv = 0;
-    BaseType_t          xHigherPriorityTaskWoken = pdFALSE;
+    static uint32_t        ulCnt[SPI_COUNT];
+    static SPI_Adapter    *pxAdap[SPI_COUNT] = { NULL };
+    BaseType_t             xRet;
+    BaseType_t             xHigherPrioTaskWoken = pdFALSE;
 
     /* Read message buffer if this is a new transfer */
-    if (ulBytesSent == 0)
+    if (pxAdap[eInst] == NULL)
     {
-        xTxLen = (uint32_t)xMessageBufferReceiveFromISR(xSpiTxBuf, pucTxBuf, SPI_QUEUE_SIZE, &xHigherPriorityTaskWoken);
-        SPI1_vSetSlave(LOW);
+        ulCnt[eInst] = 0;
+        xRet = xQueueReceiveFromISR(xSpiQueue[eInst], (void *)&pxAdap[eInst], &xHigherPrioTaskWoken);
+        configASSERT(xRet == pdTRUE);
+        SPI_vSetSlave(eInst, LOW);
     }
 
     /* Must read receive buffer first to avoid overrun */
-    if (BME_UBFX8(&SPI1->S, SPI_S_SPRF_SHIFT, SPI_S_SPRF_WIDTH) != 0)
+    if (BME_UBFX8(&pxSpiTable[eInst]->S, SPI_S_SPRF_SHIFT, SPI_S_SPRF_WIDTH) != 0)
     {
-        pucRxBuf[ulBytesRecv++] = SPI1->D;
+        pxAdap[eInst]->pucRx[ulCnt[eInst]++] = pxSpiTable[eInst]->D;
 
         /* Check if this was the last byte */
-        if (ulBytesRecv >= (uint32_t)xTxLen)
+        if (ulCnt[eInst] >= pxAdap[eInst]->ulLen)
         {
-            SPI1_vSetSlave(HIGH);
-            xRxLen = xMessageBufferSendFromISR(xSpiRxBuf, pucRxBuf, ulBytesRecv, &xHigherPriorityTaskWoken);
-            configASSERT(xRxLen == (BaseType_t)ulBytesRecv);
-            ulBytesSent = 0;
-            ulBytesRecv = 0;
+            SPI_vSetSlave(eInst, HIGH);
+            xRet = xSemaphoreGiveFromISR(xSpiSema[eInst], &xHigherPrioTaskWoken);
+            configASSERT(xRet == pdTRUE);
+
+            /* Must reset adapter pointer for next xfer */
+            pxAdap[eInst] = NULL;
         }
     }
 
-    if ((BME_UBFX8(&SPI1->C1, SPI_C1_SPTIE_SHIFT, SPI_C1_SPTIE_WIDTH) != 0)
-     && (BME_UBFX8(&SPI1->S, SPI_S_SPTEF_SHIFT, SPI_S_SPTEF_WIDTH)  != 0))
+    if ((BME_UBFX8(&pxSpiTable[eInst]->C1, SPI_C1_SPTIE_SHIFT, SPI_C1_SPTIE_WIDTH) != 0)
+     && (BME_UBFX8(&pxSpiTable[eInst]->S, SPI_S_SPTEF_SHIFT, SPI_S_SPTEF_WIDTH)  != 0))
     {
         /* Disable transmitter IRQ before sending the last byte
          * to guarantee no IRQ after the last byte
          */
-        if ((ulBytesSent + 1) >= (uint32_t)xTxLen)
+        if ((ulCnt[eInst] + 1) >= pxAdap[eInst]->ulLen)
         {
-            BME_AND8(&SPI1->C1, (uint8_t)~SPI_C1_SPTIE_MASK);
+            BME_AND8(&pxSpiTable[eInst]->C1, (uint8_t)~SPI_C1_SPTIE_MASK);
         }
 
-        SPI1->D = pucTxBuf[ulBytesSent++];
+        pxSpiTable[eInst]->D = pxAdap[eInst]->pucTx[ulCnt[eInst]];
     }
 
     /* This condition should never occur as SSOE is set 1!
      * Leave check for debugging.
      */
-    if (BME_UBFX8(&SPI1->S, SPI_S_MODF_SHIFT, SPI_S_MODF_WIDTH) != 0)
+    if (BME_UBFX8(&pxSpiTable[eInst]->S, SPI_S_MODF_SHIFT, SPI_S_MODF_WIDTH) != 0)
     {
         __BKPT();
     }
 
     /* Switch to higher priority task if needed */
-    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPrioTaskWoken);
+}
+
+/**
+ * @brief   SPI0 ISR.
+ * 
+ * @param   None.
+ *             
+ * @return  None.
+ */
+void SPI0_IRQHandler(void)
+{
+    SPI_IRQHandler(SPI_TFT);
+}
+
+/**
+ * @brief   SPI1 ISR.
+ * 
+ * @param   None.
+ *             
+ * @return  None.
+ */
+void SPI1_IRQHandler(void)
+{
+    SPI_IRQHandler(SPI_RF);
 }
