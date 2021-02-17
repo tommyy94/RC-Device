@@ -35,10 +35,10 @@
 /* SPI is always mapped as a group in the
  * multiplexing table. Should probably follow it.
  */
-#define PORT_SPI0               (PORTC)
-#define GPIO_SPI0               (FGPIOC)
-#define PORT_SPI1               (PORTE)
-#define GPIO_SPI1               (FGPIOE)
+#define SPI0_PORT               (PORTC)
+#define SPI0_GPIO               (FGPIOC)
+#define SPI1_PORT               (PORTE)
+#define SPI1_GPIO               (FGPIOE)
 
 
 typedef enum
@@ -84,24 +84,24 @@ static void SPI_IRQHandler(const SPI_Target eInst);
 __STATIC_INLINE void SPI0_IO_vInit(void)
 {
     /* Set clock */
-    PORT_SPI0->PCR[SCK0] &= ~PORT_PCR_MUX_MASK;
-    PORT_SPI0->PCR[SCK0] |=  PORT_PCR_MUX(ALT2);
+    SPI0_PORT->PCR[SCK0] &= ~PORT_PCR_MUX_MASK;
+    SPI0_PORT->PCR[SCK0] |=  PORT_PCR_MUX(ALT2);
     
     /* Set Master Out Slave In */
-    PORT_SPI0->PCR[MOSI0] &= ~PORT_PCR_MUX_MASK;
-    PORT_SPI0->PCR[MOSI0] |=  PORT_PCR_MUX(ALT5);
+    SPI0_PORT->PCR[MOSI0] &= ~PORT_PCR_MUX_MASK;
+    SPI0_PORT->PCR[MOSI0] |=  PORT_PCR_MUX(ALT5);
     
     /* Set Master In Slave out
      * Enable internal pulldown
      */
-    PORT_SPI0->PCR[MISO0] &= ~PORT_PCR_MUX_MASK;
-    PORT_SPI0->PCR[MISO0] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
+    SPI0_PORT->PCR[MISO0] &= ~PORT_PCR_MUX_MASK;
+    SPI0_PORT->PCR[MISO0] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
     
     /* Set manual SS */
-    PORT_SPI0->PCR[SS0]   &= ~PORT_PCR_MUX_MASK;
-    PORT_SPI0->PCR[SS0]   |= PORT_PCR_MUX(ALT1);
-    GPIO_SPI0->PDDR       |= MASK(SS0);
-    GPIO_SPI0->PDOR       |= MASK(SS0);
+    SPI0_PORT->PCR[SS0]   &= ~PORT_PCR_MUX_MASK;
+    SPI0_PORT->PCR[SS0]   |= PORT_PCR_MUX(ALT1);
+    SPI0_GPIO->PDDR       |= MASK(SS0);
+    SPI0_GPIO->PDOR       |= MASK(SS0);
 }
 
 /**
@@ -122,24 +122,24 @@ __STATIC_INLINE void SPI0_IO_vInit(void)
 __STATIC_INLINE void SPI1_IO_vInit(void)
 {
     /* Set clock */
-    PORT_SPI1->PCR[SCK1] &= ~PORT_PCR_MUX_MASK;
-    PORT_SPI1->PCR[SCK1] |=  PORT_PCR_MUX(ALT2);
+    SPI1_PORT->PCR[SCK1] &= ~PORT_PCR_MUX_MASK;
+    SPI1_PORT->PCR[SCK1] |=  PORT_PCR_MUX(ALT2);
     
     /* Set Master Out Slave In */
-    PORT_SPI1->PCR[MOSI1] &= ~PORT_PCR_MUX_MASK;
-    PORT_SPI1->PCR[MOSI1] |=  PORT_PCR_MUX(ALT5);
+    SPI1_PORT->PCR[MOSI1] &= ~PORT_PCR_MUX_MASK;
+    SPI1_PORT->PCR[MOSI1] |=  PORT_PCR_MUX(ALT5);
     
     /* Set Master In Slave out
      * Enable internal pulldown
      */
-    PORT_SPI1->PCR[MISO1] &= ~PORT_PCR_MUX_MASK;
-    PORT_SPI1->PCR[MISO1] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
+    SPI1_PORT->PCR[MISO1] &= ~PORT_PCR_MUX_MASK;
+    SPI1_PORT->PCR[MISO1] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
     
     /* Set manual SS */
-    PORT_SPI1->PCR[SS1]   &= ~PORT_PCR_MUX_MASK;
-    PORT_SPI1->PCR[SS1]   |= PORT_PCR_MUX(ALT1);
-    GPIO_SPI1->PDDR       |= MASK(SS1);
-    GPIO_SPI1->PDOR       |= MASK(SS1);
+    SPI1_PORT->PCR[SS1]   &= ~PORT_PCR_MUX_MASK;
+    SPI1_PORT->PCR[SS1]   |= PORT_PCR_MUX(ALT1);
+    SPI1_GPIO->PDDR       |= MASK(SS1);
+    SPI1_GPIO->PDOR       |= MASK(SS1);
 }
 
 
@@ -320,7 +320,8 @@ static void SPI_IRQHandler(const SPI_Target eInst)
     /* Must read receive buffer first to avoid overrun */
     if (BME_UBFX8(&pxSpiTable[eInst]->S, SPI_S_SPRF_SHIFT, SPI_S_SPRF_WIDTH) != 0)
     {
-        pxAdap[eInst]->pucRx[ulCnt[eInst]++] = pxSpiTable[eInst]->D;
+        pxAdap[eInst]->pucRx[ulCnt[eInst]] = pxSpiTable[eInst]->D;
+        ulCnt[eInst]++;
 
         /* Check if this was the last byte */
         if (ulCnt[eInst] >= pxAdap[eInst]->ulLen)
@@ -346,6 +347,9 @@ static void SPI_IRQHandler(const SPI_Target eInst)
         }
 
         pxSpiTable[eInst]->D = pxAdap[eInst]->pucTx[ulCnt[eInst]];
+
+        /* Is NULL check needed? */
+        pxAdap[eInst]->pvTxCallback(ulCnt[eInst]);
     }
 
     /* This condition should never occur as SSOE is set 1!
