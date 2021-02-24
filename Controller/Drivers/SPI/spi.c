@@ -220,8 +220,8 @@ void SPI0_vInit(void)
     
     SPI_vSetMode(SPI0, MODE_0);
     
-    /* Enable module & interrupts */
-    SPI0->C1 |= SPI_C1_SPIE_MASK | SPI_C1_SPE_MASK;
+    /* Enable module */
+    SPI0->C1 |= SPI_C1_SPE_MASK;
 
     NVIC_ClearPendingIRQ(SPI0_IRQn);
     NVIC_SetPriority(SPI0_IRQn, SPI0_IRQ_PRIO);
@@ -256,8 +256,8 @@ void SPI1_vInit(void)
     
     SPI_vSetMode(SPI1, MODE_0);
     
-    /* Enable module & interrupts */
-    SPI1->C1 |= SPI_C1_SPIE_MASK | SPI_C1_SPE_MASK;
+    /* Enable module */
+    SPI1->C1 |= SPI_C1_SPE_MASK;
 
     NVIC_ClearPendingIRQ(SPI1_IRQn);
     NVIC_SetPriority(SPI1_IRQn, SPI1_IRQ_PRIO);
@@ -281,11 +281,16 @@ bool SPI_bXfer(SPI_Adapter *pxAdap)
     configASSERT(xRet == pdTRUE);
 
     /* Start transmitting */
+    BME_OR8(&pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPIE_MASK);
     BME_OR8(&pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPTIE_MASK);
 
     /* Wait until xfer cplt */
     xRet = xSemaphoreTake(xSpiSema[pxAdap->eInstance], pdMS_TO_TICKS(SPI_TIMEOUT_MS));
-    configASSERT(xRet == pdTRUE);
+    if (xRet == pdFALSE)
+    {
+        pxSpiTable[pxAdap->eInstance]->C1 = 0;
+        __BKPT();
+    }
 
     return (bool)xRet;
 }
@@ -298,8 +303,7 @@ bool SPI_bXfer(SPI_Adapter *pxAdap)
  *             
  * @return  None
  *
- * @note    SPI Receive buffer full IRQ cannot be disabled.
- *          This function is fully re-entrant.
+ * @note    This function is fully re-entrant.
  */
 static void SPI_IRQHandler(const SPI_Target eInst)
 {
@@ -329,8 +333,10 @@ static void SPI_IRQHandler(const SPI_Target eInst)
         }
 
         /* Check if this was the last byte */
-        if (ulCnt[eInst] >= pxAdap[eInst]->ulLen)
+        if (ulCnt[eInst] > pxAdap[eInst]->ulLen)
         {
+            BME_AND8(&pxSpiTable[eInst]->C1, (uint8_t)~SPI_C1_SPIE_MASK);
+
             SPI_vSetSlave(eInst, HIGH);
             xRet = xSemaphoreGiveFromISR(xSpiSema[eInst], &xHigherPrioTaskWoken);
             configASSERT(xRet == pdTRUE);
