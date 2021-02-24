@@ -323,6 +323,11 @@ static void SPI_IRQHandler(const SPI_Target eInst)
         pxAdap[eInst]->pucRx[ulCnt[eInst]] = pxSpiTable[eInst]->D;
         ulCnt[eInst]++;
 
+        if (pxAdap[eInst]->pvRxCallback != NULL)
+        {
+            pxAdap[eInst]->pvRxCallback();
+        }
+
         /* Check if this was the last byte */
         if (ulCnt[eInst] >= pxAdap[eInst]->ulLen)
         {
@@ -348,8 +353,10 @@ static void SPI_IRQHandler(const SPI_Target eInst)
 
         pxSpiTable[eInst]->D = pxAdap[eInst]->pucTx[ulCnt[eInst]];
 
-        /* Is NULL check needed? */
-        pxAdap[eInst]->pvTxCallback(ulCnt[eInst]);
+        if (pxAdap[eInst]->pvTxCallback != NULL)
+        {
+            pxAdap[eInst]->pvTxCallback(ulCnt[eInst]);
+        }
     }
 
     /* This condition should never occur as SSOE is set 1!
