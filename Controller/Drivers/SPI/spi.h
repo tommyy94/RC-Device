@@ -36,7 +36,7 @@ typedef struct
     uint8_t          *pucRx;
     uint32_t          ulLen;
     void              (*pvTxCallback)(const uint32_t);
-    void              (*pvRxCallback)(void);
+    void              (*pvRxCallback)(const uint32_t);
 } SPI_Adapter;
 
 

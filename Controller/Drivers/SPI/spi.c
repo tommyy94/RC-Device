@@ -89,19 +89,19 @@ __STATIC_INLINE void SPI0_IO_vInit(void)
     
     /* Set Master Out Slave In */
     SPI0_PORT->PCR[MOSI0] &= ~PORT_PCR_MUX_MASK;
-    SPI0_PORT->PCR[MOSI0] |=  PORT_PCR_MUX(ALT5);
+    SPI0_PORT->PCR[MOSI0] |=  PORT_PCR_MUX(ALT2);
     
     /* Set Master In Slave out
      * Enable internal pulldown
      */
     SPI0_PORT->PCR[MISO0] &= ~PORT_PCR_MUX_MASK;
-    SPI0_PORT->PCR[MISO0] |=  PORT_PCR_MUX(ALT5) | PORT_PCR_PE(1);
+    SPI0_PORT->PCR[MISO0] |=  PORT_PCR_MUX(ALT2) | PORT_PCR_PE(1);
     
     /* Set manual SS */
     SPI0_PORT->PCR[SS0]   &= ~PORT_PCR_MUX_MASK;
-    SPI0_PORT->PCR[SS0]   |= PORT_PCR_MUX(ALT1);
-    SPI0_GPIO->PDDR       |= MASK(SS0);
-    SPI0_GPIO->PDOR       |= MASK(SS0);
+    SPI0_PORT->PCR[SS0]   |=  PORT_PCR_MUX(ALT1);
+    SPI0_GPIO->PDDR       |=  MASK(SS0);
+    SPI0_GPIO->PDOR       |=  MASK(SS0);
 }
 
 /**
@@ -216,7 +216,7 @@ void SPI0_vInit(void)
     SPI0->C2 &= ~SPI_C2_MODFEN_MASK;
     
     /* Baudrate = Bus clock / ((SPPR + 1) * 2^^(SPR+1)) */
-    SPI0->BR = SPI_BR_SPPR(2) | SPI_BR_SPR(1);
+    SPI0->BR = SPI_BR_SPPR(2) | SPI_BR_SPR(2);
     
     SPI_vSetMode(SPI0, MODE_0);
     
@@ -252,7 +252,7 @@ void SPI1_vInit(void)
     SPI1->C2 &= ~SPI_C2_MODFEN_MASK;
     
     /* Baudrate = Bus clock / ((SPPR + 1) * 2^^(SPR+1)) */
-    SPI1->BR = SPI_BR_SPPR(2) | SPI_BR_SPR(1);
+    SPI1->BR = SPI_BR_SPPR(2) | SPI_BR_SPR(2);
     
     SPI_vSetMode(SPI1, MODE_0);
     
@@ -312,6 +312,8 @@ static void SPI_IRQHandler(const SPI_Target eInst)
     BaseType_t             xRet;
     BaseType_t             xHigherPrioTaskWoken = pdFALSE;
 
+    configASSERT((eInst == SPI_TFT) || (eInst == SPI_RF));
+
     /* Read message buffer if this is a new transfer */
     if (pxAdap[eInst] == NULL)
     {
@@ -329,7 +331,7 @@ static void SPI_IRQHandler(const SPI_Target eInst)
 
         if (pxAdap[eInst]->pvRxCallback != NULL)
         {
-            pxAdap[eInst]->pvRxCallback();
+            pxAdap[eInst]->pvRxCallback(ulCnt[eInst]);
         }
 
         /* Check if this was the last byte */
@@ -344,18 +346,16 @@ static void SPI_IRQHandler(const SPI_Target eInst)
             /* Must reset adapter pointer for next xfer */
             pxAdap[eInst] = NULL;
         }
+        else
+        {
+            BME_OR8(&pxSpiTable[eInst]->C1, SPI_C1_SPTIE_MASK);
+        }
     }
 
     if ((BME_UBFX8(&pxSpiTable[eInst]->C1, SPI_C1_SPTIE_SHIFT, SPI_C1_SPTIE_WIDTH) != 0)
      && (BME_UBFX8(&pxSpiTable[eInst]->S, SPI_S_SPTEF_SHIFT, SPI_S_SPTEF_WIDTH)  != 0))
     {
-        /* Disable transmitter IRQ before sending the last byte
-         * to guarantee no IRQ after the last byte
-         */
-        if ((ulCnt[eInst] + 1) >= pxAdap[eInst]->ulLen)
-        {
-            BME_AND8(&pxSpiTable[eInst]->C1, (uint8_t)~SPI_C1_SPTIE_MASK);
-        }
+        BME_AND8(&pxSpiTable[eInst]->C1, (uint8_t)~SPI_C1_SPTIE_MASK);
 
         pxSpiTable[eInst]->D = pxAdap[eInst]->pucTx[ulCnt[eInst]];
 
