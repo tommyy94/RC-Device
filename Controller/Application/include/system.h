@@ -20,7 +20,7 @@
 #define COMMTASKSIZE            (512UL)
 #define HMITASKSIZE             (256UL)
 #define JOYSTICKTASKSIZE        (512UL)
-#define STARTUPTASKSIZE         (512UL)
+#define STARTUPTASKSIZE         (1024UL + 256UL)
 
 /* Interrupt priorities */
 #define SPI0_IRQ_PRIO           (5UL)

@@ -12,6 +12,8 @@
 #pragma once
 
 /* System headers */
+#include <stdint.h>
+#include <stdbool.h>
 
 /* Device vendor headers */
 
@@ -33,6 +35,8 @@ typedef struct
     uint8_t          *pucTx;
     uint8_t          *pucRx;
     uint32_t          ulLen;
+    void              (*pvTxCallback)(const uint32_t);
+    void              (*pvRxCallback)(const uint32_t);
 } SPI_Adapter;
 
 

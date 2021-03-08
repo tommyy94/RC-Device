@@ -70,7 +70,6 @@ void ADC0_vInit(void)
     ADC0->CFG1 = ADC_CFG1_ADIV(2) | ADC_CFG1_ADICLK(1) | ADC_CFG1_ADLSMP(1) | ADC_CFG1_MODE(3);
     
     /**
-    /**
     * Compare function disabled
     * Default voltage reference (VREFH & VREFL)
     */
