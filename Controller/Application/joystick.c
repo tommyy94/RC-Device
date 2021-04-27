@@ -25,7 +25,10 @@ enum
 
 extern QueueHandle_t       xJobQueue;
 extern TaskHandle_t        xJoystickTaskHandle;
+extern void                (*pvPIT0Callback)(void *);
 
+
+static void vTaskReadyCallback(void *pvArg);
 
 void vJoystickTask(void *const pvParam)
 {
@@ -37,7 +40,8 @@ void vJoystickTask(void *const pvParam)
     uint16_t      pusAdVals[AXIS_CNT];
 
     /* Load timer */
-    PIT_vTimerLoad(PIT_CH_0, PIT_CH0_TIMEOUT * 10);
+    pvPIT0Callback = &vTaskReadyCallback;
+    PIT_vTimerLoad(PIT_JOYSTICK_CH, PIT_CH0_TIMEOUT);
 
     while (1)
     {
@@ -69,4 +73,16 @@ void vJoystickTask(void *const pvParam)
         xPassed = xQueueSend(xJobQueue, (void *)&pxJob, NULL);
         configASSERT(xPassed == pdTRUE);
     }
+}
+
+
+static void vTaskReadyCallback(void *pvArg)
+{
+    BaseType_t *xHigherPriorityTaskWoken = pvArg;
+
+    /* Give signal to read user input */
+    vTaskNotifyGiveIndexedFromISR(xJoystickTaskHandle, 1, xHigherPriorityTaskWoken);
+
+    /* Clear IRQ flag & restart timer */
+    PIT_vTimerLoad(PIT_JOYSTICK_CH, PIT_CH0_TIMEOUT);
 }

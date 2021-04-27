@@ -20,21 +20,10 @@
 #include "tpm.h"
 #include "comm.h"
 
-/* Global defines */
-
-/* Global variables */
-
-extern TaskHandle_t         xCommTaskHandle;
-extern QueueHandle_t        xJobQueue;
-
-static SPI_Adapter xSpiAdap =
-{
-    .eInstance = SPI_RF
-};
-
-
 /* Local defines */
 #define NRF24L01_PULSE_DURATION     (15UL)
+
+#define NRF24L01_TIMEOUT_MS         (10UL)
 
 /* Signal edges */
 #define CE                          (1UL) /* Chip Enable */
@@ -42,6 +31,17 @@ static SPI_Adapter xSpiAdap =
 
 #define MAX_PAYLOAD_LEN             (32UL)
 #define ADDR_LEN_BYTES              (4UL)
+
+/* Local variables */
+
+extern TaskHandle_t         xCommTaskHandle;
+extern QueueHandle_t        xJobQueue;
+
+static SPI_Adapter xSpiAdap =
+{
+    .eInstance    = SPI_RF,
+    .ulTimeoutMs  = NRF24L01_TIMEOUT_MS
+};
 
 
 /* Local function prototypes */
@@ -406,9 +406,9 @@ uint32_t nRF24L01_ulReadPayload(const char *pucPayload)
 
     ucDummy[0] = R_REGISTER | R_RX_PAYLOAD;
     
-    xSpiAdap.pucTx      = ucDummy;
-    xSpiAdap.pucRx      = (uint8_t *)pucPayload;
-    xSpiAdap.ulLen      = ulLength + 1;
+    xSpiAdap.pucTx        = ucDummy;
+    xSpiAdap.pucRx        = (uint8_t *)pucPayload;
+    xSpiAdap.ulLen        = ulLength + 1;
     SPI_bXfer(&xSpiAdap);
 
     return ulLength;
@@ -431,9 +431,9 @@ void nRF24L01_vWriteRegister(const uint8_t ucRegister, const uint8_t ucValue)
     char ucData[] = { W_REGISTER | ucRegister, ucValue};
 
     /* First transfer register, then value */
-    xSpiAdap.pucTx      = ucData;
-    xSpiAdap.pucRx      = ucBuffer;
-    xSpiAdap.ulLen      = 2;
+    xSpiAdap.pucTx        = ucData;
+    xSpiAdap.pucRx        = ucBuffer;
+    xSpiAdap.ulLen        = 2;
     SPI_bXfer(&xSpiAdap);
 }
 
@@ -448,9 +448,9 @@ void nRF24L01_vWriteRegister(const uint8_t ucRegister, const uint8_t ucValue)
 void nRF24L01_vSendCommand(const uint8_t ucCommand)
 {
     uint8_t ucDummy;
-    xSpiAdap.pucTx      = (uint8_t *)&ucCommand;
-    xSpiAdap.pucRx      = (uint8_t *)&ucDummy;
-    xSpiAdap.ulLen      = 1;
+    xSpiAdap.pucTx        = (uint8_t *)&ucCommand;
+    xSpiAdap.pucRx        = (uint8_t *)&ucDummy;
+    xSpiAdap.ulLen        = 1;
     SPI_bXfer(&xSpiAdap);
 }
 
@@ -486,9 +486,9 @@ void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister,
     }
 
     /* Transfer bytes to nRF24L01 */    
-    xSpiAdap.pucTx      = ucTxData;
-    xSpiAdap.pucRx      = ucRxData;
-    xSpiAdap.ulLen      = ulLength;
+    xSpiAdap.pucTx        = ucTxData;
+    xSpiAdap.pucRx        = ucRxData;
+    xSpiAdap.ulLen        = ulLength;
     SPI_bXfer(&xSpiAdap);
 
 }

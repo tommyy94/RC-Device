@@ -21,7 +21,6 @@
 #include "nRF24L01.h"
 #include "pit.h"
 #include "spi.h"
-#include "tft.h"
 
 
 /* Global variables */
@@ -63,10 +62,6 @@ static void vSystemInit(void)
     /* Analog functionalities */
     DMA0_vInit();
     ADC0_vInit();
-
-    /* Display */
-    SPI0_vInit();
-    TFT_vInit();
     
     /* Communications */
     TPM2_vInit();

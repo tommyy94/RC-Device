@@ -1,18 +1,18 @@
 #pragma once
 #include <stdint.h>
 
-
-enum
+typedef enum
 {
-    PIT_CH_0 = 0,
-    PIT_CH_1,
+    PIT_JOYSTICK_CH = 0,
+    PIT_TFT_CH,
     PIT_CH_CNT
-};
+} PIT_eChannels;
 
+//#define PIT_CH0_TIMEOUT   (1UL)  /* 1 ms  */
+#define PIT_CH0_TIMEOUT   (10UL) /* 10 ms */
+#define PIT_CH1_TIMEOUT   (10UL) /* 10 ms */
 
-//#define PIT_CH0_TIMEOUT   (24000UL)  /* 1 ms  */
-#define PIT_CH0_TIMEOUT   (240000UL) /* 10 ms */
-#define PIT_CH1_TIMEOUT   (240000UL) /* 10 ms */
+#define PIT_TIMEOUT_MS(x) (240000UL * (x))
 
 
 void PIT_vInit(void);
