@@ -569,10 +569,6 @@
         <file file_name="Drivers/PIT/pit.c" />
         <file file_name="Drivers/PIT/pit.h" />
       </folder>
-      <folder Name="TFT">
-        <file file_name="Drivers/TFT/tft.c" />
-        <file file_name="Drivers/TFT/tft.h" />
-      </folder>
     </folder>
     <folder Name="Kinetis">
       <file file_name="KL25Z4/fsl_bitaccess.h" />
