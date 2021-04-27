@@ -101,8 +101,8 @@ static void vCreateQueues(void)
     xJobQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(xJobStruct *));
     configASSERT(xJobQueue != NULL);
 
-    xSpiQueue[SPI_TFT] = xQueueCreate(SPI_QUEUE_SIZE, sizeof(SPI_Adapter *));
-    configASSERT(xSpiQueue[SPI_TFT] != NULL);
+    xSpiQueue[SPI_UNUSED] = xQueueCreate(SPI_QUEUE_SIZE, sizeof(SPI_Adapter *));
+    configASSERT(xSpiQueue[SPI_UNUSED] != NULL);
     xSpiQueue[SPI_RF] = xQueueCreate(SPI_QUEUE_SIZE, sizeof(SPI_Adapter *));
     configASSERT(xSpiQueue[SPI_RF] != NULL);
 }
@@ -149,7 +149,7 @@ static void vCreateTasks(void)
  */
 static void vCreateSemaphores(void)
 {
-    xSpiSema[SPI_TFT] = xSemaphoreCreateBinary();
+    xSpiSema[SPI_UNUSED] = xSemaphoreCreateBinary();
     configASSERT(xSpiSema != NULL);
     xSpiSema[SPI_RF] = xSemaphoreCreateBinary();
     configASSERT(xSpiSema != NULL);
