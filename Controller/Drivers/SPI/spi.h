@@ -22,6 +22,9 @@
 /* Global defines */
 #define SPI_QUEUE_SIZE          (1UL)
 
+#define LOW     (0UL)
+#define HIGH    (1UL)
+
 typedef enum
 {
     SPI_TFT = 0,
@@ -35,8 +38,10 @@ typedef struct
     uint8_t          *pucTx;
     uint8_t          *pucRx;
     uint32_t          ulLen;
-    void              (*pvTxCallback)(const uint32_t);
-    void              (*pvRxCallback)(const uint32_t);
+    uint32_t          ulIndx;
+    uint32_t          ulTimeoutMs;
+    void              (*pvTxCallback)(void *);
+    void              (*pvRxCallback)(void *);
 } SPI_Adapter;
 
 
@@ -44,3 +49,6 @@ typedef struct
 void SPI0_vInit(void);
 void SPI1_vInit(void);
 bool SPI_bXfer(SPI_Adapter *pxAdap);
+void SPI_vSetSlave(SPI_Target eInst, const uint32_t ulState);
+void SPI_vEnableInterrupts(const SPI_Target eInst);
+void SPI_vDisableInterrupts(const SPI_Target eInst);

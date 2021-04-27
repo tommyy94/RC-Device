@@ -59,9 +59,10 @@ SPI_Type *pxSpiTable[SPI_COUNT] = { SPI0, SPI1 };
 __STATIC_INLINE void SPI0_IO_vInit(void);
 __STATIC_INLINE void SPI1_IO_vInit(void);
 __STATIC_INLINE void SPI_vSetMode(SPI_Type *const pxSpi, const SPI_Mode eMode);
-__STATIC_INLINE void SPI_vSetSlave(SPI_Target eInst, const uint32_t ulState);
 
-static void SPI_IRQHandler(const SPI_Target eInst);
+static void       SPI_IRQHandler(const SPI_Target eInst);
+static BaseType_t SPI_xRxHandler(SPI_Adapter *pxAdap);
+static void       SPI_vTxHandler(SPI_Adapter *pxAdap);
 
 
 /* Function descriptions */
@@ -152,7 +153,7 @@ __STATIC_INLINE void SPI1_IO_vInit(void)
  *             
  * @return  None
  */
-__STATIC_INLINE void SPI_vSetSlave(SPI_Target eInst, const uint32_t ulState)
+void SPI_vSetSlave(SPI_Target eInst, const uint32_t ulState)
 {
     FGPIO_Type *pxPort[SPI_COUNT] = { FGPIOC, FGPIOE };
 
@@ -277,22 +278,57 @@ bool SPI_bXfer(SPI_Adapter *pxAdap)
     BaseType_t xRet;
 
     /* Share pointer with the IRQ handler */
-    xRet = xQueueSend(xSpiQueue[pxAdap->eInstance], (void *)&pxAdap, NULL);
+    xRet = xQueueSend(xSpiQueue[pxAdap->eInstance],
+                      (void *)&pxAdap,
+                      NULL);
     configASSERT(xRet == pdTRUE);
-
-    /* Start transmitting */
-    BME_OR8(&pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPIE_MASK);
-    BME_OR8(&pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPTIE_MASK);
-
-    /* Wait until xfer cplt */
-    xRet = xSemaphoreTake(xSpiSema[pxAdap->eInstance], pdMS_TO_TICKS(SPI_TIMEOUT_MS));
-    if (xRet == pdFALSE)
+    if (xRet == pdTRUE)
     {
-        pxSpiTable[pxAdap->eInstance]->C1 = 0;
-        __BKPT();
+        /* Start transmitting */
+        pxSpiTable[pxAdap->eInstance]->C1 |= SPI_C1_SPE_MASK
+                                          |  SPI_C1_SPIE_MASK
+                                          |  SPI_C1_SPTIE_MASK;
+
+        /* Wait until xfer cplt */
+        xRet = xSemaphoreTake(xSpiSema[pxAdap->eInstance],
+                              pdMS_TO_TICKS(pxAdap->ulTimeoutMs));
+        configASSERT(xRet == pdTRUE);
+        if (xRet == pdFALSE)
+        {
+            pxSpiTable[pxAdap->eInstance]->C1 = 0;
+            SPI_vSetSlave(pxAdap->eInstance, HIGH);
+        }
     }
 
     return (bool)xRet;
+}
+
+
+/**
+ * @brief   Enable SPIx interrupts.
+ * 
+ * @param   eInst   SPI instance.
+ *             
+ * @return  None.
+ */
+void SPI_vEnableInterrupts(const SPI_Target eInst)
+{
+    //BME_OR8(&pxSpiTable[eInst]->C1, SPI_C1_SPTIE_MASK);
+    BME_OR8(&pxSpiTable[eInst]->C1, SPI_C1_SPIE_MASK);
+}
+
+
+/**
+ * @brief   Disable SPIx interrupts.
+ * 
+ * @param   eInst   SPI instance.
+ *             
+ * @return  None.
+ */
+void SPI_vDisableInterrupts(const SPI_Target eInst)
+{
+    BME_AND8(&pxSpiTable[eInst]->C1, (uint8_t)~SPI_C1_SPIE_MASK);
+    //BME_AND8(&pxSpiTable[eInst]->C1, (uint8_t)~SPI_C1_SPTIE_MASK);
 }
 
 
@@ -307,7 +343,6 @@ bool SPI_bXfer(SPI_Adapter *pxAdap)
  */
 static void SPI_IRQHandler(const SPI_Target eInst)
 {
-    static uint32_t        ulCnt[SPI_COUNT];
     static SPI_Adapter    *pxAdap[SPI_COUNT] = { NULL };
     BaseType_t             xRet;
     BaseType_t             xHigherPrioTaskWoken = pdFALSE;
@@ -317,39 +352,18 @@ static void SPI_IRQHandler(const SPI_Target eInst)
     /* Read message buffer if this is a new transfer */
     if (pxAdap[eInst] == NULL)
     {
-        ulCnt[eInst] = 0;
-        xRet = xQueueReceiveFromISR(xSpiQueue[eInst], (void *)&pxAdap[eInst], &xHigherPrioTaskWoken);
+        xRet = xQueueReceiveFromISR(xSpiQueue[eInst],
+                                    (void *)&pxAdap[eInst],
+                                    &xHigherPrioTaskWoken);
         configASSERT(xRet == pdTRUE);
         SPI_vSetSlave(eInst, LOW);
+        pxAdap[eInst]->ulIndx = 0;
     }
 
     /* Must read receive buffer first to avoid overrun */
     if (BME_UBFX8(&pxSpiTable[eInst]->S, SPI_S_SPRF_SHIFT, SPI_S_SPRF_WIDTH) != 0)
     {
-        pxAdap[eInst]->pucRx[ulCnt[eInst]] = pxSpiTable[eInst]->D;
-        ulCnt[eInst]++;
-
-        if (pxAdap[eInst]->pvRxCallback != NULL)
-        {
-            pxAdap[eInst]->pvRxCallback(ulCnt[eInst]);
-        }
-
-        /* Check if this was the last byte */
-        if (ulCnt[eInst] > pxAdap[eInst]->ulLen)
-        {
-            BME_AND8(&pxSpiTable[eInst]->C1, (uint8_t)~SPI_C1_SPIE_MASK);
-
-            SPI_vSetSlave(eInst, HIGH);
-            xRet = xSemaphoreGiveFromISR(xSpiSema[eInst], &xHigherPrioTaskWoken);
-            configASSERT(xRet == pdTRUE);
-
-            /* Must reset adapter pointer for next xfer */
-            pxAdap[eInst] = NULL;
-        }
-        else
-        {
-            BME_OR8(&pxSpiTable[eInst]->C1, SPI_C1_SPTIE_MASK);
-        }
+        xHigherPrioTaskWoken = SPI_xRxHandler(&*pxAdap[eInst]);
     }
 
     if ((BME_UBFX8(&pxSpiTable[eInst]->C1, SPI_C1_SPTIE_SHIFT, SPI_C1_SPTIE_WIDTH) != 0)
@@ -357,11 +371,11 @@ static void SPI_IRQHandler(const SPI_Target eInst)
     {
         BME_AND8(&pxSpiTable[eInst]->C1, (uint8_t)~SPI_C1_SPTIE_MASK);
 
-        pxSpiTable[eInst]->D = pxAdap[eInst]->pucTx[ulCnt[eInst]];
+        pxSpiTable[eInst]->D = pxAdap[eInst]->pucTx[pxAdap[eInst]->ulIndx];
 
         if (pxAdap[eInst]->pvTxCallback != NULL)
         {
-            pxAdap[eInst]->pvTxCallback(ulCnt[eInst]);
+            pxAdap[eInst]->pvTxCallback(&*pxAdap[eInst]);
         }
     }
 
@@ -375,6 +389,70 @@ static void SPI_IRQHandler(const SPI_Target eInst)
 
     /* Switch to higher priority task if needed */
     portYIELD_FROM_ISR(xHigherPrioTaskWoken);
+}
+
+/**
+ * @brief   SPI RX ISR.
+ * 
+ * @param   pxAdap        Pointer to SPI adapter.
+ *             
+ * @return  pxConSwitch   Force a context switch or not.
+ *
+ * @note    This function is fully re-entrant.
+ */
+static BaseType_t SPI_xRxHandler(SPI_Adapter *pxAdap)
+{
+    BaseType_t xRet;
+    BaseType_t xConSwitch;
+
+    pxAdap->pucRx[pxAdap->ulIndx] = pxSpiTable[pxAdap->eInstance]->D;
+    pxAdap->ulIndx++;
+
+    if (pxAdap->pvRxCallback != NULL)
+    {
+        pxAdap->pvRxCallback(&*pxAdap);
+    }
+
+    /* Check if this was the last byte */
+    if (pxAdap->ulIndx > pxAdap->ulLen)
+    {
+        BME_AND8(&pxSpiTable[pxAdap->eInstance]->C1, (uint8_t)~SPI_C1_SPIE_MASK);
+        BME_AND8(&pxSpiTable[pxAdap->eInstance]->C1, (uint8_t)~SPI_C1_SPE_MASK);
+
+        SPI_vSetSlave(pxAdap->eInstance, HIGH);
+        xRet = xSemaphoreGiveFromISR(xSpiSema[pxAdap->eInstance], &xConSwitch);
+        configASSERT(xRet == pdTRUE);
+
+        /* Must reset adapter pointer for next xfer */
+        pxAdap = NULL;
+    }
+    else
+    {
+        BME_OR8(&pxSpiTable[pxAdap->eInstance]->C1, SPI_C1_SPTIE_MASK);
+    }
+
+    return xConSwitch;
+}
+
+/**
+ * @brief   SPI TX ISR.
+ * 
+ * @param   pxAdap        Pointer to SPI adapter.
+ *             
+ * @return  None.
+ *
+ * @note    This function is fully re-entrant.
+ */
+static void SPI_vTxHandler(SPI_Adapter *pxAdap)
+{
+    BME_AND8(&pxSpiTable[pxAdap->eInstance]->C1, (uint8_t)~SPI_C1_SPTIE_MASK);
+
+    pxSpiTable[pxAdap->eInstance]->D = pxAdap->pucTx[pxAdap->ulIndx];
+
+    if (pxAdap->pvTxCallback != NULL)
+    {
+        pxAdap->pvTxCallback(&*pxAdap);
+    }
 }
 
 /**
