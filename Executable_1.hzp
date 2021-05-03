@@ -31,7 +31,7 @@
       build_object_file_name="$(IntDir)/$(InputName)$(OBJ)"
       build_output_directory="$(ProjectName)/bin/$(Configuration)"
       c_preprocessor_definitions="__SAME70Q21B__;__SAM_E_FAMILY;ARM_MATH_CM7;FLASH_PLACEMENT=1;__USE_CRYSTAL_OSCILLATOR__;__TCM_CONFIG__=0;STARTUP_FROM_RESET"
-      c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Device/Config;$(ProjectDir)/Device/Drivers/SPI;$(ProjectDir)/Device/Drivers/TWI;$(ProjectDir)/Device/Drivers/RTC;$(ProjectDir)/Device/Drivers/PWM;$(ProjectDir)/Device/Drivers/sd_mmc;$(ProjectDir)/Device/Drivers/DMA;$(ProjectDir)/Device/Drivers/nRF24L01+;$(ProjectDir)/Device/Drivers/PIO;$(ProjectDir)/Device/Source Files;$(ProjectDir)/Device/Middleware;$(ProjectDir)/Device/Middleware/diskio;$(ProjectDir)/Device/Middleware/fatfs/src;$(ProjectDir)/Device/Middleware/ASF;$(ProjectDir)/Device/Middleware/ASF/hal/include;$(ProjectDir)/Device/Middleware/ASF/hal/src;$(ProjectDir)/Device/Middleware/ASF/hal/utils/include;$(ProjectDir)/Device/Middleware/ASF/hpl/core;$(ProjectDir)/Device/Middleware/ASF/hpl/pio;$(ProjectDir)/Device/Middleware/ASF/hpl/pmc;$(ProjectDir)/Device/Middleware/ASF/hri;$(ProjectDir)/Device/Application/include;$(ProjectDir)/Device/Application/bloat;$(SolutionDir)/SEGGER;$(SolutionDir)/SEGGER/RTT;$(SolutionDir)/Device/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
+      c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Device/Config;$(ProjectDir)/Device/Drivers/SPI;$(ProjectDir)/Device/Drivers/TWI;$(ProjectDir)/Device/Drivers/RTC;$(ProjectDir)/Device/Drivers/PWM;$(ProjectDir)/Device/Drivers/sd_mmc;$(ProjectDir)/Device/Drivers/DMA;$(ProjectDir)/Device/Drivers/nRF24L01+;$(ProjectDir)/Device/Drivers/PIO;$(ProjectDir)/Device/Drivers/MPU-6050;$(ProjectDir)/Device/Source Files;$(ProjectDir)/Device/Middleware;$(ProjectDir)/Device/Middleware/diskio;$(ProjectDir)/Device/Middleware/fatfs/src;$(ProjectDir)/Device/Middleware/ASF;$(ProjectDir)/Device/Middleware/ASF/hal/include;$(ProjectDir)/Device/Middleware/ASF/hal/src;$(ProjectDir)/Device/Middleware/ASF/hal/utils/include;$(ProjectDir)/Device/Middleware/ASF/hpl/core;$(ProjectDir)/Device/Middleware/ASF/hpl/pio;$(ProjectDir)/Device/Middleware/ASF/hpl/pmc;$(ProjectDir)/Device/Middleware/ASF/hri;$(ProjectDir)/Device/Application/include;$(ProjectDir)/Device/Application/bloat;$(SolutionDir)/SEGGER;$(SolutionDir)/SEGGER/RTT;$(SolutionDir)/Device/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
       debug_register_definition_file="$(DeviceRegisterDefinitionFile)"
       debug_threads_script=""
       gcc_c_language_standard="gnu11"
@@ -115,6 +115,10 @@
       <folder Name="TWI">
         <file file_name="Device/Drivers/TWI/twi.c" />
         <file file_name="Device/Drivers/TWI/twi.h" />
+      </folder>
+      <folder Name="MPU-6050">
+        <file file_name="Device/Drivers/MPU-6050/mpu-6050.c" />
+        <file file_name="Device/Drivers/MPU-6050/mpu-6050.h" />
       </folder>
     </folder>
     <folder Name="Config">

@@ -16,6 +16,7 @@
 #include "dma.h"
 #include "nRF24L01.h"
 #include "twi.h"
+#include "mpu-6050.h"
 
 /* RTOS includes */
 #include "FreeRTOS.h"
@@ -167,6 +168,7 @@ static void Sys_vInit(void)
     nRF24L01_vInit();
 
     TWI0_vInit();
+    MPU6050_vInit();
 
     PWM_Init();
 }
