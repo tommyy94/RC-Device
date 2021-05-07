@@ -117,3 +117,11 @@ void journalTask(void *arg)
         __BKPT();
     }
 }
+
+
+void Journal_vWriteError(uint32_t ulError)
+{
+    configASSERT(ulError < ERROR_COUNT);
+    xTaskNotify(xJournalTask, ulError, eSetBits);
+}
+
