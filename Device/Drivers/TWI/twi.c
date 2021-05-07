@@ -18,6 +18,9 @@
 #define TWI0_PORT       (PIOA)
 #define PIN_TWCK0       (1 << 4u)
 #define PIN_TWD0        (1 << 3u)
+#define TWI_ERR_MASK    (TWIHS_SR_ARBLST_Msk \
+                         | TWIHS_SR_UNRE_Msk \
+                         | TWIHS_SR_OVRE_Msk)
 
 
 extern QueueHandle_t      xTwiQueue;
@@ -34,6 +37,7 @@ static bool    TWI_bRead(Twihs *pxTwi, const uint32_t ulTarget, TWI_Msg *pxMsg);
 static void    TWI_vWriteTHR(Twihs *pxTwi, const uint8_t ucByte);
 static uint8_t TWI_ucReadRHR(Twihs *pxTwi);
 static void    TWIHS0_Handler_vEndXfer(uint32_t *pulCnt, BaseType_t *pxTaskWoken);
+static void    TWI_vFlushTHR(Twihs *pxTwi);
 
 
 /**
@@ -115,7 +119,7 @@ void TWI_vXfer(TWI_Adapter *pxAdap, const uint32_t ulCount)
         }
         else
         {
-            if (ulK < ulCount)
+            if (ulK < (ulCount - 1))
             {
                 pxAdap->pxMsg[ulK].ulFlags |= TWI_SR;
             }
@@ -135,6 +139,8 @@ void TWI_vXfer(TWI_Adapter *pxAdap, const uint32_t ulCount)
     {
         ; /* Wait until transmission complete */
     }
+
+    TWI_vFlushTHR(pxAdap->pxInst);
 }
 
 
@@ -201,7 +207,7 @@ static bool TWI_bWrite(
     const   uint32_t   ulTarget,
     TWI_Msg           *pxMsg)
 {
-    BaseType_t xRet = pdTRUE;
+    BaseType_t xRet          = pdTRUE;
 
     configASSERT((pxTwi == TWIHS0)
               || (pxTwi == TWIHS1)
@@ -220,7 +226,9 @@ static bool TWI_bWrite(
     pxTwi->TWIHS_IER = TWIHS_IER_TXRDY_Msk;
     xRet &= xSemaphoreTake(xTwiSema, pdMS_TO_TICKS(50));
     configASSERT(xRet == pdTRUE);
-    
+
+    configASSERT((pxTwi->TWIHS_SR & TWI_ERR_MASK) == 0);
+
     return (bool)xRet;
 }
 
@@ -241,8 +249,8 @@ static bool TWI_bRead(
     const uint32_t   ulTarget,
     TWI_Msg         *pxMsg)
 {
-    BaseType_t  xRet = pdTRUE;
-    uint32_t    ulMask = TWIHS_CR_START_Msk;
+    BaseType_t  xRet         = pdTRUE;
+    uint32_t    ulMask       = TWIHS_CR_START_Msk;
 
     configASSERT((pxTwi == TWIHS0)
               || (pxTwi == TWIHS1)
@@ -263,8 +271,10 @@ static bool TWI_bRead(
 
     /* Enabling IRQ starts xfer and begin waiting until xfer done */
     pxTwi->TWIHS_IER = TWIHS_IER_RXRDY_Msk;
-    xRet &= xSemaphoreTake(xTwiSema, pdMS_TO_TICKS(50));
+    xRet &= xSemaphoreTake(xTwiSema, pdMS_TO_TICKS(200));
     configASSERT(xRet == pdTRUE);
+
+    configASSERT((pxTwi->TWIHS_SR & TWI_ERR_MASK) == 0);
 
     return (bool)xRet;
 }
@@ -301,7 +311,7 @@ static void TWI_vReleaseSlave(Twihs *pxTwi)
     configASSERT((pxTwi == TWIHS0)
               || (pxTwi == TWIHS1)
               || (pxTwi == TWIHS2));
-    TWI_vWriteCR(TWIHS0, TWIHS_CR_CLEAR_Msk | TWIHS_CR_THRCLR_Msk);
+    TWI_vWriteCR(pxTwi, TWIHS_CR_CLEAR_Msk | TWIHS_CR_THRCLR_Msk);
 }
 
 /**
@@ -343,14 +353,13 @@ void TWIHS0_Handler(void)
 {
     BaseType_t      xRet;
     uint32_t        ulStatus;
-    const uint32_t  ulErrMask  = TWIHS_SR_ARBLST_Msk | TWIHS_SR_UNRE_Msk | TWIHS_SR_OVRE_Msk;
     BaseType_t      xTaskWoken = pdFALSE;
     static uint32_t ulCnt      = 0;
     static TWI_Msg *pxMsg      = NULL;
 
     ulStatus = TWIHS0->TWIHS_SR;
-    configASSERT((ulStatus & ulErrMask) == 0);
-    if ((ulStatus & ulErrMask) == 0)
+    configASSERT((ulStatus & TWI_ERR_MASK) == 0);
+    if ((ulStatus & TWI_ERR_MASK) == 0)
     {
         /* Get a new message if not in middle of xfer */
         if (pxMsg == NULL)
@@ -364,21 +373,34 @@ void TWIHS0_Handler(void)
             /* Should be in master write mode here */
             configASSERT((TWIHS0->TWIHS_MMR & TWIHS_MMR_MREAD) == 0);
 
-            TWI_vWriteTHR(TWIHS0, pxMsg->pucBuf[ulCnt++]);
-        
-            /* Perform some last byte special handling */
-            if (ulCnt >= pxMsg->ulLen)
+            if ((ulStatus & TWIHS_SR_NACK) == 0)
             {
-                /* Skip STOP if Repeated START */
-                if ((pxMsg->ulFlags & TWI_SR) != TWI_SR)
+                TWI_vWriteTHR(TWIHS0, pxMsg->pucBuf[ulCnt++]);
+
+                /* Perform some last byte special handling */
+                if (ulCnt >= pxMsg->ulLen)
                 {
-                    TWI_vWriteCR(TWIHS0, TWIHS_CR_STOP_Msk);
+                    /* Skip STOP if Repeated START */
+                    if ((pxMsg->ulFlags & TWI_SR) != TWI_SR)
+                    {
+                        TWI_vWriteCR(TWIHS0, TWIHS_CR_STOP_Msk);
+                    }
+
+                    TWIHS0_Handler_vEndXfer(&ulCnt, &xTaskWoken);
+
+                    /* Reset msg pointer for next xfer */
+                    pxMsg = NULL;
                 }
+            }
+            else
+            {
+                __BKPT();
+
+                TWI_vWriteCR(TWIHS0, TWIHS_CR_STOP_Msk);
+                TWIHS0_Handler_vEndXfer(&ulCnt, &xTaskWoken);
 
                 /* Reset msg pointer for next xfer */
                 pxMsg = NULL;
-
-                TWIHS0_Handler_vEndXfer(&ulCnt, &xTaskWoken);
             }
         }
 
@@ -412,6 +434,19 @@ void TWIHS0_Handler(void)
     {
         portYIELD();
     }
+}
+
+
+/**
+ * @brief   Flush transmit holding register.
+ *
+ * @param   pxTwi   Pointer to TWIHS instance.
+ *
+ * @retval  None.
+ */
+static void TWI_vFlushTHR(Twihs *pxTwi)
+{
+    TWI_vWriteCR(pxTwi, TWIHS_CR_THRCLR);
 }
 
 
