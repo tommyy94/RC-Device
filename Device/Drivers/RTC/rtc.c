@@ -13,6 +13,7 @@
 #include "rtc.h"
 #include "system.h"
 #include "ff.h"
+#include "logWriter.h"
 
 
 /* RTC must be read 2-3 times to ensure that two consecutive reads match */
@@ -303,7 +304,7 @@ void CalendarTask(void *arg)
         if (event == RTC_SET_TIME)
         {
             ret = xQueueReceive(xTsQ, &calendar, pdMS_TO_TICKS(10));
-            assert(ret != errQUEUE_EMPTY, __FILE__, __LINE__);
+            assert(ret != errQUEUE_EMPTY);
 
             /* Disable RTC second period IRQ to avoid race condition */
             rtc->RTC_IDR = RTC_IDR_SECDIS_Msk;
@@ -313,7 +314,7 @@ void CalendarTask(void *arg)
         if (event == RTC_RETURN_TIME)
         {
             ret = xQueueSend(xTsQ, &calendar, pdMS_TO_TICKS(10));
-            assert(ret != errQUEUE_FULL, __FILE__, __LINE__);
+            assert(ret != errQUEUE_FULL);
         }
     }
 }
@@ -392,7 +393,7 @@ DWORD get_fattime(void)
     uint32_t time;
     struct Calendar calendar;
     status = RTC_GetTime(&calendar);
-    assert(status == true, __FILE__, __LINE__);
+    assert(status == true);
 
     time = ((calendar.date.year - 1980) << 25) | (calendar.date.month << 21) | (calendar.date.day << 16)
           | (calendar.time.hour << 11) | (calendar.time.minutes << 5) | (calendar.time.seconds << 0);

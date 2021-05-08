@@ -38,6 +38,7 @@
 extern "C" {
 #endif
 
+#if 0
 #include <compiler.h>
 
 #ifndef USE_SIMPLE_ASSERT
@@ -85,9 +86,10 @@ extern "C" {
  * \param[in] file File name
  * \param[in] line Line number
  */
-void assert(const bool condition, const char *const file, const int line);
+//void assert(const bool condition, const char *const file, const int line);
 
 #ifdef __cplusplus
 }
 #endif
 #endif /* _ASSERT_H_INCLUDED */
+#endif

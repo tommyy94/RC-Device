@@ -175,7 +175,11 @@
               <file file_name="Device/Middleware/ASF/hal/utils/include/events.h" />
               <file file_name="Device/Middleware/ASF/hal/utils/include/parts.h" />
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils.h" />
-              <file file_name="Device/Middleware/ASF/hal/utils/include/utils_assert.h" />
+              <file file_name="Device/Middleware/ASF/hal/utils/include/utils_assert.h">
+                <configuration
+                  Name="GCC Debug"
+                  build_exclude_from_build="Yes" />
+              </file>
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils_decrement_macro.h" />
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils_event.h" />
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils_increment_macro.h" />
@@ -184,7 +188,11 @@
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils_repeat_macro.h" />
             </folder>
             <folder Name="src">
-              <file file_name="Device/Middleware/ASF/hal/utils/src/utils_assert.c" />
+              <file file_name="Device/Middleware/ASF/hal/utils/src/utils_assert.c">
+                <configuration
+                  Name="GCC Debug"
+                  build_exclude_from_build="Yes" />
+              </file>
               <file file_name="Device/Middleware/ASF/hal/utils/src/utils_event.c" />
               <file file_name="Device/Middleware/ASF/hal/utils/src/utils_list.c" />
               <file file_name="Device/Middleware/ASF/hal/utils/src/utils_syscalls.c" />
@@ -382,7 +390,7 @@
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
       build_output_directory="$(ProjectDir)/Documents/CrossWorks Projects/Executable_1/FreeRTOS"
-      c_user_include_directories="$(DeviceIncludePath);$(SolutionDir)/Device/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
+      c_user_include_directories="$(DeviceIncludePath);$(SolutionDir)/Device/Config;$(SolutionDir)/Device/Application/include;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
       debug_register_definition_file="$(DeviceRegisterDefinitionFile)"
       linker_memory_map_file="$(DeviceMemoryMapFile)"
       linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement_tcm.xml"

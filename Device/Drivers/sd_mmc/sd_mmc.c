@@ -40,6 +40,7 @@
 
 #include "sd_mmc_protocol.h"
 #include "sd_mmc.h"
+#include "logWriter.h"
 
 #if CONF_OS_SUPPORT
 #include <hal_rtos.h>
@@ -883,7 +884,7 @@ static bool sd_mmc_cmd13(void)
  */
 static bool sdio_cmd52(uint8_t rw_flag, uint8_t func_nb, uint32_t reg_addr, uint8_t rd_after_wr, uint8_t *io_data)
 {
-    ASSERT(io_data != NULL);
+    assert(io_data != NULL);
     if (!driver_send_cmd(sd_mmc_hal,
                          SDIO_CMD52_IO_RW_DIRECT,
                          ((uint32_t)*io_data << SDIO_CMD52_WR_DATA) | ((uint32_t)rw_flag << SDIO_CMD52_RW_FLAG)
@@ -914,8 +915,8 @@ static bool sdio_cmd52(uint8_t rw_flag, uint8_t func_nb, uint32_t reg_addr, uint
 static bool sdio_cmd53(uint8_t rw_flag, uint8_t func_nb, uint32_t reg_addr, uint8_t inc_addr, uint32_t size,
                        bool access_block)
 {
-    ASSERT(size != 0);
-    ASSERT(size <= 512);
+    assert(size != 0);
+    assert(size <= 512);
 
     return driver_adtc_start(
         sd_mmc_hal,
@@ -1065,7 +1066,7 @@ static sd_mmc_err_t sd_mmc_select_slot(uint8_t slot)
         }
     }
 
-    ASSERT(!(sd_mmc_slot_sel != slot && sd_mmc_nb_block_remaining != 0));
+    assert(!(sd_mmc_slot_sel != slot && sd_mmc_nb_block_remaining != 0));
 
     /* Initialize interface */
     sd_mmc_slot_sel = slot;
@@ -1444,7 +1445,7 @@ sd_mmc_err_t sd_mmc_init_read_blocks(uint8_t slot, uint32_t start, uint16_t nb_b
 
 sd_mmc_err_t sd_mmc_start_read_blocks(void *dest, uint16_t nb_block)
 {
-    ASSERT(sd_mmc_nb_block_remaining >= nb_block);
+    assert(sd_mmc_nb_block_remaining >= nb_block);
 
     if (!driver_start_read_blocks(sd_mmc_hal, dest, nb_block)) {
         sd_mmc_nb_block_remaining = 0;
@@ -1527,7 +1528,7 @@ sd_mmc_err_t sd_mmc_init_write_blocks(uint8_t slot, uint32_t start, uint16_t nb_
 
 sd_mmc_err_t sd_mmc_start_write_blocks(const void *src, uint16_t nb_block)
 {
-    ASSERT(sd_mmc_nb_block_remaining >= nb_block);
+    assert(sd_mmc_nb_block_remaining >= nb_block);
     if (!driver_start_write_blocks(sd_mmc_hal, src, nb_block)) {
         sd_mmc_nb_block_remaining = 0;
         return SD_MMC_ERR_COMM;

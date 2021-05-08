@@ -38,7 +38,7 @@ SemaphoreHandle_t           xTwiSema;
 
 void commTask(void *arg);
 void startupTask(void *arg);
-void journalTask(void *arg);
+void Journal_vErrorTask(void *arg);
 void CalendarTask(void *arg);
 
 
@@ -70,15 +70,15 @@ void startupTask(void *arg)
                        NULL,
                        TASK_COMM_STACK_PRIORITY,
                        &xCommTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+    assert(xRet == pdPASS);
     
-    xRet = xTaskCreate(journalTask,
+    xRet = xTaskCreate(Journal_vErrorTask,
                        "Journal",
                        TASK_JOURNAL_STACK_SIZE,
                        NULL,
                        TASK_JOURNAL_STACK_PRIORITY,
                        &xJournalTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+    assert(xRet == pdPASS);
     
     xRet = xTaskCreate(CalendarTask,
                        "Calendar",
@@ -86,7 +86,7 @@ void startupTask(void *arg)
                        NULL,
                        TASK_CALENDAR_STACK_PRIORITY,
                        &xCalendarTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+    assert(xRet == pdPASS);
     
     xRet = xTaskCreate(throttleTask,
                        "Throttle",
@@ -94,7 +94,7 @@ void startupTask(void *arg)
                        NULL,
                        TASK_THROTTLE_STACK_PRIORITY,
                        &xThrottleTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+    assert(xRet == pdPASS);
     
     /* startupTask can now be deleted */
     vTaskDelete(NULL);
@@ -113,7 +113,7 @@ void commTask(void *arg)
         (void)xQueueReceive(xJobQueue, &pxJob, portMAX_DELAY);
 
         /* Job should always have a subscriber so we can notify when job done */
-        assert(pxJob->xSubscriber != NULL, __FILE__, __LINE__);
+        assert(pxJob->xSubscriber != NULL);
 
         switch (pxJob->ulType)
         {
@@ -140,12 +140,12 @@ void commTask(void *arg)
                 if ((ucStatus & STATUS_MAX_RT(1)) != 0)
                 {
                     /* Max retransmits - payload not sent */
-                    xTaskNotify(xJournalTask, RF_ERROR, eSetBits);
+                    Journal_vWriteError(RF_ERROR);
                 }
                 break;
             default:
                 /* Something went wrong real bad */
-                xTaskNotify(xJournalTask, RF_BAD_JOB, eSetBits);
+                Journal_vWriteError(RF_BAD_JOB);
                 break;
         }
     }
@@ -161,6 +161,8 @@ void commTask(void *arg)
  */
 static void Sys_vInit(void)
 {
+    static AccelType_t xAccel;
+
     RTC_Init();
 
     DMA_Init();
@@ -171,6 +173,8 @@ static void Sys_vInit(void)
     MPU6050_vInit();
 
     PWM_Init();
+    
+    MPU6050_vAccelRead(&xAccel);
 }
 
 /**
@@ -183,16 +187,16 @@ static void Sys_vInit(void)
 static void Sys_vCreateEvents(void)
 {
     xTsQ = xQueueCreate(TS_QUEUE_SIZE, sizeof(struct Calendar));
-    assert(xTsQ != NULL, __FILE__, __LINE__);
+    assert(xTsQ != NULL);
 
     xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(xJobStruct *));
-    configASSERT(xJobQueue != NULL);
+    assert(xJobQueue != NULL);
     
     xTwiQueue = xQueueCreate(TWI_QUEUE_SIZE, sizeof(TWI_Msg *));
-    configASSERT(xTwiQueue != NULL);
+    assert(xTwiQueue != NULL);
 
     xTwiSema = xSemaphoreCreateBinary();
-    configASSERT(xTwiSema != NULL);
+    assert(xTwiSema != NULL);
 }
 
 
@@ -211,7 +215,7 @@ void RTOS_Init(void)
                                   NULL,
                                   TASK_STARTUP_STACK_PRIORITY,
                                   &xStartupTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+    assert(xRet == pdPASS);
 
     vTaskStartScheduler();
 

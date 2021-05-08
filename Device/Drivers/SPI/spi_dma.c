@@ -87,7 +87,7 @@ static void SPI0_DMA_InitTransaction(uint8_t *msg, uint8_t *recv, uint32_t len)
   Xdmac *dma = XDMAC;
   Spi *spi = SPI0;
 
-  assert(len > 0, __FILE__, __LINE__);
+  assert(len > 0);
 
   /* Clear pending interrupt requests */
   (void)dma->XdmacChid[DMA_SPI0_TX_CH].XDMAC_CIS;
@@ -206,8 +206,7 @@ void SPI0_DMA_TransmitMessage(uint8_t *msg, uint8_t *recv, uint32_t len)
   if (((evtBits & DMA_EVENT_SPI0_TX) == 0)
    || ((evtBits & DMA_EVENT_SPI0_RX) == 0))
   {
-    __BKPT();
-    xTaskNotify(xJournalTask, DMA_ERROR, eSetBits);
+    Journal_vWriteError(DMA_ERROR);
   }
 
   xEventGroupClearBits(dmaEvent, DMA_EVENT_SPI0_TX | DMA_EVENT_SPI0_RX);

@@ -29,7 +29,7 @@ void DMA_Init(void)
   DMA_Init_memcpy();
 
   dmaEvent = xEventGroupCreate();
-  assert(dmaEvent != NULL, __FILE__, __LINE__);
+  assert(dmaEvent != NULL);
   
   NVIC_ClearPendingIRQ(XDMAC_IRQn);
   NVIC_SetPriority(XDMAC_IRQn, XDMAC_IRQ_PRIO);

@@ -224,7 +224,7 @@ __STATIC_INLINE void nRF24L01_vConfigureChipEnable(void)
  */
 __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
 {
-    assert((ulState == LOW) || (ulState == HIGH), __FILE__, __LINE__);
+    assert((ulState == LOW) || (ulState == HIGH));
     Pio *pio = PIOD;
 
     /* Figure out whether to set or clear bit
@@ -393,7 +393,7 @@ void nRF24L01_vSendCommand(const uint8_t ucCommand)
  */
 void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *pucValue, uint32_t ulLength)
 {
-    assert((ulLength) <= ADDR_LEN_BYTES, __FILE__, __LINE__);
+    assert((ulLength) <= ADDR_LEN_BYTES);
 
     uint8_t uRxData[MAX_PAYLOAD_LEN] = { 0 };
     uint8_t uTxData[MAX_PAYLOAD_LEN] = { 0 };

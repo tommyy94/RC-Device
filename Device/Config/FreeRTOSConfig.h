@@ -8,6 +8,7 @@
 /* Important: put #includes here unless they are also meant for the assembler.
  */
 #include <stdint.h>
+#include "logWriter.h"
 void assert_triggered(const char *file, uint32_t line);
 #endif
 
@@ -300,16 +301,7 @@ to exclude the API function. */
 
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
-#define configASSERT(x)                                                         \
-	do																			\
-	{																			\
-		if ((x) == 0)															\
-		{																		\
-			taskDISABLE_INTERRUPTS();                                           \
-			for (;;)                                                            \
-			;                                                                   \
-		}																		\
-	} while(0)
+#define configASSERT(x) assert((x))
 
 
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS

@@ -1,6 +1,5 @@
 /* Device includes */
 #include <same70q21b.h>
-#include <utils_assert.h>
 #include <stdbool.h>
 
 /* RTOS includes */
@@ -102,13 +101,13 @@ void TWI_vXfer(TWI_Adapter *pxAdap, const uint32_t ulCount)
     bool bRet;
 
     /* Sanity check */
-    configASSERT((pxAdap->pxInst == TWIHS0)
+    assert((pxAdap->pxInst == TWIHS0)
               || (pxAdap->pxInst == TWIHS1)
               || (pxAdap->pxInst == TWIHS2));
 
     for (uint32_t ulK = 0; ulK < ulCount; ulK++)
     {
-        configASSERT((pxAdap->pxMsg[ulK].ulFlags == TWI_WRITE)
+        assert((pxAdap->pxMsg[ulK].ulFlags == TWI_WRITE)
                   || (pxAdap->pxMsg[ulK].ulFlags == TWI_READ));
 
         if (pxAdap->pxMsg[ulK].ulFlags == TWI_READ)
@@ -131,7 +130,7 @@ void TWI_vXfer(TWI_Adapter *pxAdap, const uint32_t ulCount)
         if (bRet == false)
         {
             TWI_vReleaseSlave(pxAdap->pxInst);
-            xTaskNotify(xJournalTask, I2C_ERROR, eSetBits);
+            Journal_vWriteError(I2C_ERROR);
         }
     }
 
@@ -168,9 +167,7 @@ static void TWI0_IO_vInit(void)
  */
 static void TWI_vWriteTHR(Twihs *pxTwi, const uint8_t ucByte)
 {
-    configASSERT((pxTwi == TWIHS0)
-              || (pxTwi == TWIHS1)
-              || (pxTwi == TWIHS2));
+    assert((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
     pxTwi->TWIHS_THR = TWIHS_THR_TXDATA(ucByte);
 }
 
@@ -184,9 +181,7 @@ static void TWI_vWriteTHR(Twihs *pxTwi, const uint8_t ucByte)
  */
 static uint8_t TWI_ucReadRHR(Twihs *pxTwi)
 {
-    configASSERT((pxTwi == TWIHS0)
-              || (pxTwi == TWIHS1)
-              || (pxTwi == TWIHS2));
+    assert((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
     return TWIHS_RHR_RXDATA(pxTwi->TWIHS_RHR);
 }
 
@@ -209,12 +204,10 @@ static bool TWI_bWrite(
 {
     BaseType_t xRet          = pdTRUE;
 
-    configASSERT((pxTwi == TWIHS0)
-              || (pxTwi == TWIHS1)
-              || (pxTwi == TWIHS2));
+    assert((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
 
     xRet &= xQueueSend(xTwiQueue, (void *)&pxMsg, NULL);
-    configASSERT(xRet == pdTRUE);
+    assert(xRet == pdTRUE);
 
     /* START bit sent automatically when writing */
     pxTwi->TWIHS_MMR &= ~TWIHS_MMR_MREAD_Msk;
@@ -225,9 +218,9 @@ static bool TWI_bWrite(
     /* Enabling IRQ starts xfer and begin waiting until xfer done */
     pxTwi->TWIHS_IER = TWIHS_IER_TXRDY_Msk;
     xRet &= xSemaphoreTake(xTwiSema, pdMS_TO_TICKS(50));
-    configASSERT(xRet == pdTRUE);
+    assert(xRet == pdTRUE);
 
-    configASSERT((pxTwi->TWIHS_SR & TWI_ERR_MASK) == 0);
+    assert((pxTwi->TWIHS_SR & TWI_ERR_MASK) == 0);
 
     return (bool)xRet;
 }
@@ -252,12 +245,10 @@ static bool TWI_bRead(
     BaseType_t  xRet         = pdTRUE;
     uint32_t    ulMask       = TWIHS_CR_START_Msk;
 
-    configASSERT((pxTwi == TWIHS0)
-              || (pxTwi == TWIHS1)
-              || (pxTwi == TWIHS2));
+    assert((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
 
     xRet &= xQueueSend(xTwiQueue, (void *)&pxMsg, NULL);
-    configASSERT(xRet == pdTRUE);
+    assert(xRet == pdTRUE);
 
     pxTwi->TWIHS_MMR |= TWIHS_MMR_DADR(ulTarget) | TWIHS_MMR_MREAD_Msk;
     __DMB();
@@ -272,9 +263,9 @@ static bool TWI_bRead(
     /* Enabling IRQ starts xfer and begin waiting until xfer done */
     pxTwi->TWIHS_IER = TWIHS_IER_RXRDY_Msk;
     xRet &= xSemaphoreTake(xTwiSema, pdMS_TO_TICKS(200));
-    configASSERT(xRet == pdTRUE);
+    assert(xRet == pdTRUE);
 
-    configASSERT((pxTwi->TWIHS_SR & TWI_ERR_MASK) == 0);
+    assert((pxTwi->TWIHS_SR & TWI_ERR_MASK) == 0);
 
     return (bool)xRet;
 }
@@ -291,9 +282,7 @@ static bool TWI_bRead(
  */
 static void TWI_vWriteCR(Twihs *pxTwi, uint32_t ulMask)
 {
-    configASSERT((pxTwi == TWIHS0)
-              || (pxTwi == TWIHS1)
-              || (pxTwi == TWIHS2));
+    assert((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
     pxTwi->TWIHS_CR = ulMask;
     __DMB();
 }
@@ -308,9 +297,7 @@ static void TWI_vWriteCR(Twihs *pxTwi, uint32_t ulMask)
  */
 static void TWI_vReleaseSlave(Twihs *pxTwi)
 {
-    configASSERT((pxTwi == TWIHS0)
-              || (pxTwi == TWIHS1)
-              || (pxTwi == TWIHS2));
+    assert((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
     TWI_vWriteCR(pxTwi, TWIHS_CR_CLEAR_Msk | TWIHS_CR_THRCLR_Msk);
 }
 
@@ -323,7 +310,7 @@ static void TWI_vReleaseSlave(Twihs *pxTwi)
  */
 static void TWI_vSetMasterMode(Twihs *pxTwi)
 {
-    configASSERT((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
+    assert((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
     TWI_vWriteCR(TWIHS0, TWIHS_CR_MSEN_Msk | TWIHS_CR_SVDIS_Msk);
 }
 
@@ -337,7 +324,7 @@ static void TWI_vSetMasterMode(Twihs *pxTwi)
  */
 static void TWI_vSetSlaveMode(Twihs *pxTwi)
 {
-    configASSERT((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
+    assert((pxTwi == TWIHS0) || (pxTwi == TWIHS1) || (pxTwi == TWIHS2));
     TWI_vWriteCR(TWIHS0, TWIHS_CR_MSDIS_Msk | TWIHS_CR_SVEN_Msk);
 }
 
@@ -358,20 +345,20 @@ void TWIHS0_Handler(void)
     static TWI_Msg *pxMsg      = NULL;
 
     ulStatus = TWIHS0->TWIHS_SR;
-    configASSERT((ulStatus & TWI_ERR_MASK) == 0);
+    assert((ulStatus & TWI_ERR_MASK) == 0);
     if ((ulStatus & TWI_ERR_MASK) == 0)
     {
         /* Get a new message if not in middle of xfer */
         if (pxMsg == NULL)
         {
             xRet = xQueueReceiveFromISR(xTwiQueue, (void *)&pxMsg, &xTaskWoken);
-            configASSERT(xRet == pdTRUE);
+            assert(xRet == pdTRUE);
         }
 
         if ((ulStatus & TWIHS_SR_TXRDY_Msk) && (TWIHS0->TWIHS_IMR & TWIHS_IMR_TXRDY_Msk))
         {
             /* Should be in master write mode here */
-            configASSERT((TWIHS0->TWIHS_MMR & TWIHS_MMR_MREAD) == 0);
+            assert((TWIHS0->TWIHS_MMR & TWIHS_MMR_MREAD) == 0);
 
             if ((ulStatus & TWIHS_SR_NACK) == 0)
             {
@@ -407,7 +394,7 @@ void TWIHS0_Handler(void)
         if ((ulStatus & TWIHS_SR_RXRDY_Msk) && (TWIHS0->TWIHS_IMR & TWIHS_IMR_RXRDY_Msk)) 
         {
             /* Should be in master read mode here */
-            configASSERT((TWIHS0->TWIHS_MMR & TWIHS_MMR_MREAD) != 0);
+            assert((TWIHS0->TWIHS_MMR & TWIHS_MMR_MREAD) != 0);
 
             if (ulCnt < (pxMsg->ulLen - 1))
             {
@@ -470,7 +457,7 @@ static void TWIHS0_Handler_vEndXfer(
 
     /* Signal subscriber */
     xRet = xSemaphoreGiveFromISR(xTwiSema, pxTaskWoken);
-    configASSERT(xRet == pdTRUE);
+    assert(xRet == pdTRUE);
 
     *pulCnt = 0;
 }

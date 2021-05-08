@@ -5,6 +5,9 @@
 #include <stdbool.h>
 
 
+#define assert(x)   Journal_vAssert(x, __FILE__, __LINE__)
+
+
 enum
 {
     SPI_ERROR           = (1u <<  0),
@@ -33,6 +36,7 @@ typedef struct Diagnostics
 
 void Journal_vErrorTask(void *arg);
 void Journal_vWriteError(uint32_t ulError);
+void Journal_vAssert(bool bEval, char *pucFile, uint32_t ulLine);
 
 
 #endif /* LOGWRITER_H_ */

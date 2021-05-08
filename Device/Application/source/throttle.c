@@ -98,7 +98,7 @@ void throttleTask(void *pvArg)
         xRet = xQueueSend(xJobQueue, &pxJob, NULL);
         if (xRet != pdTRUE)
         {
-            xTaskNotify(xJournalTask, JOB_QUEUE_FULL, eSetBits);
+            Journal_vWriteError(JOB_QUEUE_FULL);
         }
 
         (void)ulTaskNotifyTakeIndexed(3, pdTRUE, portMAX_DELAY);
@@ -226,8 +226,8 @@ static uint32_t ulScale(uint16_t usAxis)
  */
 static void vSetThrottle(const eThrottleChannel eCh, const uint32_t ulThrottle)
 {
-    assert(eCh < THROTTLE_CH_CNT, __FILE__, __LINE__);
-    assert(ulThrottle  <= DUTY_CYCLE_MAX, __FILE__, __LINE__);
+    assert(eCh < THROTTLE_CH_CNT);
+    assert(ulThrottle  <= DUTY_CYCLE_MAX);
     PWM_UpdateDutyCycle(xChMap.pxPwm[eCh], xChMap.eCh[eCh], ulThrottle);
 }
 
@@ -241,7 +241,7 @@ static void vSetThrottle(const eThrottleChannel eCh, const uint32_t ulThrottle)
  */
 static void vEnableThrottle(const eThrottleChannel eCh)
 {
-    assert(eCh < THROTTLE_CH_CNT, __FILE__, __LINE__);
+    assert(eCh < THROTTLE_CH_CNT);
     PWM_Enable(xChMap.pxPwm[eCh], xChMap.eCh[eCh]);
 }
 
@@ -255,7 +255,7 @@ static void vEnableThrottle(const eThrottleChannel eCh)
  */
 static void vDisableThrottle(const eThrottleChannel eCh)
 {
-    assert(eCh < THROTTLE_CH_CNT, __FILE__, __LINE__);
+    assert(eCh < THROTTLE_CH_CNT);
     PWM_Disable(xChMap.pxPwm[eCh], xChMap.eCh[eCh]);
 }
 
