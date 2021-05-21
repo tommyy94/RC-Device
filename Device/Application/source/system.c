@@ -161,7 +161,7 @@ void commTask(void *arg)
  */
 static void Sys_vInit(void)
 {
-    static AccelType_t xAccel;
+    static AxisStruct_t xAccel;
 
     RTC_Init();
 
