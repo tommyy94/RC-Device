@@ -74,7 +74,8 @@ void TWI0_vInit(void)
      */
     PMC->PMC_PCR |= PMC_PCR_CMD_Msk | PMC_PCR_PID(TWIHS0_CLOCK_ID) | PMC_PCR_EN_Msk;
 
-    TWIHS0->TWIHS_CWGR = TWIHS_CWGR_CKDIV(1) | TWIHS_CWGR_CHDIV(43) | TWIHS_CWGR_CLDIV(43);
+    //TWIHS0->TWIHS_CWGR = TWIHS_CWGR_CKDIV(1) | TWIHS_CWGR_CHDIV(43) | TWIHS_CWGR_CLDIV(43);
+    TWIHS0->TWIHS_CWGR = TWIHS_CWGR_CKDIV(1) | TWIHS_CWGR_CHDIV(153) | TWIHS_CWGR_CLDIV(153);
     TWI_vWriteCR(TWIHS0, TWIHS_CR_FIFOEN_Msk | TWIHS_CR_THRCLR_Msk);
 
     TWIHS0->TWIHS_IER = TWIHS_IER_ARBLST_Msk | TWIHS_IER_UNRE_Msk | TWIHS_IER_OVRE_Msk;
@@ -362,11 +363,13 @@ void TWIHS0_Handler(void)
 
             if ((ulStatus & TWIHS_SR_NACK) == 0)
             {
-                TWI_vWriteTHR(TWIHS0, pxMsg->pucBuf[ulCnt++]);
-
                 /* Perform some last byte special handling */
-                if (ulCnt >= pxMsg->ulLen)
+                if (ulCnt >= (pxMsg->ulLen - 1))
                 {
+                    TWIHS0->TWIHS_IDR = TWIHS_IDR_TXRDY_Msk;
+                    __DMB();
+                    TWI_vWriteTHR(TWIHS0, pxMsg->pucBuf[ulCnt++]);
+
                     /* Skip STOP if Repeated START */
                     if ((pxMsg->ulFlags & TWI_SR) != TWI_SR)
                     {
@@ -377,6 +380,10 @@ void TWIHS0_Handler(void)
 
                     /* Reset msg pointer for next xfer */
                     pxMsg = NULL;
+                }
+                else
+                {
+                    TWI_vWriteTHR(TWIHS0, pxMsg->pucBuf[ulCnt++]);
                 }
             }
             else
@@ -393,12 +400,17 @@ void TWIHS0_Handler(void)
 
         if ((ulStatus & TWIHS_SR_RXRDY_Msk) && (TWIHS0->TWIHS_IMR & TWIHS_IMR_RXRDY_Msk)) 
         {
+            TWIHS0->TWIHS_IDR = TWIHS_IDR_RXRDY_Msk;
+            __DMB();
+
             /* Should be in master read mode here */
             assert((TWIHS0->TWIHS_MMR & TWIHS_MMR_MREAD) != 0);
 
             if (ulCnt < (pxMsg->ulLen - 1))
             {
                 pxMsg->pucBuf[ulCnt++] = TWI_ucReadRHR(TWIHS0);
+                __DMB();
+                TWIHS0->TWIHS_IER = TWIHS_IER_RXRDY_Msk;
             }
             else /* Do last byte handling */
             {
