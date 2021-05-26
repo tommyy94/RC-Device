@@ -157,6 +157,8 @@ static void     MPU6050_vWriteReg(uint8_t ucReg, uint8_t ucVal);
 static bool     MPU6050_bSelfTest(MPU6050_Sensor_t eSensor);
 static void     MPU6050_vSensorRead(AxisStruct_t      *pxAxis,
                                     MPU6050_Sensor_t   eSensor);
+static bool     MPU6050_bValidateSelfTest(const uint8_t ucFt,
+                                          const uint8_t ucDev);
 
 
 /**
@@ -318,12 +320,8 @@ static void MPU6050_vSetSampleRate(void)
  */
 static bool MPU6050_bSelfTest(MPU6050_Sensor_t eSensor)
 {
-    AxisStruct_t    xDev;
-    AxisStruct_t    xSTR;
-    AxisStruct_t    xFT;
-    int32_t         lTest;
-    uint32_t        ulReg;
-    uint32_t        ulCalib;
+    AxisStruct_t    xDev = { 0 };
+    AxisStruct_t    xFT  = { 0 };
     bool            bPass = true;
     
     /* Self-test enable mask is the same for both
@@ -333,33 +331,53 @@ static bool MPU6050_bSelfTest(MPU6050_Sensor_t eSensor)
                                  MPU6050_ACCEL_CONFIG_YA_ST |
                                  MPU6050_ACCEL_CONFIG_ZA_ST;
 
+    uint32_t const pulConfTbl[SENSOR_COUNT][2] =
+    {
+        { MPU6050_ACCEL_CONFIG, MPU6050_ACCEL_CONFIG_AFS_SEL_8G },
+        { NULL,                 NULL                            },
+        { MPU6050_GYRO_CONFIG,  MPU6050_GYRO_CONFIG_FS_SEL_2000 }
+    };
+
     assert((eSensor == SENSOR_ACCEL) || (eSensor == SENSOR_GYRO));
 
-    if (eSensor == SENSOR_ACCEL)
-    {
-        ulReg   = MPU6050_ACCEL_CONFIG;
-        ulCalib = MPU6050_ACCEL_CONFIG_AFS_SEL_8G;
-    }
-    else
-    {
-        ulReg   = MPU6050_GYRO_CONFIG;
-        ulCalib = MPU6050_GYRO_CONFIG_FS_SEL_2000;
-    }
-    MPU6050_vWriteReg(ulReg, ulTestMask | ulCalib);
+    MPU6050_vWriteReg(pulConfTbl[eSensor][0], ulTestMask | pulConfTbl[eSensor][1]);
 
     xFT.ucX = MPU6050_ulObtainFactoryTrim(eSensor, X_AXIS);
     xFT.ucY = MPU6050_ulObtainFactoryTrim(eSensor, Y_AXIS);
     xFT.ucZ = MPU6050_ulObtainFactoryTrim(eSensor, Z_AXIS);
 
     /* Disable self-test mode and read again */
-    MPU6050_vWriteReg(ulReg, ulCalib);
+    MPU6050_vWriteReg(pulConfTbl[eSensor][0], pulConfTbl[eSensor][1]);
     MPU6050_vSensorRead(&xDev, eSensor);
 
     /* Change from Factory Trim of the Self-Test Response (%) */
-    xSTR.ucX = xFT.ucX - xDev.ucX;
-    xSTR.ucY = xFT.ucY - xDev.ucY;
-    xSTR.ucZ = xFT.ucZ - xDev.ucZ;
-    lTest = (xSTR.ucX - xFT.ucX) / xFT.ucX;
+    bPass &= MPU6050_bValidateSelfTest(xFT.ucX, xDev.ucX);
+    bPass &= MPU6050_bValidateSelfTest(xFT.ucY, xDev.ucY);
+    bPass &= MPU6050_bValidateSelfTest(xFT.ucZ, xDev.ucZ);
+
+    return bPass;
+}
+
+
+/**
+ * @brief   Calculate Change from Factory Trim
+ *          of the Self-Test Response (%).
+ *
+ * @param   ucFt    Factory Trim value.
+ *
+ * @param   ucDev   Device sensor value.
+ *
+ * @retval  bPass   Test PASS/FAIL.
+ */
+static bool MPU6050_bValidateSelfTest(const uint8_t ucFt,
+                                      const uint8_t ucDev)
+{
+    int32_t lTest;
+    int32_t lStr;
+    bool    bPass = true;
+    
+    lStr  = ucFt - ucDev;
+    lTest = (lStr - ucFt) / ucFt;
     if ((lTest >= SELF_TEST_RESPONSE_MAX)
      || (lTest <= SELF_TEST_RESPONSE_MIN))
     {
@@ -382,27 +400,22 @@ static bool MPU6050_bSelfTest(MPU6050_Sensor_t eSensor)
 static void MPU6050_vSensorRead(AxisStruct_t    *pxAxis,
                                 MPU6050_Sensor_t eSensor)
 {
-    uint8_t  pucTbl[] =
+    uint8_t const pucTbl[] =
     {
         MPU6050_ACCEL_XOUT_H,
         MPU6050_GYRO_XOUT_H,
         MPU6050_TEMP_OUT_H
     };
-    uint8_t  pucRecv[6] = { 0x00 };
-    uint32_t ulLen      = 6;
+    uint32_t const pulLenTbl[SENSOR_COUNT] = { 6, 2, 6 };
+    uint8_t pucRecv[6]                     = { 0x00 };
 
     assert(eSensor < SENSOR_COUNT);
 
-    if (eSensor == SENSOR_TEMP)
-    {
-        ulLen = 2;
-    }
-
-    xTwiAdap.pxMsg[0].pucBuf    = &pucTbl[eSensor];
+    xTwiAdap.pxMsg[0].pucBuf    = (uint8_t *)&pucTbl[eSensor];
     xTwiAdap.pxMsg[0].ulLen     = 1;
     xTwiAdap.pxMsg[0].ulFlags   = TWI_WRITE;
     xTwiAdap.pxMsg[1].pucBuf    = pucRecv;
-    xTwiAdap.pxMsg[1].ulLen     = ulLen;
+    xTwiAdap.pxMsg[1].ulLen     = pulLenTbl[eSensor];
     xTwiAdap.pxMsg[1].ulFlags   = TWI_READ;
     TWI_vXfer(&xTwiAdap, 2);
 
@@ -419,7 +432,6 @@ static void MPU6050_vSensorRead(AxisStruct_t    *pxAxis,
  *
  * @retval  return  Factory Trimmed value.
  */
-
 static uint32_t MPU6050_ulObtainFactoryTrim(MPU6050_Sensor_t eSensor,
                                             Axis_t           eAxis)
 {
@@ -430,9 +442,10 @@ static uint32_t MPU6050_ulObtainFactoryTrim(MPU6050_Sensor_t eSensor,
     {
         MPU6050_SELF_TEST_X_XA_TEST, 0, MPU6050_SELF_TEST_X_XG_TEST
     };
-    const CalculateFactoryTrim_t plTrimTbl[] =
+    const CalculateFactoryTrim_t plTrimTbl[SENSOR_COUNT] =
     {
         &MPU6050_lCalculateAccelFactoryTrim,
+        NULL,
         &MPU6050_lCalculateGyroFactoryTrim
     };
 
@@ -445,7 +458,10 @@ static uint32_t MPU6050_ulObtainFactoryTrim(MPU6050_Sensor_t eSensor,
     ulAxisTest &= pucMaskTbl[eSensor];
     if (ulAxisTest > 0)
     {
-        ulTrim = plTrimTbl[eSensor](ulAxisTest, eAxis);
+        if (plTrimTbl[eSensor] != NULL)
+        {
+            ulTrim = plTrimTbl[eSensor](ulAxisTest, eAxis);
+        }
     }
 
     return ulTrim;
@@ -489,15 +505,15 @@ static int32_t MPU6050_lCalculateAccelFactoryTrim(const uint32_t ulFt,
 static int32_t MPU6050_lCalculateGyroFactoryTrim(const uint32_t ulFt,
                                                  const Axis_t   eAxis)
 {
-    uint32_t ulTrim = 0;
+    int32_t lTrim = 0;
     if (ulFt > 0)
     {
-        ulTrim = 3275 * pow(1.046, ulFt - 1);
+        lTrim = 3275 * pow(1.046, ulFt - 1);
     }
     if (eAxis == Y_AXIS)
     {
-        ulTrim = -ulTrim;
+        lTrim = -lTrim;
     }
 
-    return ulTrim;
+    return lTrim;
 }
