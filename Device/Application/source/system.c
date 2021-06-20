@@ -131,6 +131,7 @@ void commTask(void *pvArg)
         {
             case RF_SEND:
                 nRF24L01_vSendPayload((const char *)pxJob->pucData, pxJob->ulLen);
+                xTaskNotifyGiveIndexed(pxJob->xSubscriber, 4);
                 break;
             case RF_READ:
                 pxJob->ulLen = nRF24L01_ulReadPayload((const char *)pxJob->pucData);
