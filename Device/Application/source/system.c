@@ -57,9 +57,9 @@ static void Sys_vCreateEvents(void);
  *
  * @retval  None
  */
-void startupTask(void *arg)
+void startupTask(void *pvArg)
 {
-    (void)arg;
+    (void)pvArg;
     BaseType_t xRet;
 
     /* Must first create events so they can be called in Sys_vInit() */
@@ -173,20 +173,20 @@ void commTask(void *pvArg)
  */
 static void Sys_vInit(void)
 {
-    static AxisStruct_t xAccel;
-
-    RTC_Init();
-
+    /* Initialize communications */
     DMA_Init();
     SPI0_Init();
     nRF24L01_vInit();
 
+    /* Initialize sensors */
     TWI0_vInit();
     MPU6050_vInit();
 
+    /* Initialize motor control */
     PWM_Init();
-    
-    MPU6050_vAccelRead(&xAccel);
+
+    /* Start RTC last so it won't notify not-existent task */
+    RTC_Init();
 }
 
 /**
