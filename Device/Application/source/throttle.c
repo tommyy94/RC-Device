@@ -189,15 +189,15 @@ static uint32_t ulSetSteer(const uint32_t ulThrottle, const uint16_t usSteer)
  *                          |
  *      What we get:        |   What we want:
  *                          |
- *            y=2^16        |               y=2^16
+ *            y=2^16-1      |               y=2^8-1
  *          A               |             A
  *          |               |             |
- *  x=0     |      x=2^16   |   x=2^16    |      x=2^16
+ *  x=0     |    x=2^16-1   |   x=2^8-1   |      x=2^8-1
  *     <----+---->          |        <----+---->
- *          |               |             |x,y=0
- *          |               |             |
+ *          |               |             |\
+ *          |               |             | x,y=0
  *          v               |             v
- *            y=0           |               y=2^16
+ *            y=0           |               y=2^8-1
  *                          |
  *
  * @param   usAxis  Axis to scale.
@@ -261,7 +261,7 @@ static void vDisableThrottle(const eThrottleChannel eCh)
 
 
 /**
- * @brief   Update 
+ * @brief   Update motor throttle.
  *
  * @param   usJoyPos        Joystick position.
  *
