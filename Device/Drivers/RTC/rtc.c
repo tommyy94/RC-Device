@@ -66,15 +66,15 @@ static bool     RTC_GetTime(Calendar *calendar);
 void RTC_Init(void)
 {
     /* Stop RTC */
-    RTC->RTC_CR |= RTC_CR_UPDCAL_Msk | RTC_CR_UPDTIM_Msk;
+    RTC->RTC_IDR = RTC_IDR_TDERRDIS_Msk | RTC_IDR_CALDIS_Msk
+                 | RTC_IDR_TIMDIS_Msk | RTC_IDR_ALRDIS_Msk | RTC_IDR_ACKDIS_Msk;
+    RTC->RTC_CR  |= RTC_CR_UPDCAL_Msk | RTC_CR_UPDTIM_Msk;
 
     RTC->RTC_SCCR = RTC_SCCR_TDERRCLR_Msk | RTC_SCCR_CALCLR_Msk
                   | RTC_SCCR_TIMCLR_Msk   | RTC_SCCR_SECCLR_Msk
                   | RTC_SCCR_ALRCLR_Msk   |  RTC_SCCR_ACKCLR_Msk;
 
     /* Enable second periodic interrupt */
-    RTC->RTC_IDR = RTC_IDR_TDERRDIS_Msk | RTC_IDR_CALDIS_Msk
-                 | RTC_IDR_TIMDIS_Msk | RTC_IDR_ALRDIS_Msk | RTC_IDR_ACKDIS_Msk;
     RTC->RTC_IER = RTC_IER_SECEN_Msk;
 
     NVIC_ClearPendingIRQ(RTC_IRQn);
