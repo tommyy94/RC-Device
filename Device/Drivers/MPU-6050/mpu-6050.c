@@ -292,6 +292,44 @@ void MPU6050_vGyroRead(AxisStruct_t *pxGyro)
 
 
 /**
+ * @brief   Read MPU6050 gyroscope and accelerometer
+ *          measurements.
+ *
+ * @param   pxAccel   Pointer to accelerometer struct.
+ *
+ * @param   pxGyro    Pointer to gyroscope struct.
+ *
+ * @retval  None.
+ */
+void MPU6050_vSensorsRead(AxisStruct_t *pxAccel,
+                          AxisStruct_t *pxGyro)
+{
+    uint8_t ucReg     = MPU6050_ACCEL_XOUT_H;
+    uint8_t ucRecv[8] = { 0x00 };
+
+    xTwiAdap.pxMsg[0].pucBuf    = &ucReg;
+    xTwiAdap.pxMsg[0].ulLen     = 1;
+    xTwiAdap.pxMsg[0].ulFlags   = TWI_WRITE;
+    xTwiAdap.pxMsg[1].pucBuf    = ucRecv;
+    xTwiAdap.pxMsg[1].ulLen     = 14;
+    xTwiAdap.pxMsg[1].ulFlags   = TWI_READ;
+    TWI_vXfer(&xTwiAdap, 2);
+
+    /* Store accelerometer measurements to it's struct */
+    pxAccel->ucX = (ucRecv[0]  << 4) | ucRecv[1];
+    pxAccel->ucY = (ucRecv[2]  << 4) | ucRecv[3];
+    pxAccel->ucZ = (ucRecv[4]  << 4) | ucRecv[5];
+
+    /* Discard garbage 2 garbage bytes (temperature) */
+
+    /* Store gyroscope measurements to respective struct */
+    pxGyro->ucX  = (ucRecv[8]  << 4) | ucRecv[9];
+    pxGyro->ucY  = (ucRecv[10] << 4) | ucRecv[11];
+    pxGyro->ucZ  = (ucRecv[12] << 4) | ucRecv[13];
+}
+
+
+/**
  * @brief   Set sampling rate.
  *
  * @param   None.
