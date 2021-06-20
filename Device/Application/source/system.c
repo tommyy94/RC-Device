@@ -24,22 +24,25 @@
 #include "queue.h"
 
 
-TaskHandle_t		    xStartupTask;
-TaskHandle_t		    xCommTask;
-TaskHandle_t		    xJournalTask;
-TaskHandle_t		    xCalendarTask;
-TaskHandle_t		    xThrottleTask;
+TaskHandle_t        xStartupTask;
+TaskHandle_t        xCommTask;
+TaskHandle_t        xJournalTask;
+TaskHandle_t        xCalendarTask;
+TaskHandle_t        xThrottleTask;
+TaskHandle_t        xGyroTask;
 
-QueueHandle_t		    xTsQ;
-QueueHandle_t               xJobQueue;
-QueueHandle_t               xTwiQueue;
-SemaphoreHandle_t           xTwiSema;
+QueueHandle_t       xTsQ;
+QueueHandle_t       xJobQueue;
+QueueHandle_t       xTwiQueue;
+SemaphoreHandle_t   xTwiSema;
 
 
-void commTask(void *arg);
-void startupTask(void *arg);
-void Journal_vErrorTask(void *arg);
-void CalendarTask(void *arg);
+extern void commTask(void *pvArg);
+extern void startupTask(void *pvArg);
+extern void Journal_vErrorTask(void *pvArg);
+extern void CalendarTask(void *pvArg);
+extern void throttleTask(void *pvArg);
+extern void vGyroTask(void *pvArg);
 
 
 static void Sys_vInit(void);
@@ -96,14 +99,22 @@ void startupTask(void *arg)
                        &xThrottleTask);
     assert(xRet == pdPASS);
     
+    xRet = xTaskCreate(vGyroTask,
+                       "Gyro",
+                       TASK_GYRO_STACK_SIZE,
+                       NULL,
+                       TASK_GYRO_STACK_PRIORITY,
+                       &xGyroTask);
+    assert(xRet == pdPASS);
+    
     /* startupTask can now be deleted */
     vTaskDelete(NULL);
 }
 
 
-void commTask(void *arg)
+void commTask(void *pvArg)
 {
-    (void)arg;
+    (void)pvArg;
     uint8_t     ucStatus;
     xJobStruct *pxJob = NULL;
 

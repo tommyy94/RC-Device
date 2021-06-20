@@ -12,19 +12,22 @@ extern "C" {
 
 
 #define TASK_STARTUP_STACK_SIZE			(8192/ sizeof(portSTACK_TYPE))
-#define TASK_STARTUP_STACK_PRIORITY		(tskIDLE_PRIORITY + 6)
+#define TASK_STARTUP_STACK_PRIORITY		(tskIDLE_PRIORITY + 10)
 
 #define TASK_COMM_STACK_SIZE			(4096 / sizeof(portSTACK_TYPE))
 #define TASK_COMM_STACK_PRIORITY		(tskIDLE_PRIORITY + 2)
 
 #define TASK_JOURNAL_STACK_SIZE			(4096 / sizeof(portSTACK_TYPE))
-#define TASK_JOURNAL_STACK_PRIORITY		(tskIDLE_PRIORITY + 3)
+#define TASK_JOURNAL_STACK_PRIORITY		(tskIDLE_PRIORITY + 6)
 
 #define TASK_CALENDAR_STACK_SIZE		(2048 / sizeof(portSTACK_TYPE))
-#define TASK_CALENDAR_STACK_PRIORITY            (tskIDLE_PRIORITY + 4)
+#define TASK_CALENDAR_STACK_PRIORITY            (tskIDLE_PRIORITY + 7)
 
 #define TASK_THROTTLE_STACK_SIZE		(2048 / sizeof(portSTACK_TYPE))
-#define TASK_THROTTLE_STACK_PRIORITY            (tskIDLE_PRIORITY + 5)
+#define TASK_THROTTLE_STACK_PRIORITY            (tskIDLE_PRIORITY + 8)
+
+#define TASK_GYRO_STACK_SIZE                    (192  / sizeof(portSTACK_TYPE))
+#define TASK_GYRO_STACK_PRIORITY                (tskIDLE_PRIORITY + 5)
 
 /* Interrupt priorities
  * Remark: Lower equals higher priority 
