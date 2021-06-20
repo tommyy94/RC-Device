@@ -309,12 +309,14 @@
         <file file_name="Device/Application/include/logWriter.h" />
         <file file_name="Device/Application/include/throttle.h" />
         <file file_name="Device/Application/include/system.h" />
+        <file file_name="Device/Application/include/gyro.h" />
       </folder>
       <folder Name="source">
         <file file_name="Device/Application/source/logWriter.c" />
         <file file_name="Device/Application/source/main.c" />
         <file file_name="Device/Application/source/system.c" />
         <file file_name="Device/Application/source/throttle.c" />
+        <file file_name="Device/Application/source/gyro.c" />
       </folder>
       <folder Name="bloat">
         <file file_name="Device/Application/bloat/atmel_start.c" />

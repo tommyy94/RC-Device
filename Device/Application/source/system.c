@@ -6,6 +6,7 @@
 #include "system.h"
 #include "logWriter.h"
 #include "throttle.h"
+#include "gyro.h"
 
 /* Driver includes */
 #include "spi.h"
