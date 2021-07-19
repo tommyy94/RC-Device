@@ -16,7 +16,7 @@
       arm_keep_assembly="Yes"
       arm_linker_heap_size="4096"
       arm_linker_process_stack_size="256"
-      arm_linker_stack_size="4096"
+      arm_linker_stack_size="40960"
       arm_simulator_memory_simulation_filename="$(ProjectDir)/Device/SAM_E_SimulatorMemory_linux_x64.so"
       arm_simulator_memory_simulation_parameter="SAM E;FLASH,0x00400000,0x00200000,ROM;RAM,0x20400000,0x00060000,RAM"
       arm_target_debug_interface_type="ADIv5"
