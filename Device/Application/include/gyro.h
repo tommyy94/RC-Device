@@ -1,3 +1,3 @@
 #pragma once
 
-void vGyroTask(void *pvArg);
+void gyro_vTask(void *pvArg);

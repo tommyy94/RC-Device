@@ -5,6 +5,7 @@
 
 
 extern QueueHandle_t    xJobQueue;
+extern QueueHandle_t    xGyroQueue;
 extern TaskHandle_t     xGyroTask;
 
 
@@ -20,31 +21,37 @@ void gyro_vTask(void *pvArg)
 {
     (void)pvArg;
     BaseType_t     xRet;
+
     AxisStruct_t   xAccel;
     AxisStruct_t   xGyro;
-    xJobStruct     xJob;
-    xJobStruct    *pxJob = &xJob;
+
+    RF_Struct_t    xRf;
+    RF_Struct_t   *pxRf= NULL;
 
     while (1)
     {
-        MPU6050_vSensorsRead(&xAccel, &xGyro);
-        pxJob->pucData[0] = xAccel.ucX;
-        pxJob->pucData[1] = xAccel.ucY;
-        pxJob->pucData[2] = xAccel.ucZ;
-        pxJob->pucData[3] = xAccel.ucX;
-        pxJob->pucData[4] = xAccel.ucY;
-        pxJob->pucData[5] = xAccel.ucZ;
-
-        /* Order a write job */
-        pxJob->ulLen        = 6;
-        pxJob->ulType       = RF_SEND;
-        pxJob->xSubscriber  = xGyroTask;
-        xRet = xQueueSend(xJobQueue, &pxJob, NULL);
+        xRet = xQueueReceive(xGyroQueue, &pxRf, portMAX_DELAY);
         if (xRet != pdTRUE)
         {
             Journal_vWriteError(JOB_QUEUE_FULL);
         }
 
-        (void)ulTaskNotifyTakeIndexed(4, pdTRUE, portMAX_DELAY);
+        /* Read sensor and reorganize measurements */
+        MPU6050_vSensorsRead(&xAccel, &xGyro);
+        xRf.pucParam[0] = xAccel.ucX;
+        xRf.pucParam[1] = xAccel.ucY;
+        xRf.pucParam[2] = xAccel.ucZ;
+        xRf.pucParam[3] = xAccel.ucX;
+        xRf.pucParam[4] = xAccel.ucY;
+        xRf.pucParam[5] = xAccel.ucZ;
+
+        /* Pass message forward as a response */
+        xRf.ucCmd = RF_RESP;
+        pxRf = &xRf;
+        xRet = xQueueSend(xJobQueue, &pxRf, NULL);
+        if (xRet != pdTRUE)
+        {
+            Journal_vWriteError(JOB_QUEUE_FULL);
+        }
     }
 }

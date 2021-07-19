@@ -35,8 +35,8 @@
 #define TWIHS0_IRQ_PRIO     (7u)
 
 #define JOB_QUEUE_SIZE      (32u)
-
-enum
+#define THROTTLE_QUEUE_SIZE (32u)
+#define GYRO_QUEUE_SIZE     (32u)
 
 extern TaskHandle_t         xStartupTask;
 extern TaskHandle_t         xCommTask;
