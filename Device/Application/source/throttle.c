@@ -54,6 +54,7 @@ static xChannelMap xChMap =
 };
 
 extern QueueHandle_t          xJobQueue;
+extern QueueHandle_t          xThrottleQueue;
 extern TaskHandle_t           xJournalTask;
 extern TaskHandle_t           xThrottleTask;
 
@@ -61,7 +62,7 @@ extern TaskHandle_t           xThrottleTask;
 static void     vThrottle(xAxisStruct xAxis);
 static uint32_t ulScale(uint16_t usAxis);
 static void     vEnableThrottle(const eThrottleChannel eCh);
-static void     vDisableThrottle(const eThrottleChannel eChe);
+static void     vDisableThrottle(const eThrottleChannel eCh);
 static bool     bCheckDeadZone(const uint16_t usAxis);
 static uint32_t ulSetSteer(const uint32_t ulThrottle,
                            const uint16_t usSteer);
@@ -81,33 +82,29 @@ static void     vUpdateThrottle(const uint16_t usJoyPos,
 void throttle_vTask(void *pvArg)
 {
     (void)pvArg;
-    BaseType_t  xRet;    
-    xAxisStruct xAxis;
-    xJobStruct  xJob;
-    xJobStruct *pxJob = &xJob;
+    BaseType_t   xRet;
+    xAxisStruct  xAxis;
+    RF_Struct_t *pxRf;
 
     while (1)
     {
-        /* Wait for payload */
-        (void)ulTaskNotifyTakeIndexed(2, pdTRUE, portMAX_DELAY);
-        /* TODO: Check for timeout */
-
-        /* Payload received, order read job */
-        pxJob->ulType       = RF_READ;
-        pxJob->xSubscriber  = xThrottleTask;
-        xRet = xQueueSend(xJobQueue, &pxJob, NULL);
-        if (xRet != pdTRUE)
+        xRet = xQueueReceive(xThrottleQueue, &pxRf, portMAX_DELAY);
+        assert(xRet == pdTRUE);
+        if (xRet == pdTRUE)
         {
-            Journal_vWriteError(JOB_QUEUE_FULL);
+            /* First element is nRF24L01 status byte, ignore it */
+            xAxis.usX = (pxRf->pucParam[2] << 8) | pxRf->pucParam[1];
+            xAxis.usY = (pxRf->pucParam[4] << 8) | pxRf->pucParam[3];
+
+            vThrottle(xAxis);
         }
-
-        (void)ulTaskNotifyTakeIndexed(3, pdTRUE, portMAX_DELAY);
-
-        /* First element is nRF24L01 status byte, ignore it */
-        xAxis.usX = (pxJob->pucData[2] << 8) | pxJob->pucData[1];
-        xAxis.usY = (pxJob->pucData[4] << 8) | pxJob->pucData[3];
-
-        vThrottle(xAxis);
+        else
+        {
+            for (eThrottleChannel eCh = THROTTLE_CH_0; eCh < THROTTLE_CH_CNT; eCh++)
+            {
+                vDisableThrottle(eCh);
+            }
+        }
     }
 }
 
