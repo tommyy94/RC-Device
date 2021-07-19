@@ -6,6 +6,8 @@
 #include "system.h"
 #include "logWriter.h"
 #include "throttle.h"
+#include "gyro.h"
+#include "com.h"
 
 /* Driver includes */
 #include "spi.h"
@@ -16,6 +18,7 @@
 #include "dma.h"
 #include "nRF24L01.h"
 #include "twi.h"
+#include "mpu-6050.h"
 
 /* RTOS includes */
 #include "FreeRTOS.h"
@@ -23,26 +26,30 @@
 #include "queue.h"
 
 
-TaskHandle_t		    xStartupTask;
-TaskHandle_t		    xCommTask;
-TaskHandle_t		    xJournalTask;
-TaskHandle_t		    xCalendarTask;
-TaskHandle_t		    xThrottleTask;
+TaskHandle_t        xStartupTask;
+TaskHandle_t        xCommTask;
+TaskHandle_t        xJournalTask;
+TaskHandle_t        xRtcTask;
+TaskHandle_t        xThrottleTask;
+TaskHandle_t        xGyroTask;
 
-QueueHandle_t		    xTsQ;
-QueueHandle_t               xJobQueue;
-QueueHandle_t               xTwiQueue;
-SemaphoreHandle_t           xTwiSema;
-
-
-void commTask(void *arg);
-void startupTask(void *arg);
-void journalTask(void *arg);
-void CalendarTask(void *arg);
+QueueHandle_t       xTsQ;
+QueueHandle_t       xJobQueue;
+QueueHandle_t       xThrottleQueue;
+QueueHandle_t       xGyroQueue;
+QueueHandle_t       xTwiQueue;
+SemaphoreHandle_t   xTwiSema;
 
 
-static void Sys_vInit(void);
-static void Sys_vCreateEvents(void);
+extern void com_vTask(void *pvArg);
+extern void journal_vErrorTask(void *pvArg);
+extern void RTC_vTask(void *pvArg);
+extern void throttle_vTask(void *pvArg);
+extern void gyro_vTask(void *pvArg);
+
+static void sys_vStartupTask(void *pvArg);
+static void sys_vInitHardware(void);
+static void sys_vCreateEvents(void);
 
 
 /**
@@ -52,102 +59,59 @@ static void Sys_vCreateEvents(void);
  *
  * @retval  None
  */
-void startupTask(void *arg)
+static void sys_vStartupTask(void *pvArg)
 {
-    (void)arg;
+    (void)pvArg;
     BaseType_t xRet;
 
     /* Must first create events so they can be called in Sys_vInit() */
-    Sys_vCreateEvents();
+    sys_vCreateEvents();
 
-    /* Must call Sys_vInit() as some drivers call the OS API */
-    Sys_vInit();
-
-    xRet = xTaskCreate(commTask,
-                       "Comm",
+    xRet = xTaskCreate(com_vTask,
+                       "Com",
                        TASK_COMM_STACK_SIZE,
                        NULL,
                        TASK_COMM_STACK_PRIORITY,
                        &xCommTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+    assert(xRet == pdPASS);
     
-    xRet = xTaskCreate(journalTask,
+    xRet = xTaskCreate(journal_vErrorTask,
                        "Journal",
                        TASK_JOURNAL_STACK_SIZE,
                        NULL,
                        TASK_JOURNAL_STACK_PRIORITY,
                        &xJournalTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+    assert(xRet == pdPASS);
     
-    xRet = xTaskCreate(CalendarTask,
-                       "Calendar",
-                       TASK_CALENDAR_STACK_SIZE,
+    xRet = xTaskCreate(RTC_vTask,
+                       "RTC",
+                       TASK_RTC_STACK_SIZE,
                        NULL,
-                       TASK_CALENDAR_STACK_PRIORITY,
-                       &xCalendarTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+                       TASK_RTC_STACK_PRIORITY,
+                       &xRtcTask);
+    assert(xRet == pdPASS);
     
-    xRet = xTaskCreate(throttleTask,
+    xRet = xTaskCreate(throttle_vTask,
                        "Throttle",
                        TASK_THROTTLE_STACK_SIZE,
                        NULL,
                        TASK_THROTTLE_STACK_PRIORITY,
                        &xThrottleTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+    assert(xRet == pdPASS);
     
-    /* startupTask can now be deleted */
+    xRet = xTaskCreate(gyro_vTask,
+                       "Gyro",
+                       TASK_GYRO_STACK_SIZE,
+                       NULL,
+                       TASK_GYRO_STACK_PRIORITY,
+                       &xGyroTask);
+    assert(xRet == pdPASS);
+
+    /* Must call Sys_vInitHardware() as some drivers call the OS API */
+    sys_vInitHardware();
+    
+    /* sys_vStartupTask can now be deleted */
     vTaskDelete(NULL);
-}
-
-
-void commTask(void *arg)
-{
-    (void)arg;
-    uint8_t     ucStatus;
-    xJobStruct *pxJob = NULL;
-
-    while (1)
-    {
-        /* Dequeue new item from the job queue */
-        (void)xQueueReceive(xJobQueue, &pxJob, portMAX_DELAY);
-
-        /* Job should always have a subscriber so we can notify when job done */
-        assert(pxJob->xSubscriber != NULL, __FILE__, __LINE__);
-
-        switch (pxJob->ulType)
-        {
-            case RF_SEND:
-                nRF24L01_vSendPayload((const char *)pxJob->pucData, pxJob->ulLen);
-                break;
-            case RF_READ:
-                pxJob->ulLen = nRF24L01_ulReadPayload((const char *)pxJob->pucData);
-                xTaskNotifyGiveIndexed(pxJob->xSubscriber, 3);
-                break;
-            case RF_STATUS:
-                ucStatus = nRF24L01_ucGetStatus();
-                if ((ucStatus & STATUS_TX_DS(1)) != 0)
-                {
-                    /* Payload sent - no action needed */
-                }
-                if ((ucStatus & STATUS_RX_DR(1)) != 0)
-                {
-                    /* Give event group a notification we have a new payload
-                     * so they can order a new job.
-                     */
-                    (void)xTaskNotifyGiveIndexed(xThrottleTask, 2);
-                }
-                if ((ucStatus & STATUS_MAX_RT(1)) != 0)
-                {
-                    /* Max retransmits - payload not sent */
-                    xTaskNotify(xJournalTask, RF_ERROR, eSetBits);
-                }
-                break;
-            default:
-                /* Something went wrong real bad */
-                xTaskNotify(xJournalTask, RF_BAD_JOB, eSetBits);
-                break;
-        }
-    }
 }
 
 
@@ -158,17 +122,22 @@ void commTask(void *arg)
  *
  * @retval  None
  */
-static void Sys_vInit(void)
+static void sys_vInitHardware(void)
 {
-    RTC_Init();
-
+    /* Initialize communications */
     DMA_Init();
     SPI0_Init();
     nRF24L01_vInit();
 
+    /* Initialize sensors */
     TWI0_vInit();
+    MPU6050_vInit();
 
+    /* Initialize motor control */
     PWM_Init();
+
+    /* Start RTC last so it won't notify non-existent task */
+    RTC_vInit();
 }
 
 /**
@@ -178,19 +147,25 @@ static void Sys_vInit(void)
  *
  * @retval  None
  */
-static void Sys_vCreateEvents(void)
+static void sys_vCreateEvents(void)
 {
     xTsQ = xQueueCreate(TS_QUEUE_SIZE, sizeof(struct Calendar));
-    assert(xTsQ != NULL, __FILE__, __LINE__);
+    assert(xTsQ != NULL);
 
-    xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(xJobStruct *));
-    configASSERT(xJobQueue != NULL);
-    
     xTwiQueue = xQueueCreate(TWI_QUEUE_SIZE, sizeof(TWI_Msg *));
-    configASSERT(xTwiQueue != NULL);
+    assert(xTwiQueue != NULL);
+    
+    xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(RF_Struct_t *));
+    assert(xJobQueue != NULL);
+    
+    xThrottleQueue = xQueueCreate(THROTTLE_QUEUE_SIZE, sizeof(RF_Struct_t *));
+    assert(xThrottleQueue != NULL);
+    
+    xGyroQueue = xQueueCreate(GYRO_QUEUE_SIZE, sizeof(RF_Struct_t *));
+    assert(xGyroQueue != NULL);
 
     xTwiSema = xSemaphoreCreateBinary();
-    configASSERT(xTwiSema != NULL);
+    assert(xTwiSema != NULL);
 }
 
 
@@ -201,15 +176,15 @@ static void Sys_vCreateEvents(void)
  *
  * @retval  None
  */
-void RTOS_Init(void)
+void sys_vInit(void)
 {
-    BaseType_t xRet = xTaskCreate(startupTask,
+    BaseType_t xRet = xTaskCreate(sys_vStartupTask,
                                   "Startup",
                                   TASK_STARTUP_STACK_SIZE,
                                   NULL,
                                   TASK_STARTUP_STACK_PRIORITY,
                                   &xStartupTask);
-    assert(xRet == pdPASS, __FILE__, __LINE__);
+    assert(xRet == pdPASS);
 
     vTaskStartScheduler();
 

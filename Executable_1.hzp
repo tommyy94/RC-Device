@@ -16,7 +16,7 @@
       arm_keep_assembly="Yes"
       arm_linker_heap_size="4096"
       arm_linker_process_stack_size="256"
-      arm_linker_stack_size="4096"
+      arm_linker_stack_size="40960"
       arm_simulator_memory_simulation_filename="$(ProjectDir)/Device/SAM_E_SimulatorMemory_linux_x64.so"
       arm_simulator_memory_simulation_parameter="SAM E;FLASH,0x00400000,0x00200000,ROM;RAM,0x20400000,0x00060000,RAM"
       arm_target_debug_interface_type="ADIv5"
@@ -31,7 +31,7 @@
       build_object_file_name="$(IntDir)/$(InputName)$(OBJ)"
       build_output_directory="$(ProjectName)/bin/$(Configuration)"
       c_preprocessor_definitions="__SAME70Q21B__;__SAM_E_FAMILY;ARM_MATH_CM7;FLASH_PLACEMENT=1;__USE_CRYSTAL_OSCILLATOR__;__TCM_CONFIG__=0;STARTUP_FROM_RESET"
-      c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Device/Config;$(ProjectDir)/Device/Drivers/SPI;$(ProjectDir)/Device/Drivers/TWI;$(ProjectDir)/Device/Drivers/RTC;$(ProjectDir)/Device/Drivers/PWM;$(ProjectDir)/Device/Drivers/sd_mmc;$(ProjectDir)/Device/Drivers/DMA;$(ProjectDir)/Device/Drivers/nRF24L01+;$(ProjectDir)/Device/Drivers/PIO;$(ProjectDir)/Device/Source Files;$(ProjectDir)/Device/Middleware;$(ProjectDir)/Device/Middleware/diskio;$(ProjectDir)/Device/Middleware/fatfs/src;$(ProjectDir)/Device/Middleware/ASF;$(ProjectDir)/Device/Middleware/ASF/hal/include;$(ProjectDir)/Device/Middleware/ASF/hal/src;$(ProjectDir)/Device/Middleware/ASF/hal/utils/include;$(ProjectDir)/Device/Middleware/ASF/hpl/core;$(ProjectDir)/Device/Middleware/ASF/hpl/pio;$(ProjectDir)/Device/Middleware/ASF/hpl/pmc;$(ProjectDir)/Device/Middleware/ASF/hri;$(ProjectDir)/Device/Application/include;$(ProjectDir)/Device/Application/bloat;$(SolutionDir)/SEGGER;$(SolutionDir)/SEGGER/RTT;$(SolutionDir)/Device/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
+      c_user_include_directories="$(DeviceIncludePath);$(ProjectDir)/Device/Config;$(ProjectDir)/Device/Drivers/SPI;$(ProjectDir)/Device/Drivers/TWI;$(ProjectDir)/Device/Drivers/RTC;$(ProjectDir)/Device/Drivers/PWM;$(ProjectDir)/Device/Drivers/sd_mmc;$(ProjectDir)/Device/Drivers/DMA;$(ProjectDir)/Device/Drivers/nRF24L01+;$(ProjectDir)/Device/Drivers/PIO;$(ProjectDir)/Device/Drivers/MPU-6050;$(ProjectDir)/Device/Source Files;$(ProjectDir)/Device/Middleware;$(ProjectDir)/Device/Middleware/diskio;$(ProjectDir)/Device/Middleware/fatfs/src;$(ProjectDir)/Device/Middleware/ASF;$(ProjectDir)/Device/Middleware/ASF/hal/include;$(ProjectDir)/Device/Middleware/ASF/hal/src;$(ProjectDir)/Device/Middleware/ASF/hal/utils/include;$(ProjectDir)/Device/Middleware/ASF/hpl/core;$(ProjectDir)/Device/Middleware/ASF/hpl/pio;$(ProjectDir)/Device/Middleware/ASF/hpl/pmc;$(ProjectDir)/Device/Middleware/ASF/hri;$(ProjectDir)/Device/Application/include;$(ProjectDir)/Device/Application/bloat;$(SolutionDir)/SEGGER;$(SolutionDir)/SEGGER/RTT;$(SolutionDir)/Device/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
       debug_register_definition_file="$(DeviceRegisterDefinitionFile)"
       debug_threads_script=""
       gcc_c_language_standard="gnu11"
@@ -116,6 +116,10 @@
         <file file_name="Device/Drivers/TWI/twi.c" />
         <file file_name="Device/Drivers/TWI/twi.h" />
       </folder>
+      <folder Name="MPU-6050">
+        <file file_name="Device/Drivers/MPU-6050/mpu-6050.c" />
+        <file file_name="Device/Drivers/MPU-6050/mpu-6050.h" />
+      </folder>
     </folder>
     <folder Name="Config">
       <file file_name="Device/Config/conf_fatfs.h" />
@@ -171,7 +175,11 @@
               <file file_name="Device/Middleware/ASF/hal/utils/include/events.h" />
               <file file_name="Device/Middleware/ASF/hal/utils/include/parts.h" />
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils.h" />
-              <file file_name="Device/Middleware/ASF/hal/utils/include/utils_assert.h" />
+              <file file_name="Device/Middleware/ASF/hal/utils/include/utils_assert.h">
+                <configuration
+                  Name="GCC Debug"
+                  build_exclude_from_build="Yes" />
+              </file>
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils_decrement_macro.h" />
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils_event.h" />
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils_increment_macro.h" />
@@ -180,7 +188,11 @@
               <file file_name="Device/Middleware/ASF/hal/utils/include/utils_repeat_macro.h" />
             </folder>
             <folder Name="src">
-              <file file_name="Device/Middleware/ASF/hal/utils/src/utils_assert.c" />
+              <file file_name="Device/Middleware/ASF/hal/utils/src/utils_assert.c">
+                <configuration
+                  Name="GCC Debug"
+                  build_exclude_from_build="Yes" />
+              </file>
               <file file_name="Device/Middleware/ASF/hal/utils/src/utils_event.c" />
               <file file_name="Device/Middleware/ASF/hal/utils/src/utils_list.c" />
               <file file_name="Device/Middleware/ASF/hal/utils/src/utils_syscalls.c" />
@@ -297,12 +309,16 @@
         <file file_name="Device/Application/include/logWriter.h" />
         <file file_name="Device/Application/include/throttle.h" />
         <file file_name="Device/Application/include/system.h" />
+        <file file_name="Device/Application/include/gyro.h" />
+        <file file_name="Device/Application/include/com.h" />
       </folder>
       <folder Name="source">
         <file file_name="Device/Application/source/logWriter.c" />
         <file file_name="Device/Application/source/main.c" />
         <file file_name="Device/Application/source/system.c" />
         <file file_name="Device/Application/source/throttle.c" />
+        <file file_name="Device/Application/source/gyro.c" />
+        <file file_name="Device/Application/source/com.c" />
       </folder>
       <folder Name="bloat">
         <file file_name="Device/Application/bloat/atmel_start.c" />
@@ -378,7 +394,7 @@
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
       build_output_directory="$(ProjectDir)/Documents/CrossWorks Projects/Executable_1/FreeRTOS"
-      c_user_include_directories="$(DeviceIncludePath);$(SolutionDir)/Device/Config;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
+      c_user_include_directories="$(DeviceIncludePath);$(SolutionDir)/Device/Config;$(SolutionDir)/Device/Application/include;$(SolutionDir)/FreeRTOS/Source/include;$(SolutionDir)/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"
       debug_register_definition_file="$(DeviceRegisterDefinitionFile)"
       linker_memory_map_file="$(DeviceMemoryMapFile)"
       linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement_tcm.xml"

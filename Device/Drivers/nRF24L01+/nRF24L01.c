@@ -15,6 +15,7 @@
 #include "pio.h"
 #include "logWriter.h"
 #include "system.h"
+#include "com.h"
 
 /* Local variables */
 
@@ -224,7 +225,7 @@ __STATIC_INLINE void nRF24L01_vConfigureChipEnable(void)
  */
 __STATIC_INLINE void nRF24L01_vSetChipEnable(const uint32_t ulState)
 {
-    assert((ulState == LOW) || (ulState == HIGH), __FILE__, __LINE__);
+    assert((ulState == LOW) || (ulState == HIGH));
     Pio *pio = PIOD;
 
     /* Figure out whether to set or clear bit
@@ -393,7 +394,7 @@ void nRF24L01_vSendCommand(const uint8_t ucCommand)
  */
 void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *pucValue, uint32_t ulLength)
 {
-    assert((ulLength) <= ADDR_LEN_BYTES, __FILE__, __LINE__);
+    assert((ulLength) <= ADDR_LEN_BYTES);
 
     uint8_t uRxData[MAX_PAYLOAD_LEN] = { 0 };
     uint8_t uTxData[MAX_PAYLOAD_LEN] = { 0 };
@@ -422,20 +423,13 @@ void nRF24L01_vWriteAddressRegister(const uint8_t ucRegister, const uint8_t *puc
  */
 void PIOD_ISR(void)
 {
-    BaseType_t  xRet;
-    BaseType_t  xHigherPrioTaskAwoken = pdFALSE;
+    BaseType_t            xRet;
+    BaseType_t            xHigherPrioTaskAwoken = pdFALSE;
+    static RF_Struct_t    xRf;
+    static RF_Struct_t   *pxRf = &xRf;
 
-    static xJobStruct  xJob;
-    static xJobStruct *pxJob = &xJob;
-
-    /* Each job needs to have a subscriber, but ISR can't
-     * really have one, so just set subscriber xCommTask.
-     * Also not processing any data when reading status.
-     */
-    xJob.xSubscriber = xCommTask;
-    xJob.ulType      = RF_STATUS;
-
-    xRet = xQueueSendToFrontFromISR(xJobQueue, &pxJob, &xHigherPrioTaskAwoken);
+    xRf.ucCmd= RF_STATUS;
+    xRet = xQueueSendFromISR(xJobQueue, &pxRf, &xHigherPrioTaskAwoken);
     if (xRet != pdTRUE)
     {
         xTaskNotifyFromISR(xJournalTask, JOB_QUEUE_FULL, eSetBits, &xHigherPrioTaskAwoken);

@@ -7,7 +7,7 @@
 #include "pwm.h"
 #include "logWriter.h"
 #include "system.h"
-#include "utils_assert.h"
+#include "com.h"
 
 /* RTOS includes */
 #include "FreeRTOS.h"
@@ -54,6 +54,7 @@ static xChannelMap xChMap =
 };
 
 extern QueueHandle_t          xJobQueue;
+extern QueueHandle_t          xThrottleQueue;
 extern TaskHandle_t           xJournalTask;
 extern TaskHandle_t           xThrottleTask;
 
@@ -61,7 +62,7 @@ extern TaskHandle_t           xThrottleTask;
 static void     vThrottle(xAxisStruct xAxis);
 static uint32_t ulScale(uint16_t usAxis);
 static void     vEnableThrottle(const eThrottleChannel eCh);
-static void     vDisableThrottle(const eThrottleChannel eChe);
+static void     vDisableThrottle(const eThrottleChannel eCh);
 static bool     bCheckDeadZone(const uint16_t usAxis);
 static uint32_t ulSetSteer(const uint32_t ulThrottle,
                            const uint16_t usSteer);
@@ -78,36 +79,32 @@ static void     vUpdateThrottle(const uint16_t usJoyPos,
  *
  * @return  None.
  */
-void throttleTask(void *pvArg)
+void throttle_vTask(void *pvArg)
 {
     (void)pvArg;
-    BaseType_t  xRet;    
-    xAxisStruct xAxis;
-    xJobStruct  xJob;
-    xJobStruct *pxJob = &xJob;
+    BaseType_t   xRet;
+    xAxisStruct  xAxis;
+    RF_Struct_t *pxRf;
 
     while (1)
     {
-        /* Wait for payload */
-        (void)ulTaskNotifyTakeIndexed(2, pdTRUE, portMAX_DELAY);
-        /* TODO: Check for timeout */
-
-        /* Payload received, order read job */
-        pxJob->ulType       = RF_READ;
-        pxJob->xSubscriber  = xThrottleTask;
-        xRet = xQueueSend(xJobQueue, &pxJob, NULL);
-        if (xRet != pdTRUE)
+        xRet = xQueueReceive(xThrottleQueue, &pxRf, portMAX_DELAY);
+        assert(xRet == pdTRUE);
+        if (xRet == pdTRUE)
         {
-            xTaskNotify(xJournalTask, JOB_QUEUE_FULL, eSetBits);
+            /* First element is nRF24L01 status byte, ignore it */
+            xAxis.usX = (pxRf->pucParam[2] << 8) | pxRf->pucParam[1];
+            xAxis.usY = (pxRf->pucParam[4] << 8) | pxRf->pucParam[3];
+
+            vThrottle(xAxis);
         }
-
-        (void)ulTaskNotifyTakeIndexed(3, pdTRUE, portMAX_DELAY);
-
-        /* First element is nRF24L01 status byte, ignore it */
-        xAxis.usX = (pxJob->pucData[2] << 8) | pxJob->pucData[1];
-        xAxis.usY = (pxJob->pucData[4] << 8) | pxJob->pucData[3];
-
-        vThrottle(xAxis);
+        else
+        {
+            for (eThrottleChannel eCh = THROTTLE_CH_0; eCh < THROTTLE_CH_CNT; eCh++)
+            {
+                vDisableThrottle(eCh);
+            }
+        }
     }
 }
 
@@ -189,15 +186,15 @@ static uint32_t ulSetSteer(const uint32_t ulThrottle, const uint16_t usSteer)
  *                          |
  *      What we get:        |   What we want:
  *                          |
- *            y=2^16        |               y=2^16
+ *            y=2^16-1      |               y=2^8-1
  *          A               |             A
  *          |               |             |
- *  x=0     |      x=2^16   |   x=2^16    |      x=2^16
+ *  x=0     |    x=2^16-1   |   x=2^8-1   |      x=2^8-1
  *     <----+---->          |        <----+---->
- *          |               |             |x,y=0
- *          |               |             |
+ *          |               |             |\
+ *          |               |             | x,y=0
  *          v               |             v
- *            y=0           |               y=2^16
+ *            y=0           |               y=2^8-1
  *                          |
  *
  * @param   usAxis  Axis to scale.
@@ -226,8 +223,8 @@ static uint32_t ulScale(uint16_t usAxis)
  */
 static void vSetThrottle(const eThrottleChannel eCh, const uint32_t ulThrottle)
 {
-    assert(eCh < THROTTLE_CH_CNT, __FILE__, __LINE__);
-    assert(ulThrottle  <= DUTY_CYCLE_MAX, __FILE__, __LINE__);
+    assert(eCh < THROTTLE_CH_CNT);
+    assert(ulThrottle  <= DUTY_CYCLE_MAX);
     PWM_UpdateDutyCycle(xChMap.pxPwm[eCh], xChMap.eCh[eCh], ulThrottle);
 }
 
@@ -241,7 +238,7 @@ static void vSetThrottle(const eThrottleChannel eCh, const uint32_t ulThrottle)
  */
 static void vEnableThrottle(const eThrottleChannel eCh)
 {
-    assert(eCh < THROTTLE_CH_CNT, __FILE__, __LINE__);
+    assert(eCh < THROTTLE_CH_CNT);
     PWM_Enable(xChMap.pxPwm[eCh], xChMap.eCh[eCh]);
 }
 
@@ -255,13 +252,13 @@ static void vEnableThrottle(const eThrottleChannel eCh)
  */
 static void vDisableThrottle(const eThrottleChannel eCh)
 {
-    assert(eCh < THROTTLE_CH_CNT, __FILE__, __LINE__);
+    assert(eCh < THROTTLE_CH_CNT);
     PWM_Disable(xChMap.pxPwm[eCh], xChMap.eCh[eCh]);
 }
 
 
 /**
- * @brief   Update 
+ * @brief   Update motor throttle.
  *
  * @param   usJoyPos        Joystick position.
  *

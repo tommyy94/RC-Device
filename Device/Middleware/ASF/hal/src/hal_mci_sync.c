@@ -32,7 +32,7 @@
  */
 
 #include "hal_mci_sync.h"
-#include <utils_assert.h>
+#include "logWriter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,7 +46,7 @@ extern "C" {
  */
 int32_t mci_sync_init(struct mci_sync_desc *mci, void *hw)
 {
-    ASSERT(mci && hw);
+    assert(mci && hw);
     return _mci_sync_init(&mci->device, hw);
 }
 
@@ -55,7 +55,7 @@ int32_t mci_sync_init(struct mci_sync_desc *mci, void *hw)
  */
 int32_t mci_sync_deinit(struct mci_sync_desc *mci)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_deinit(&mci->device);
 }
 
@@ -65,7 +65,7 @@ int32_t mci_sync_deinit(struct mci_sync_desc *mci)
 int32_t mci_sync_select_device(struct mci_sync_desc *mci, uint8_t slot, uint32_t clock, uint8_t bus_width,
                                bool high_speed)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_select_device(&mci->device, slot, clock, bus_width, high_speed);
 }
 
@@ -74,7 +74,7 @@ int32_t mci_sync_select_device(struct mci_sync_desc *mci, uint8_t slot, uint32_t
  */
 int32_t mci_sync_deselect_device(struct mci_sync_desc *mci, uint8_t slot)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_deselect_device(&mci->device, slot);
 }
 
@@ -83,7 +83,7 @@ int32_t mci_sync_deselect_device(struct mci_sync_desc *mci, uint8_t slot)
  */
 uint8_t mci_sync_get_bus_width(struct mci_sync_desc *mci, uint8_t slot)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_get_bus_width(&mci->device, slot);
 }
 
@@ -93,7 +93,7 @@ uint8_t mci_sync_get_bus_width(struct mci_sync_desc *mci, uint8_t slot)
  */
 bool mci_sync_is_high_speed_capable(struct mci_sync_desc *mci)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_is_high_speed_capable(&mci->device);
 }
 
@@ -102,7 +102,7 @@ bool mci_sync_is_high_speed_capable(struct mci_sync_desc *mci)
  */
 void mci_sync_send_clock(struct mci_sync_desc *mci)
 {
-    ASSERT(mci);
+    assert(mci);
     _mci_sync_send_clock(&mci->device);
 }
 
@@ -111,7 +111,7 @@ void mci_sync_send_clock(struct mci_sync_desc *mci)
  */
 bool mci_sync_send_cmd(struct mci_sync_desc *mci, uint32_t cmd, uint32_t arg)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_send_cmd(&mci->device, cmd, arg);
 }
 
@@ -120,7 +120,7 @@ bool mci_sync_send_cmd(struct mci_sync_desc *mci, uint32_t cmd, uint32_t arg)
  */
 uint32_t mci_sync_get_response(struct mci_sync_desc *mci)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_get_response(&mci->device);
 }
 
@@ -129,7 +129,7 @@ uint32_t mci_sync_get_response(struct mci_sync_desc *mci)
  */
 void mci_sync_get_response_128(struct mci_sync_desc *mci, uint8_t *response)
 {
-    ASSERT(mci && response);
+    assert(mci && response);
     _mci_sync_get_response_128(&mci->device, response);
 }
 
@@ -141,7 +141,7 @@ void mci_sync_get_response_128(struct mci_sync_desc *mci, uint8_t *response)
 bool mci_sync_adtc_start(struct mci_sync_desc *mci, uint32_t cmd, uint32_t arg, uint16_t block_size, uint16_t nb_block,
                          bool access_block)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_adtc_start(&mci->device, cmd, arg, block_size, nb_block, access_block);
 }
 
@@ -150,7 +150,7 @@ bool mci_sync_adtc_start(struct mci_sync_desc *mci, uint32_t cmd, uint32_t arg, 
  */
 bool mci_sync_adtc_stop(struct mci_sync_desc *mci, uint32_t cmd, uint32_t arg)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_adtc_stop(&mci->device, cmd, arg);
 }
 
@@ -159,7 +159,7 @@ bool mci_sync_adtc_stop(struct mci_sync_desc *mci, uint32_t cmd, uint32_t arg)
  */
 bool mci_sync_read_word(struct mci_sync_desc *mci, uint32_t *value)
 {
-    ASSERT(mci && value);
+    assert(mci && value);
     return _mci_sync_read_word(&mci->device, value);
 }
 
@@ -168,7 +168,7 @@ bool mci_sync_read_word(struct mci_sync_desc *mci, uint32_t *value)
  */
 bool mci_sync_write_word(struct mci_sync_desc *mci, uint32_t value)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_write_word(&mci->device, value);
 }
 
@@ -178,7 +178,7 @@ bool mci_sync_write_word(struct mci_sync_desc *mci, uint32_t value)
  */
 bool mci_sync_start_read_blocks(struct mci_sync_desc *mci, void *dst, uint16_t nb_block)
 {
-    ASSERT(mci && dst);
+    assert(mci && dst);
     return _mci_sync_start_read_blocks(&mci->device, dst, nb_block);
 }
 
@@ -187,7 +187,7 @@ bool mci_sync_start_read_blocks(struct mci_sync_desc *mci, void *dst, uint16_t n
  */
 bool mci_sync_start_write_blocks(struct mci_sync_desc *mci, const void *src, uint16_t nb_block)
 {
-    ASSERT(mci && src);
+    assert(mci && src);
     return _mci_sync_start_write_blocks(&mci->device, src, nb_block);
 }
 
@@ -196,7 +196,7 @@ bool mci_sync_start_write_blocks(struct mci_sync_desc *mci, const void *src, uin
  */
 bool mci_sync_wait_end_of_read_blocks(struct mci_sync_desc *mci)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_wait_end_of_read_blocks(&mci->device);
 }
 
@@ -205,7 +205,7 @@ bool mci_sync_wait_end_of_read_blocks(struct mci_sync_desc *mci)
  */
 bool mci_sync_wait_end_of_write_blocks(struct mci_sync_desc *mci)
 {
-    ASSERT(mci);
+    assert(mci);
     return _mci_sync_wait_end_of_write_blocks(&mci->device);
 }
 

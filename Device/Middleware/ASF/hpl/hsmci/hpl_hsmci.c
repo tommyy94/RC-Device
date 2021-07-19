@@ -38,7 +38,7 @@ extern "C" {
 #include <hpl_mci_sync.h>
 #include <hpl_mci_async.h>
 #include <hpl_hsmci_config.h>
-#include <utils_assert.h>
+#include "logWriter.h"
 
 #define HSMCI_SLOT_0_SIZE 4
 
@@ -59,7 +59,7 @@ static void _mci_reset(const void *const hw)
 {
     uint32_t mr, dtor, sdcr, cstor, cfg;
 
-    ASSERT(hw);
+    assert(hw);
 
     mr    = hri_hsmci_read_MR_reg(hw);
     dtor  = hri_hsmci_read_DTOR_reg(hw);
@@ -124,7 +124,7 @@ static bool _mci_wait_busy(const void *const hw)
     uint32_t busy_wait = 0xFFFFFFFF;
     uint32_t sr;
 
-    ASSERT(hw);
+    assert(hw);
 
     do {
         sr = hri_hsmci_read_SR_reg(hw);
@@ -149,7 +149,7 @@ static bool _mci_wait_busy(const void *const hw)
 static bool _mci_send_cmd_execute(const void *const hw, uint32_t cmdr, uint32_t cmd, uint32_t arg)
 {
     uint32_t sr;
-    ASSERT(hw);
+    assert(hw);
 
     cmdr |= HSMCI_CMDR_CMDNB(cmd) | HSMCI_CMDR_SPCMD_STD;
     if (cmd & MCI_RESP_PRESENT) {
@@ -270,7 +270,7 @@ void HSMCI_IrqHandler(void)
  */
 int32_t _mci_sync_init(struct _mci_sync_device *const mci_dev, void *const hw)
 {
-    ASSERT(mci_dev && hw);
+    assert(mci_dev && hw);
 
     mci_dev->hw = hw;
 
@@ -297,7 +297,7 @@ int32_t _mci_sync_init(struct _mci_sync_device *const mci_dev, void *const hw)
  */
 int32_t _mci_async_init(struct _mci_async_device *const mci_dev, void *const hw)
 {
-    ASSERT(mci_dev && hw);
+    assert(mci_dev && hw);
     struct _mci_async_device *dev = mci_dev;
 
     /* Do hardware initialize. */
@@ -319,7 +319,7 @@ int32_t _mci_async_init(struct _mci_async_device *const mci_dev, void *const hw)
  */
 int32_t _mci_sync_deinit(struct _mci_sync_device *const mci_dev)
 {
-    ASSERT(mci_dev);
+    assert(mci_dev);
 
     mci_dev->hw = NULL;
     return ERR_NONE;
@@ -329,7 +329,7 @@ int32_t _mci_sync_deinit(struct _mci_sync_device *const mci_dev)
  */
 int32_t _mci_async_deinit(struct _mci_async_device *const mci_dev)
 {
-    ASSERT(mci_dev);
+    assert(mci_dev);
     mci_dev->hw = NULL;
     NVIC_DisableIRQ(HSMCI_IRQn);
     NVIC_ClearPendingIRQ(HSMCI_IRQn);
@@ -346,7 +346,7 @@ int32_t _mci_sync_select_device(struct _mci_sync_device *const mci_dev, uint8_t 
     uint32_t mci_bus_width = HSMCI_SDCR_SDCBUS_1;
     void *   hw;
 
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
 
     if (high_speed) {
@@ -460,7 +460,7 @@ bool _mci_async_is_high_speed_capable(struct _mci_async_device *const mci_dev)
 void _mci_sync_send_clock(struct _mci_sync_device *const mci_dev)
 {
     void *hw;
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
 
     /* Configure command */
@@ -487,7 +487,7 @@ void _mci_async_send_init_sequence(struct _mci_async_device *const mci_dev)
 bool _mci_sync_send_cmd(struct _mci_sync_device *const mci_dev, uint32_t cmd, uint32_t arg)
 {
     void *hw;
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
 
     /* Configure command */
@@ -510,7 +510,7 @@ bool _mci_async_send_cmd(struct _mci_async_device *const mci_dev, uint32_t cmd, 
 uint32_t _mci_sync_get_response(struct _mci_sync_device *const mci_dev)
 {
     void *hw;
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
 
     return hri_hsmci_read_RSPR_reg(hw, 0);
@@ -530,7 +530,7 @@ void _mci_sync_get_response_128(struct _mci_sync_device *const mci_dev, uint8_t 
 {
     uint32_t response_32;
     void *   hw;
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
 
     for (uint8_t i = 0; i < 4; i++) {
@@ -563,7 +563,7 @@ bool _mci_sync_adtc_start(struct _mci_sync_device *const mci_dev, uint32_t cmd, 
 {
     uint32_t cmdr;
     void *   hw;
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
 
     /* No use without dma support */
@@ -618,7 +618,7 @@ bool _mci_async_adtc_start(struct _mci_async_device *const mci_dev, uint32_t cmd
 {
     uint32_t cmdr;
     void *   hw;
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
     hri_hsmci_set_MR_reg(hw, HSMCI_MR_WRPROOF | HSMCI_MR_RDPROOF);
     /* Force byte transfer if needed */
@@ -658,7 +658,7 @@ bool _mci_async_adtc_start(struct _mci_async_device *const mci_dev, uint32_t cmd
 bool _mci_sync_adtc_stop(struct _mci_sync_device *const mci_dev, uint32_t cmd, uint32_t arg)
 {
     void *hw;
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
 
     return _mci_send_cmd_execute(hw, HSMCI_CMDR_TRCMD_STOP_DATA, cmd, arg);
@@ -680,7 +680,7 @@ bool _mci_sync_read_word(struct _mci_sync_device *const mci_dev, uint32_t *value
     uint8_t  nbytes;
     void *   hw;
 
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
 
     /* Wait data available */
@@ -718,7 +718,7 @@ bool _mci_sync_read_word(struct _mci_sync_device *const mci_dev, uint32_t *value
  */
 bool _mci_async_read_bytes(struct _mci_async_device *const mci_dev, uint32_t *value)
 {
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     /* Read data */
     *value = hri_hsmci_read_RDR_reg(mci_dev->hw);
     return true;
@@ -732,7 +732,7 @@ bool _mci_sync_write_word(struct _mci_sync_device *const mci_dev, uint32_t value
     uint8_t  nbytes;
     void *   hw;
 
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     hw = mci_dev->hw;
 
     /* Wait data available */
@@ -769,7 +769,7 @@ bool _mci_sync_write_word(struct _mci_sync_device *const mci_dev, uint32_t value
  */
 bool _mci_async_write_bytes(struct _mci_async_device *const mci_dev, uint32_t value)
 {
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
     /* Write data */
     hri_hsmci_write_TDR_reg(mci_dev->hw, value);
     return true;
@@ -785,9 +785,9 @@ bool _mci_sync_start_read_blocks(struct _mci_sync_device *const mci_dev, void *d
     uint8_t *ptr = (uint8_t *)dst;
     uint8_t  nbytes;
 
-    ASSERT(mci_dev && mci_dev->hw);
-    ASSERT(nb_block);
-    ASSERT(dst);
+    assert(mci_dev && mci_dev->hw);
+    assert(nb_block);
+    assert(dst);
 
     nb_data = nb_block * mci_dev->mci_sync_block_size;
     nbytes  = (mci_dev->mci_sync_block_size & 0x3) ? 1 : 4;
@@ -810,9 +810,9 @@ bool _mci_sync_start_write_blocks(struct _mci_sync_device *const mci_dev, const 
     uint32_t nb_data;
     uint8_t *ptr = (uint8_t *)src;
 
-    ASSERT(mci_dev && mci_dev->hw);
-    ASSERT(nb_block);
-    ASSERT(src);
+    assert(mci_dev && mci_dev->hw);
+    assert(nb_block);
+    assert(src);
 
     nb_data = nb_block * mci_dev->mci_sync_block_size;
 
@@ -838,7 +838,7 @@ bool _mci_sync_start_write_blocks(struct _mci_sync_device *const mci_dev, const 
  */
 bool _mci_sync_wait_end_of_read_blocks(struct _mci_sync_device *const mci_dev)
 {
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
 
     /* Always return true for sync read blocks */
     return true;
@@ -849,7 +849,7 @@ bool _mci_sync_wait_end_of_read_blocks(struct _mci_sync_device *const mci_dev)
  */
 bool _mci_sync_wait_end_of_write_blocks(struct _mci_sync_device *const mci_dev)
 {
-    ASSERT(mci_dev && mci_dev->hw);
+    assert(mci_dev && mci_dev->hw);
 
     /* Always return true for sync write blocks */
     return true;
@@ -863,7 +863,7 @@ int32_t _mci_async_register_callback(struct _mci_async_device *mci_dev, const en
 {
     typedef void (*func_t)(void);
     struct _mci_async_device *dev = mci_dev;
-    ASSERT(dev && (cb_type <= MCI_ASYNC_ERROR));
+    assert(dev && (cb_type <= MCI_ASYNC_ERROR));
     func_t *p_ls  = (func_t *)&dev->cb;
     p_ls[cb_type] = (func_t)func;
     return ERR_NONE;
@@ -878,7 +878,7 @@ int32_t _mci_async_register_callback(struct _mci_async_device *mci_dev, const en
 void _mci_async_set_irq_state(struct _mci_async_device *const device, const enum _mci_async_callback_type type,
                               const bool state)
 {
-    ASSERT(device);
+    assert(device);
     if (MCI_ASYNC_READ_DONE == type) {
         if (state) {
             hri_hsmci_set_IMR_RXRDY_bit(device->hw);

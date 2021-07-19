@@ -1,7 +1,7 @@
 #include <same70q21b.h>
-#include <utils_assert.h>
 #include "pwm.h"
 #include "pio.h"
+#include "logWriter.h"
 
 
 static void     PWM_IO_Init(void);
@@ -111,7 +111,7 @@ static void PWM_IO_Init(void)
 
 void PWM_UpdateDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t ulDutyCycle)
 {
-  assert(ch < PWM_CHANNEL_COUNT, __FILE__, __LINE__);
+  assert(ch < PWM_CHANNEL_COUNT);
 
   pwm->PwmChNum[ch].PWM_CDTYUPD = PWM_CDTYUPD_CDTYUPD(ulDutyCycle);
 }
@@ -119,7 +119,7 @@ void PWM_UpdateDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t ulDutyCycle)
 
 void PWM_UpdateFrequency(Pwm *pwm, PWM_Channel ch, Frequency freq)
 {
-  assert(ch < PWM_CHANNEL_COUNT, __FILE__, __LINE__);
+  assert(ch < PWM_CHANNEL_COUNT);
   pwm->PwmChNum[ch].PWM_CPRDUPD = PWM_CPRDUPD_CPRDUPD(freq_tbl[freq]);
 }
 
@@ -146,7 +146,7 @@ static uint16_t PWM_GetChannelDutyCycle(float dutyPer)
  */
 void PWM_IncrementDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t steps)
 {
-  assert(ch < PWM_CHANNEL_COUNT, __FILE__, __LINE__);
+  assert(ch < PWM_CHANNEL_COUNT);
   uint16_t curDuty;
   const float step = 11.7;
 
@@ -162,7 +162,7 @@ void PWM_IncrementDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t steps)
  */
 void PWM_DecrementDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t steps)
 {
-  assert(ch < PWM_CHANNEL_COUNT, __FILE__, __LINE__);
+  assert(ch < PWM_CHANNEL_COUNT);
   uint16_t curDuty;
   const float step = 11.7;
 
@@ -174,13 +174,13 @@ void PWM_DecrementDutyCycle(Pwm *pwm, PWM_Channel ch, uint32_t steps)
 
 void PWM_Enable(Pwm *pwm, PWM_Channel ch)
 {
-    assert(ch <= PWM_DIS_CHID3_Pos, __FILE__, __LINE__);
+    assert(ch <= PWM_DIS_CHID3_Pos);
     pwm->PWM_ENA = (0x1U << ch) & PWM_ENA_Msk;
 }
 
 
 void PWM_Disable(Pwm *pwm, PWM_Channel ch)
 {
-    assert(ch <= PWM_DIS_CHID3_Pos, __FILE__, __LINE__);
+    assert(ch <= PWM_DIS_CHID3_Pos);
     pwm->PWM_DIS = (0x1U << ch) & PWM_DIS_Msk;
 }

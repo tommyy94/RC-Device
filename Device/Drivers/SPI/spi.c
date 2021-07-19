@@ -59,7 +59,7 @@ void SPI0_Init(void)
      * 8 bits per transfer
      */
     spi->SPI_CSR[SLAVE_1] = SPI_CSR_SCBR(16) | SPI_CSR_BITS_8_BIT; /* 2.6 MHz */
-    assert((spi->SPI_CSR[SLAVE_1] & SPI_CSR_SCBR_Msk) != 0, __FILE__, __LINE__);
+    assert((spi->SPI_CSR[SLAVE_1] & SPI_CSR_SCBR_Msk) != 0);
     
     /* CPOL = 0, CPHA = 1, SPCK inactive LOW */
     SPI_SetMode(spi, SLAVE_1, MODE_0);
@@ -114,9 +114,9 @@ __STATIC_INLINE void SPI0_IO_Init(void)
  */
 static void SPI_SetMode(Spi *spi, SPI_SlaveSelect slave, SPI_Mode mode)
 {
-    assert((spi == SPI0) || (spi == SPI1), __FILE__, __LINE__);
-    assert(slave < SLAVE_COUNT, __FILE__, __LINE__);
-    assert(mode < MODE_COUNT, __FILE__, __LINE__);
+    assert((spi == SPI0) || (spi == SPI1));
+    assert(slave < SLAVE_COUNT);
+    assert(mode < MODE_COUNT);
     
     /* NOTE: The bit field positions are inverted in the register:
      * CPOL on the LSB side and NCPHA on the MSB side whereas in the datasheet
@@ -216,7 +216,7 @@ void SPI0_Handler(void)
     BaseType_t xTaskWoken = pdFALSE;
 
     status = spi->SPI_SR;
-    assert((status & SPI_SR_MODF_Msk)  == 0, __FILE__, __LINE__);
+    assert((status & SPI_SR_MODF_Msk)  == 0);
 
     /* Do context switch if higher prio task woke up */
     portEND_SWITCHING_ISR(xTaskWoken);

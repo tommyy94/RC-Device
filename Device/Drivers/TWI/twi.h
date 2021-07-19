@@ -1,8 +1,14 @@
 #pragma once
+#include <same70q21b.h>
+#include <stdint.h>
 
 
-#define TWI_QUEUE_SIZE  (1UL)
-#define TWI_MSG_LIMIT   (2u)
+#define TWI_QUEUE_SIZE  (1ul)
+#define TWI_MSG_LIMIT   (2ul)
+
+#define TWI_WRITE       (0x00ul)
+#define TWI_READ        (0x01ul)
+#define TWI_SR          (0x02ul)
 
 
 typedef struct

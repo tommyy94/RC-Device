@@ -33,7 +33,7 @@
  */
 
 #include <hpl_gpio.h>
-#include <utils_assert.h>
+#include "logWriter.h"
 
 /**
  * \brief Transfer gpio_port to hardware address
@@ -62,7 +62,7 @@ static inline void _gpio_set_direction(const enum gpio_port port, const uint32_t
 		break;
 
 	default:
-		ASSERT(false);
+		assert(false);
 	}
 }
 
@@ -128,7 +128,7 @@ static inline void _gpio_set_pin_pull_mode(const enum gpio_port port, const uint
 		break;
 
 	default:
-		ASSERT(false);
+		assert(false);
 		break;
 	}
 }

@@ -38,7 +38,7 @@ static uint32_t createFileSystem(void)
     BYTE work[_MAX_SS]; /* Work area (larger is better for processing time) */
     
     res = f_mkfs("SD1", 0, sizeof(work));
-    assert(res == FR_OK, __FILE__, __LINE__);
+    assert(res == FR_OK);
     
     return res == FR_OK;
 }
@@ -56,7 +56,7 @@ static void logError(uint32_t id)
     __BKPT();
 
     /* Get timestamp - format 2012-09-26 00:16:47 */
-    xTaskNotify(xCalendarTask, RTC_RETURN_TIME, eSetBits);
+    xTaskNotify(xRtcTask, RTC_RETURN_TIME, eSetBits);
     if (xQueueReceive(xTsQ, calendar, pdMS_TO_TICKS(TS_QUEUE_TIMEOUT)) == pdPASS)
     {
         snprintf(msg,
@@ -85,13 +85,13 @@ static void logError(uint32_t id)
         /* Could be full, delete and try again */
         res = f_open(&file, "error.log", FA_CREATE_ALWAYS | FA_WRITE);        
     }
-    assert(res == FR_OK, __FILE__, __LINE__);
+    assert(res == FR_OK);
     if (res == FR_OK)
     {
         len = strlen((const char *)msg);
         res = f_write(&file, msg, len, &bytesWritten);
-        assert(bytesWritten == len , __FILE__, __LINE__);
-        assert(res == FR_OK, __FILE__, __LINE__);
+        assert(bytesWritten == len);
+        assert(res == FR_OK);
         f_close(&file);
     }
 }
@@ -101,19 +101,40 @@ static void logError(uint32_t id)
  * - Record error
  * - Include timestamp
  */
-void journalTask(void *arg)
+void journal_vErrorTask(void *arg)
 {
     (void)arg;
     FRESULT res;
     uint32_t event;
     
     res = f_mount(&fs, path, FATFS_DELAY_MOUNT);
-    assert(res == FR_OK, __FILE__, __LINE__);
+    assert(res == FR_OK);
     
     while (1)
     {
         event = ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
         logError(event);
         __BKPT();
+    }
+}
+
+
+void Journal_vWriteError(uint32_t ulError)
+{
+    configASSERT(ulError < ERROR_COUNT);
+    xTaskNotify(xJournalTask, ulError, eSetBits);
+}
+
+
+void Journal_vAssert(bool bEval, char *pucFile, uint32_t ulLine)
+{
+    (void)pucFile;
+    (void)ulLine;
+
+    if (bEval == false)
+    {
+        __BKPT();
+        
+        //logError(event);
     }
 }

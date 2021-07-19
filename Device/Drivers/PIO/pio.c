@@ -1,7 +1,6 @@
-#include "pio.h"
-
 #include <same70q21b.h>
-#include <utils_assert.h>
+#include "pio.h"
+#include "logWriter.h"
 
 
 void PIOD_Handler(void)
@@ -27,22 +26,22 @@ void PIOD_ISR(void)
 
 void PIO_EnableIRQ(Pio *pio, uint32_t mask)
 {
-    assert((pio == PIOA) || (pio == PIOB) || (pio == PIOC) || (pio == PIOD) || (pio == PIOE), __FILE__, __LINE__);
+    assert((pio == PIOA) || (pio == PIOB) || (pio == PIOC) || (pio == PIOD) || (pio == PIOE));
     pio->PIO_IER = PIO_IER_P(mask);
 }
 
 
 void PIO_DisableIRQ(Pio *pio, uint32_t mask)
 {
-    assert((pio == PIOA) || (pio == PIOB) || (pio == PIOC) || (pio == PIOD) || (pio == PIOE), __FILE__, __LINE__);
+    assert((pio == PIOA) || (pio == PIOB) || (pio == PIOC) || (pio == PIOD) || (pio == PIOE));
     pio->PIO_IDR = PIO_IDR_P(mask);
 }
 
 
 void PIO_ConfigurePull(Pio *pio, uint32_t mask, Pio_PullType pull)
 {
-    assert((pio == PIOA) || (pio == PIOB) || (pio == PIOC) || (pio == PIOD) || (pio == PIOE), __FILE__, __LINE__);
-    assert((pull == PIO_PULLUP) || pull == PIO_PULLDOWN, __FILE__, __LINE__);
+    assert((pio == PIOA) || (pio == PIOB) || (pio == PIOC) || (pio == PIOD) || (pio == PIOE));
+    assert((pull == PIO_PULLUP) || pull == PIO_PULLDOWN);
 
     if (pull == PIO_PULLUP)
     {
@@ -61,9 +60,9 @@ void PIO_ConfigurePull(Pio *pio, uint32_t mask, Pio_PullType pull)
 
 void PIO_ConfigureIRQ(Pio *pio, PIO_IrqType type, PIO_IrqLevel level, uint32_t mask)
 {
-    assert((pio == PIOA) || (pio == PIOB) || (pio == PIOC) || (pio == PIOD) || (pio == PIOE), __FILE__, __LINE__);
-    assert((type == PIO_EDGE_IRQ) || (type == PIO_LEVEL_IRQ), __FILE__, __LINE__);
-    assert((level == PIO_LEVEL_POSITIVE) || (level == PIO_LEVEL_NEGATIVE), __FILE__, __LINE__);
+    assert((pio == PIOA) || (pio == PIOB) || (pio == PIOC) || (pio == PIOD) || (pio == PIOE));
+    assert((type == PIO_EDGE_IRQ) || (type == PIO_LEVEL_IRQ));
+    assert((level == PIO_LEVEL_POSITIVE) || (level == PIO_LEVEL_NEGATIVE));
 
     if (type == PIO_EDGE_IRQ)
     {
@@ -112,8 +111,8 @@ void PIO_ConfigureIRQ(Pio *pio, PIO_IrqType type, PIO_IrqLevel level, uint32_t m
  */
 void PIO_vSetPeripheralFunction(Pio *pxPio, const uint32_t ulMask, const PIO_PeriphFunc xFunc)
 {
-    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE), __FILE__, __LINE__);
-    assert((xFunc == PIO_PERIPH_A) || (xFunc == PIO_PERIPH_B) || (xFunc == PIO_PERIPH_C) || (xFunc == PIO_PERIPH_D), __FILE__, __LINE__);
+    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE));
+    assert((xFunc == PIO_PERIPH_A) || (xFunc == PIO_PERIPH_B) || (xFunc == PIO_PERIPH_C) || (xFunc == PIO_PERIPH_D));
 
     switch (xFunc)
     {
@@ -143,7 +142,7 @@ void PIO_vSetPeripheralFunction(Pio *pxPio, const uint32_t ulMask, const PIO_Per
 
 void PIO_vSetIoFunction(Pio *pxPio, const uint32_t ulMask, const PIO_Dir xDir)
 {
-    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE), __FILE__, __LINE__);
+    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE));
 
     pxPio->PIO_PER = PIO_PER_P(ulMask);
     pxPio->PIO_OER = PIO_OER_P(xDir);
@@ -152,14 +151,14 @@ void PIO_vSetIoFunction(Pio *pxPio, const uint32_t ulMask, const PIO_Dir xDir)
 
 void PIO_vSetOutput(Pio *pxPio, const uint32_t ulMask)
 {
-    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE), __FILE__, __LINE__);
+    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE));
     pxPio->PIO_SODR = PIO_SODR_P(ulMask);
 }
 
 
 void PIO_vClearOutput(Pio *pxPio, const uint32_t ulMask)
 {
-    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE), __FILE__, __LINE__);
+    assert((pxPio == PIOA) || (pxPio == PIOB) || (pxPio == PIOC) || (pxPio == PIOD)|| (pxPio == PIOE));
     pxPio->PIO_CODR = PIO_CODR_P(ulMask);
 }
 
