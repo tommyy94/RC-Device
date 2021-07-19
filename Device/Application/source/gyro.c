@@ -1,6 +1,7 @@
 #include "gyro.h"
 #include "mpu-6050.h"
 #include "system.h"
+#include "com.h"
 
 
 extern QueueHandle_t    xJobQueue;

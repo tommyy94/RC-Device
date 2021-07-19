@@ -15,6 +15,7 @@
 #include "pio.h"
 #include "logWriter.h"
 #include "system.h"
+#include "com.h"
 
 /* Local variables */
 

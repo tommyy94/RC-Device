@@ -7,6 +7,7 @@
 #include "logWriter.h"
 #include "throttle.h"
 #include "gyro.h"
+#include "com.h"
 
 /* Driver includes */
 #include "spi.h"
@@ -111,55 +112,6 @@ static void sys_vStartupTask(void *pvArg)
     
     /* sys_vStartupTask can now be deleted */
     vTaskDelete(NULL);
-void commTask(void *pvArg)
-{
-    (void)pvArg;
-    uint8_t     ucStatus;
-    xJobStruct *pxJob = NULL;
-
-    while (1)
-    {
-        /* Dequeue new item from the job queue */
-        (void)xQueueReceive(xJobQueue, &pxJob, portMAX_DELAY);
-
-        /* Job should always have a subscriber so we can notify when job done */
-        assert(pxJob->xSubscriber != NULL);
-
-        switch (pxJob->ulType)
-        {
-            case RF_SEND:
-                nRF24L01_vSendPayload((const char *)pxJob->pucData, pxJob->ulLen);
-                xTaskNotifyGiveIndexed(pxJob->xSubscriber, 4);
-                break;
-            case RF_READ:
-                pxJob->ulLen = nRF24L01_ulReadPayload((const char *)pxJob->pucData);
-                xTaskNotifyGiveIndexed(pxJob->xSubscriber, 3);
-                break;
-            case RF_STATUS:
-                ucStatus = nRF24L01_ucGetStatus();
-                if ((ucStatus & STATUS_TX_DS(1)) != 0)
-                {
-                    /* Payload sent - no action needed */
-                }
-                if ((ucStatus & STATUS_RX_DR(1)) != 0)
-                {
-                    /* Give event group a notification we have a new payload
-                     * so they can order a new job.
-                     */
-                    (void)xTaskNotifyGiveIndexed(xThrottleTask, 2);
-                }
-                if ((ucStatus & STATUS_MAX_RT(1)) != 0)
-                {
-                    /* Max retransmits - payload not sent */
-                    Journal_vWriteError(RF_ERROR);
-                }
-                break;
-            default:
-                /* Something went wrong real bad */
-                Journal_vWriteError(RF_BAD_JOB);
-                break;
-        }
-    }
 }
 
 

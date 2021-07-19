@@ -37,11 +37,6 @@
 #define JOB_QUEUE_SIZE      (32u)
 
 enum
-{
-    RF_SEND = 0,
-    RF_READ,
-    RF_STATUS
-};
 
 extern TaskHandle_t         xStartupTask;
 extern TaskHandle_t         xCommTask;

@@ -7,7 +7,7 @@
 #include "pwm.h"
 #include "logWriter.h"
 #include "system.h"
-#include "utils_assert.h"
+#include "com.h"
 
 /* RTOS includes */
 #include "FreeRTOS.h"
