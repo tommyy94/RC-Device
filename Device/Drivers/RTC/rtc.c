@@ -91,6 +91,7 @@ void RTC_vInit(void)
     /* Enable second periodic interrupt */
     RTC->RTC_IER = RTC_IER_SECEN_Msk;
     
+    RTC_vStart();
 }
 
 

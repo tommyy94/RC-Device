@@ -105,12 +105,12 @@ static void sys_vStartupTask(void *pvArg)
                        TASK_GYRO_STACK_PRIORITY,
                        &xGyroTask);
     assert(xRet == pdPASS);
+
+    /* Must call Sys_vInitHardware() as some drivers call the OS API */
+    sys_vInitHardware();
     
-    /* startupTask can now be deleted */
+    /* sys_vStartupTask can now be deleted */
     vTaskDelete(NULL);
-}
-
-
 void commTask(void *pvArg)
 {
     (void)pvArg;
