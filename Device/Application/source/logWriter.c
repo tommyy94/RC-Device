@@ -56,7 +56,7 @@ static void logError(uint32_t id)
     __BKPT();
 
     /* Get timestamp - format 2012-09-26 00:16:47 */
-    xTaskNotify(xCalendarTask, RTC_RETURN_TIME, eSetBits);
+    xTaskNotify(xRtcTask, RTC_RETURN_TIME, eSetBits);
     if (xQueueReceive(xTsQ, calendar, pdMS_TO_TICKS(TS_QUEUE_TIMEOUT)) == pdPASS)
     {
         snprintf(msg,
@@ -101,7 +101,7 @@ static void logError(uint32_t id)
  * - Record error
  * - Include timestamp
  */
-void Journal_vErrorTask(void *arg)
+void journal_vErrorTask(void *arg)
 {
     (void)arg;
     FRESULT res;

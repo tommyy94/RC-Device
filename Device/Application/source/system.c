@@ -34,20 +34,21 @@ TaskHandle_t        xGyroTask;
 
 QueueHandle_t       xTsQ;
 QueueHandle_t       xJobQueue;
+QueueHandle_t       xThrottleQueue;
+QueueHandle_t       xGyroQueue;
 QueueHandle_t       xTwiQueue;
 SemaphoreHandle_t   xTwiSema;
 
 
-extern void commTask(void *pvArg);
-extern void startupTask(void *pvArg);
+extern void com_vTask(void *pvArg);
+extern void journal_vErrorTask(void *pvArg);
 extern void RTC_vTask(void *pvArg);
 extern void throttle_vTask(void *pvArg);
-extern void throttleTask(void *pvArg);
-extern void vGyroTask(void *pvArg);
+extern void gyro_vTask(void *pvArg);
 
-
-static void Sys_vInit(void);
-static void Sys_vCreateEvents(void);
+static void sys_vStartupTask(void *pvArg);
+static void sys_vInitHardware(void);
+static void sys_vCreateEvents(void);
 
 
 /**
@@ -57,26 +58,23 @@ static void Sys_vCreateEvents(void);
  *
  * @retval  None
  */
-void startupTask(void *pvArg)
+static void sys_vStartupTask(void *pvArg)
 {
     (void)pvArg;
     BaseType_t xRet;
 
     /* Must first create events so they can be called in Sys_vInit() */
-    Sys_vCreateEvents();
+    sys_vCreateEvents();
 
-    /* Must call Sys_vInit() as some drivers call the OS API */
-    Sys_vInit();
-
-    xRet = xTaskCreate(commTask,
-                       "Comm",
+    xRet = xTaskCreate(com_vTask,
+                       "Com",
                        TASK_COMM_STACK_SIZE,
                        NULL,
                        TASK_COMM_STACK_PRIORITY,
                        &xCommTask);
     assert(xRet == pdPASS);
     
-    xRet = xTaskCreate(Journal_vErrorTask,
+    xRet = xTaskCreate(journal_vErrorTask,
                        "Journal",
                        TASK_JOURNAL_STACK_SIZE,
                        NULL,
@@ -92,7 +90,7 @@ void startupTask(void *pvArg)
                        &xRtcTask);
     assert(xRet == pdPASS);
     
-    xRet = xTaskCreate(throttleTask,
+    xRet = xTaskCreate(throttle_vTask,
                        "Throttle",
                        TASK_THROTTLE_STACK_SIZE,
                        NULL,
@@ -100,7 +98,7 @@ void startupTask(void *pvArg)
                        &xThrottleTask);
     assert(xRet == pdPASS);
     
-    xRet = xTaskCreate(vGyroTask,
+    xRet = xTaskCreate(gyro_vTask,
                        "Gyro",
                        TASK_GYRO_STACK_SIZE,
                        NULL,
@@ -172,7 +170,7 @@ void commTask(void *pvArg)
  *
  * @retval  None
  */
-static void Sys_vInit(void)
+static void sys_vInitHardware(void)
 {
     /* Initialize communications */
     DMA_Init();
@@ -197,16 +195,22 @@ static void Sys_vInit(void)
  *
  * @retval  None
  */
-static void Sys_vCreateEvents(void)
+static void sys_vCreateEvents(void)
 {
     xTsQ = xQueueCreate(TS_QUEUE_SIZE, sizeof(struct Calendar));
     assert(xTsQ != NULL);
 
-    xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(xJobStruct *));
-    assert(xJobQueue != NULL);
-    
     xTwiQueue = xQueueCreate(TWI_QUEUE_SIZE, sizeof(TWI_Msg *));
     assert(xTwiQueue != NULL);
+    
+    xJobQueue = xQueueCreate(JOB_QUEUE_SIZE, sizeof(RF_Struct_t *));
+    assert(xJobQueue != NULL);
+    
+    xThrottleQueue = xQueueCreate(THROTTLE_QUEUE_SIZE, sizeof(RF_Struct_t *));
+    assert(xThrottleQueue != NULL);
+    
+    xGyroQueue = xQueueCreate(GYRO_QUEUE_SIZE, sizeof(RF_Struct_t *));
+    assert(xGyroQueue != NULL);
 
     xTwiSema = xSemaphoreCreateBinary();
     assert(xTwiSema != NULL);
@@ -220,9 +224,9 @@ static void Sys_vCreateEvents(void)
  *
  * @retval  None
  */
-void RTOS_Init(void)
+void sys_vInit(void)
 {
-    BaseType_t xRet = xTaskCreate(startupTask,
+    BaseType_t xRet = xTaskCreate(sys_vStartupTask,
                                   "Startup",
                                   TASK_STARTUP_STACK_SIZE,
                                   NULL,

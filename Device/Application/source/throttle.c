@@ -78,7 +78,7 @@ static void     vUpdateThrottle(const uint16_t usJoyPos,
  *
  * @return  None.
  */
-void throttleTask(void *pvArg)
+void throttle_vTask(void *pvArg)
 {
     (void)pvArg;
     BaseType_t  xRet;    

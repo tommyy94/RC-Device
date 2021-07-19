@@ -15,7 +15,7 @@ extern TaskHandle_t     xGyroTask;
  *
  * @return  None.
  */
-void vGyroTask(void *pvArg)
+void gyro_vTask(void *pvArg)
 {
     (void)pvArg;
     BaseType_t     xRet;

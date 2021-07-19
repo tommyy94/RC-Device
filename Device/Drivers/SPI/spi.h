@@ -2,6 +2,7 @@
 #define SPI_H_
 
 #include <stdbool.h>
+#include <same70q21b.h>
 
 
 #define SPI_QUEUE_SIZE		(4)

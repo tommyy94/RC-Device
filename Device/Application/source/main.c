@@ -11,7 +11,7 @@ int main(void)
     SCB_EnableICache();
     SCB_EnableDCache();
     
-    RTOS_Init();
+    sys_vInit();
 }
 
 
