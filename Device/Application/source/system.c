@@ -28,7 +28,7 @@
 TaskHandle_t        xStartupTask;
 TaskHandle_t        xCommTask;
 TaskHandle_t        xJournalTask;
-TaskHandle_t        xCalendarTask;
+TaskHandle_t        xRtcTask;
 TaskHandle_t        xThrottleTask;
 TaskHandle_t        xGyroTask;
 
@@ -40,8 +40,8 @@ SemaphoreHandle_t   xTwiSema;
 
 extern void commTask(void *pvArg);
 extern void startupTask(void *pvArg);
-extern void Journal_vErrorTask(void *pvArg);
-extern void CalendarTask(void *pvArg);
+extern void RTC_vTask(void *pvArg);
+extern void throttle_vTask(void *pvArg);
 extern void throttleTask(void *pvArg);
 extern void vGyroTask(void *pvArg);
 
@@ -84,12 +84,12 @@ void startupTask(void *pvArg)
                        &xJournalTask);
     assert(xRet == pdPASS);
     
-    xRet = xTaskCreate(CalendarTask,
-                       "Calendar",
-                       TASK_CALENDAR_STACK_SIZE,
+    xRet = xTaskCreate(RTC_vTask,
+                       "RTC",
+                       TASK_RTC_STACK_SIZE,
                        NULL,
-                       TASK_CALENDAR_STACK_PRIORITY,
-                       &xCalendarTask);
+                       TASK_RTC_STACK_PRIORITY,
+                       &xRtcTask);
     assert(xRet == pdPASS);
     
     xRet = xTaskCreate(throttleTask,
@@ -186,8 +186,8 @@ static void Sys_vInit(void)
     /* Initialize motor control */
     PWM_Init();
 
-    /* Start RTC last so it won't notify not-existent task */
-    RTC_Init();
+    /* Start RTC last so it won't notify non-existent task */
+    RTC_vInit();
 }
 
 /**
