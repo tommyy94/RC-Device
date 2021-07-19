@@ -304,8 +304,8 @@ void MPU6050_vGyroRead(AxisStruct_t *pxGyro)
 void MPU6050_vSensorsRead(AxisStruct_t *pxAccel,
                           AxisStruct_t *pxGyro)
 {
-    uint8_t ucReg     = MPU6050_ACCEL_XOUT_H;
-    uint8_t ucRecv[8] = { 0x00 };
+    uint8_t ucReg      = MPU6050_ACCEL_XOUT_H;
+    uint8_t ucRecv[14] = { 0x00 };
 
     xTwiAdap.pxMsg[0].pucBuf    = &ucReg;
     xTwiAdap.pxMsg[0].ulLen     = 1;
@@ -334,7 +334,7 @@ void MPU6050_vSensorsRead(AxisStruct_t *pxAccel,
  *
  * @param   None.
  *
- * @retval  None.
+ * @retval  None..
  *
  * @note    SampleRate = GyroscopeOutputRate / (1 + SMPLRT_DIV)
  *
